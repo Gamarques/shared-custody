@@ -1,4 +1,10 @@
 node_modules
 .next
 .env*
+!.env.example
 tools/logs
+next-env.d.ts
+*.tsbuildinfo
+.vercel
+supabase/.temp
+supabase/.branches

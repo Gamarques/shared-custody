@@ -55,7 +55,7 @@ def main():
         raw = jev(t)
         (LOGS / f"{tid}.jev.json").write_text(json.dumps(raw, indent=1))
         # tolerate either flat or nested response shapes
-        d = raw.get("choice") and raw or next((v for v in raw.values() if isinstance(v, dict) and "choice" in v), raw)
+        d = raw["answers"]["difficulty"]
         choice, conf = d["choice"], d["confidence"]
         model, effort, turns = ROUTE[(choice, conf >= 0.6)]
         print(f"{tid} {t['title'][:60]} -> jev={choice}({conf:.2f}) model={model}", flush=True)
