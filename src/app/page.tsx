@@ -134,6 +134,9 @@ export default async function Home() {
             <Link href="/excecoes">Exceções (troca de dias, férias, feriados)</Link>
           </p>
           <p>
+            <Link href="/despesas">Despesas</Link>
+          </p>
+          <p>
             <Link href="/despesas/nova">Nova despesa</Link>
           </p>
           <p>
