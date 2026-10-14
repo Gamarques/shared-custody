@@ -322,3 +322,40 @@ Known limits:
   home screen keeps less (see "Riscos" in `docs/plano-mvp.md`).
 - Only months already opened while online are available; nothing is prefetched.
 - After a deploy, `shell-v2` keeps the old build's scripts until the cache version is raised.
+
+## T-13 — Expense form with a share per expense and the family default (RF-08, RF-09)
+
+Status: **code done; SQL executed locally (PGlite), not on a live Supabase project; the form
+was not exercised in a browser**. `/despesas/nova` (linked from the home as "Nova despesa")
+registers an expense: amount (typed as text, "12,50", "1.234,56" or "1,234.56", parsed to
+integer cents without floats), date (today in the family zone by default, no future dates),
+description, category (the fixed list of the `expenses.category` check), who paid (the caller
+by default) and the payer's share in percent, prefilled with `families.default_payer_share_bps`
+and editable per expense. A line under the form shows the split ("Ana paga 30,00 € (60%) e
+Bruno, 20,00 € (40%)"), rounded as business rule 1 says, so the two parts add up to the amount.
+The "Padrão da família" section on the same page edits the default; existing expenses keep the
+share they were saved with.
+
+Migration `20261014000600_expense_form.sql`: a new expense always starts `pending`, with
+`deleted_at` null and server timestamps, whatever the client sends (the payer cannot
+self-confirm); amounts are capped at 1 000 000,00. The RLS from T-05 is unchanged: members
+read, insert and update their family's expenses, nobody deletes them, and members update their
+own family (the default share). Covered by `src/lib/expenses/expenses.sql.test.ts`,
+`money.test.ts`, `expense-form.test.ts` and `src/app/despesas/nova/page.test.tsx`.
+
+1. Apply the migration: `npx supabase db push`.
+2. Verify with two members of one family (A, B):
+   - A opens `/despesas/nova`: "Parte de quem pagou (%)" shows `50`; type `100,00`, a
+     description and a category; the split line shows 50,00 € for each; "Registrar despesa"
+     shows "Despesa registrada: ...";
+   - in the SQL editor: the row has `amount_cents = 10000`, `payer_share_bps = 5000`,
+     `status = 'pending'`, `created_by` = A;
+   - change the percent to `30` for another expense: the row has `payer_share_bps = 3000`;
+   - B sets "Padrão da família" to `60` and saves; reloading the page as A shows `60`
+     prefilled; the earlier rows still have 5000 and 3000;
+   - with a user of another family, `supabase.from('expenses').insert({... family_id: <A's> })`
+     fails with `42501`, and `supabase.from('families').update({default_payer_share_bps: 0})
+     .eq('id', <A's family>)` changes no row.
+3. Gaps: the receipt photo of RF-08 arrives in T-14 (`receipt_path` stays null); the expense
+   list (T-15) does not exist yet, so the page only confirms the saved expense. Either member
+   can change the family default, without the other's approval.
