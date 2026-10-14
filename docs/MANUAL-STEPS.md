@@ -58,3 +58,26 @@ curl -s https://<project>.vercel.app/api/health  # {"ok":true,"supabaseConfigure
   Magic links (T-02) depend on this.
 - Install the Supabase CLI (`npx supabase`), then `npx supabase link --project-ref <ref>` so the
   migrations in `supabase/migrations` (T-05 onward) can be pushed with `npx supabase db push`.
+
+## T-02 — Magic link login
+
+Status: **code done, not verified against a live Supabase project**. Unit tests mock the
+Supabase client; no real e-mail was sent and no real session was created.
+
+1. In Supabase **Authentication > Providers**, keep **Email** enabled (magic link / OTP).
+2. In **Authentication > URL Configuration**, set the Site URL and add
+   `http://localhost:3000/auth/callback` and `https://<project>.vercel.app/auth/callback`
+   (or `/**` patterns) to the redirect allow list.
+3. Optional: edit the "Magic Link" e-mail template; the default link works with the PKCE
+   flow used by `@supabase/ssr` (`/auth/callback?code=...`).
+4. Note: the free-plan built-in SMTP is rate limited (few e-mails per hour). Configure a
+   custom SMTP provider before real use.
+5. Verify (local or deployed):
+   - open `/` → redirected to `/login`; enter an e-mail; receive the link;
+   - open the link **in the same browser** (PKCE verifier is stored there) → lands on `/`
+     with the e-mail and a "Sair" button shown;
+   - close and reopen the browser/PWA → still signed in (cookie refreshed by `src/proxy.ts`);
+   - click "Sair" → back at `/login`; `/` redirects to `/login` again.
+
+RLS: T-02 adds no tables (Supabase manages `auth.users`), so no migration is needed here.
+Table policies and isolation tests come with T-05.

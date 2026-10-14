@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SessionBar } from "./SessionBar";
 
 export const metadata: Metadata = {
   title: "Guarda Compartilhada",
@@ -14,7 +15,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt">
-      <body>{children}</body>
+      <body>
+        <SessionBar />
+        {children}
+      </body>
     </html>
   );
 }

@@ -22,7 +22,7 @@ export async function createClient() {
           }
         } catch {
           // Called from a Server Component, where cookies are read-only.
-          // Session refresh is handled by the proxy added with login (T-02).
+          // Session refresh is handled by src/proxy.ts.
         }
       },
     },
