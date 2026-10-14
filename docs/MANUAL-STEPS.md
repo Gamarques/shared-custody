@@ -140,3 +140,18 @@ privileges), so these steps are still needed:
    `GET /rest/v1/families` returns `401`/`42501`, not `[]` with rows.
 5. Not done here: the expense audit trigger (T-17), the Storage bucket policies for receipts
    (T-14), and saving the child's name in onboarding (the `children` table now exists).
+
+## T-06 — PWA base (manifest, icons, service worker)
+
+Status: **code done and tested locally; install on real devices not verified**.
+Manifest (`/manifest.webmanifest`), icons (`public/icons`, regenerate with `node tools/gen-icons.mjs`),
+`public/sw.js` and `public/offline.html` are in place. The service worker registers only in
+production builds. Icons are placeholders (ring glyph); replace with final art when available.
+
+1. Deploy (or `npm run build && npm start` and expose via HTTPS tunnel — install needs HTTPS).
+2. Android/Chrome: open the URL, menu > "Instalar app"; icon appears on home screen, opens standalone.
+3. iOS/Safari: Share > "Adicionar à Tela de Início"; check icon and standalone launch.
+4. Chrome DevTools > Application: Manifest shows no errors, Service Worker is "activated",
+   Lighthouse PWA/installable check passes.
+5. Airplane mode: opening a previously visited page works; unseen page shows "Sem conexão".
+   (Offline calendar data is T-12.)
