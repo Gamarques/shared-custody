@@ -155,3 +155,28 @@ production builds. Icons are placeholders (ring glyph); replace with final art w
    Lighthouse PWA/installable check passes.
 5. Airplane mode: opening a previously visited page works; unseen page shows "Sem conexão".
    (Offline calendar data is T-12.)
+
+## T-08 — Custody rule configuration (RF-04)
+
+Status: **code done; SQL executed locally (PGlite), not on a live Supabase project**.
+`/guarda` shows the current rule, a form (who starts, handover weekday and time, first handover
+date and, for a change, "vale a partir de") and the history of all versions. Saving always
+inserts a new row in `custody_rules`; members cannot update or delete rows (privileges revoked),
+and a trigger blocks content changes even for roles that bypass RLS. `valid_from` defaults to
+`starts_on` for the first version and to today in the family time zone for later ones;
+`created_at` is always the server clock. Saving a new version does not write `valid_to` on the
+previous one (that would change a preserved row); `getCustodyHolder` orders versions by save
+order instead. Covered by `src/lib/custody/custody-rules.sql.test.ts` and `holder.test.ts`.
+
+1. Apply the migration: `npx supabase db push`. File:
+   `supabase/migrations/20261014000400_custody_rule_versions.sql`.
+2. Verify with two members of one family (A, B):
+   - A opens `/guarda`, sees "Nenhuma regra definida ainda.", saves Sunday 18:00 with a first
+     handover date; the page shows it as "Regra atual" and one entry in the history;
+   - B opens `/guarda`, changes to Friday 19:00 and clicks "Salvar nova versão"; the history now
+     has two entries, the old one unchanged;
+   - in the SQL editor: two rows in `custody_rules`, the first with its original values;
+   - through the API with A's session, `supabase.from('custody_rules').update({...})` and
+     `.delete()` fail with `42501` (permission denied), and the row count stays at 2.
+3. Any member can change the rule and can choose a past "vale a partir de" to correct a
+   mistake; old versions stay in the history. No approval by the other member (out of MVP scope).

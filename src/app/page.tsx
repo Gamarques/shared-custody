@@ -12,9 +12,14 @@ export default function Home() {
         {configured ? "Supabase configurado." : "Supabase ainda não configurado (ver .env.example)."}
       </p>
       {configured && (
-        <p>
-          <Link href="/convidar">Convidar o outro responsável</Link>
-        </p>
+        <>
+          <p>
+            <Link href="/guarda">Regra de guarda</Link>
+          </p>
+          <p>
+            <Link href="/convidar">Convidar o outro responsável</Link>
+          </p>
+        </>
       )}
     </main>
   );

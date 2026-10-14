@@ -50,7 +50,8 @@ type PreparedRule = {
   index: number;
   startsOn: number;
   time: ReturnType<typeof parseTime>;
-  validFrom: number;
+  /** 00:00 local of valid_from: from here on, this version replaces the earlier schedule. */
+  validFromStart: number;
   /** First instant the rule is in force: the later of valid_from 00:00 and the first handover. */
   effectiveStart: number;
 };
@@ -59,40 +60,53 @@ function handoverInstant(r: PreparedRule, week: number, timeZone: string): numbe
   return localDayTimeToInstant(r.startsOn + 7 * week, r.time, timeZone);
 }
 
+/** Save order: created_at, then position in the list (fixtures without created_at). */
+function savedBefore(a: PreparedRule, b: PreparedRule): number {
+  const ta = a.rule.created_at ? Date.parse(a.rule.created_at) : NaN;
+  const tb = b.rule.created_at ? Date.parse(b.rule.created_at) : NaN;
+  return (Number.isNaN(ta) || Number.isNaN(tb) ? 0 : ta - tb) || a.index - b.index;
+}
+
 function prepareRules(rules: readonly CustodyRule[], timeZone: string): PreparedRule[] {
   return rules
     .map((rule, index) => {
       const startsOn = parseDate(rule.starts_on);
       const time = parseTime(rule.handover_time);
-      const validFrom = parseDate(rule.valid_from);
       const firstHandover = localDayTimeToInstant(startsOn, time, timeZone);
-      const validFromStart = localDayTimeToInstant(validFrom, { hour: 0, minute: 0, second: 0 }, timeZone);
+      const validFromStart = localDayTimeToInstant(
+        parseDate(rule.valid_from),
+        { hour: 0, minute: 0, second: 0 },
+        timeZone,
+      );
       return {
         rule,
         index,
         startsOn,
         time,
-        validFrom,
+        validFromStart,
         effectiveStart: Math.max(firstHandover, validFromStart),
       };
     })
-    .sort(
-      (a, b) =>
-        a.effectiveStart - b.effectiveStart ||
-        a.validFrom - b.validFrom ||
-        (a.rule.created_at ?? "").localeCompare(b.rule.created_at ?? "") ||
-        a.index - b.index,
-    );
+    .sort(savedBefore);
 }
 
 /**
- * Rule in force at `t`: the one with the latest effective start not after `t`. A version stays
- * in force until the next version starts, so changing the rule never leaves a gap and never
- * rewrites past weeks. valid_to only ends the last version.
+ * Rule in force at `t`. Versions apply in the order they were saved: each one replaces the
+ * earlier schedule from 00:00 of its valid_from, but that schedule keeps running until the new
+ * version's first handover, so a change never leaves a gap and never rewrites past weeks.
+ * A version saved later with the same or an earlier valid_from replaces an older one entirely
+ * (a correction), even if the older one had not started yet. valid_to only ends the last version.
  */
 function ruleAt(prepared: PreparedRule[], t: number, timeZone: string): PreparedRule | null {
-  let i = -1;
-  while (i + 1 < prepared.length && prepared[i + 1].effectiveStart <= t) i++;
+  // Walk from the newest version back. Once a newer version (not yet started at t) has taken
+  // over from its valid_from, older versions taking over on or after that date never apply.
+  let replacedFrom = Infinity;
+  let i = prepared.length - 1;
+  for (; i >= 0; i--) {
+    const r = prepared[i];
+    if (r.validFromStart < replacedFrom && r.effectiveStart <= t) break;
+    replacedFrom = Math.min(replacedFrom, r.validFromStart);
+  }
   if (i < 0) return null;
   const current = prepared[i];
   if (i === prepared.length - 1 && current.rule.valid_to !== null) {

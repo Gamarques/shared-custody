@@ -244,6 +244,39 @@ describe("getCustodyHolder: rule change", () => {
     });
   });
 
+  it("a same-day correction replaces a pending version entirely (T-08)", () => {
+    // Saved on 2026-05-20: Friday rule from 2026-06-05. Corrected the same day to start on
+    // Friday 2026-06-12 instead. The first save must never apply.
+    const corrected = {
+      ...friday19,
+      id: "rule-friday-fix",
+      starts_on: "2026-06-12",
+      created_at: "2026-05-20T10:05:00Z",
+    };
+    const s = schedule([closedSunday, friday19, corrected]);
+    expect(holder("2026-06-06T12:00:00Z", s)).toMatchObject({ ruleId: "rule-sunday", memberId: B });
+    // The old Sunday rule hands over to A on 2026-06-07 as usual.
+    expect(holder("2026-06-08T12:00:00Z", s)).toMatchObject({ ruleId: "rule-sunday", memberId: A });
+    expect(holder("2026-06-12T18:00:00Z", s)).toMatchObject({ ruleId: "rule-friday-fix", memberId: B, weekIndex: 0 });
+  });
+
+  it("a later save wins over an earlier one that starts later", () => {
+    // v2 (saved 2026-05-20, valid from 2026-06-01) waits for 2026-06-26; v3 (saved 2026-05-25,
+    // valid from 2026-06-02) starts on 2026-06-05 and must not be cut off by v2 later.
+    const v2 = { ...friday19, id: "v2", starts_on: "2026-06-26", first_member_id: A };
+    const v3 = { ...friday19, id: "v3", valid_from: "2026-06-02", created_at: "2026-05-25T10:00:00Z" };
+    const s = schedule([v3, closedSunday, v2]);
+    expect(holder("2026-06-04T12:00:00Z", s)).toMatchObject({ ruleId: "rule-sunday" });
+    expect(holder("2026-06-27T12:00:00Z", s)).toMatchObject({ ruleId: "v3", memberId: A, weekIndex: 3 });
+  });
+
+  it("an earlier valid_from saved later rewrites the weeks from that date (correction of the past)", () => {
+    const fixFirst = { ...sunday18, id: "rule-fixed", first_member_id: B, created_at: "2026-02-01T10:00:00Z" };
+    const s = schedule([sunday18, fixFirst]);
+    expect(holder("2026-01-05T12:00:00Z", s)).toMatchObject({ ruleId: "rule-fixed", memberId: B, weekIndex: 0 });
+    expect(holder("2026-01-04T17:59:59Z", s)).toBeNull();
+  });
+
   it("has no holder after valid_to of the last rule", () => {
     const s = schedule([{ ...sunday18, valid_to: "2026-02-01" }]);
     expect(who("2026-01-31T23:59:59Z", s)).toBe(B);
