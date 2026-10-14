@@ -54,13 +54,32 @@ function candidateInstants(t: number, schedule: CustodySchedule, horizonMs: numb
  * override counts instead, when it hands the child back.
  */
 export function getNextHandover(instant: Date, schedule: CustodySchedule, horizonDays = 400): NextHandover | null {
+  return getNextChange(instant, schedule, horizonDays, (h) => h?.memberId ?? null);
+}
+
+/** Who has the child and which override (if any) puts them there. */
+export function holderAndOverride(h: CustodyHolder | null): string | null {
+  return h ? `${h.memberId}|${h.source === "override" ? h.overrideId : ""}` : null;
+}
+
+/**
+ * Next instant after `instant` at which `key(holder)` changes, or null within `horizonDays`.
+ * getNextHandover keys by member; the calendar also keys by override, so an exception that keeps
+ * the child with the same member still starts and ends where its reason applies.
+ */
+export function getNextChange(
+  instant: Date,
+  schedule: CustodySchedule,
+  horizonDays: number,
+  key: (h: CustodyHolder | null) => string | null,
+): NextHandover | null {
   const t = instant.getTime();
   if (Number.isNaN(t)) throw new Error("Invalid instant");
-  const currentId = getCustodyHolder(instant, schedule)?.memberId ?? null;
+  const current = key(getCustodyHolder(instant, schedule));
   for (const ms of candidateInstants(t, schedule, horizonDays * MS_PER_DAY)) {
     const at = new Date(ms);
     const holder = getCustodyHolder(at, schedule);
-    if ((holder?.memberId ?? null) !== currentId) return { at, holder };
+    if (key(holder) !== current) return { at, holder };
   }
   return null;
 }

@@ -8,5 +8,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
+    // Booting PGlite and applying every migration takes seconds per SQL test file, more when
+    // several run in parallel.
+    hookTimeout: 60_000,
   },
 });

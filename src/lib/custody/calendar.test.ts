@@ -234,7 +234,9 @@ describe("buildMonthCalendar (RF-06)", () => {
     expect(names(day(cal, "2026-10-15"))).toEqual(["Bruno", "Ana"]);
     expect(handovers(cal)).toContain("2026-10-14 01:00 Ana>Bruno");
     expect(handovers(cal)).toContain("2026-10-15 09:00 Bruno>Ana");
-    expect(describeDay(d14)).toBe("14/10: com Ana; troca às 01:00 para Bruno");
+    expect(describeDay(d14)).toBe("14/10: com Ana; troca às 01:00 para Bruno (Consulta no dentista)");
+    expect(d14.labels).toEqual(["Consulta no dentista"]);
+    expect(day(cal, "2026-10-15").labels).toEqual([]);
     expect(describeDay(day(cal, "2026-10-15"))).toBe("15/10: com Bruno (Consulta no dentista); troca às 09:00 para Ana");
     expectAgreesWithHolder(cal, inp);
   });
@@ -244,7 +246,7 @@ describe("buildMonthCalendar (RF-06)", () => {
     const cal = buildMonthCalendar(inp);
     expect(handovers(cal).at(-1)).toBe("2026-10-20 00:00 Bruno>-");
     expect(names(day(cal, "2026-10-20"))).toEqual([null]);
-    expect(describeDay(day(cal, "2026-10-20"))).toBe("20/10: sem guarda definida; às 00:00 a guarda termina");
+    expect(describeDay(day(cal, "2026-10-20"))).toBe("20/10: às 00:00 a guarda termina");
     expectAgreesWithHolder(cal, inp);
   });
 
@@ -259,6 +261,96 @@ describe("buildMonthCalendar (RF-06)", () => {
     const cal = buildMonthCalendar(input("2026-10", { rules: [] }));
     expect(handovers(cal)).toEqual([]);
     expect(days(cal).every((d) => names(d).join() === "")).toBe(true);
+  });
+});
+
+describe("exceptions in the calendar (RF-07)", () => {
+  // In October 2026 the rule gives Bruno 04/10 18:00-11/10, Ana 11/10-18/10, Bruno 18/10-25/10.
+  const holidays: CustodyOverride = {
+    id: "ferias",
+    starts_at: "2026-10-16T17:00:00Z", // Friday 18:00 in Lisbon, in Ana's week
+    ends_at: "2026-10-22T17:00:00Z", // Thursday 18:00, in what would be Bruno's week
+    member_id: "ana",
+    reason: "Férias",
+    created_at: "2026-10-01T10:00:00Z",
+  };
+  const holiday: CustodyOverride = {
+    id: "feriado",
+    starts_at: "2026-10-19T23:00:00Z", // 20/10 00:00 in Lisbon
+    ends_at: "2026-10-20T23:00:00Z", // 21/10 00:00
+    member_id: "bruno",
+    reason: "Feriado",
+    created_at: "2026-10-02T10:00:00Z", // created after "Férias": wins where they overlap
+  };
+  const nextMonth: CustodyOverride = {
+    id: "novembro",
+    starts_at: "2026-11-01T10:00:00Z",
+    ends_at: "2026-11-01T12:00:00Z",
+    member_id: "ana",
+    reason: "Aniversário",
+    created_at: "2026-10-03T10:00:00Z",
+  };
+
+  it("overrides the rule, hides the handover it covers and labels where it starts", () => {
+    const inp = input("2026-10", { overrides: [holidays] });
+    const cal = buildMonthCalendar(inp);
+
+    // Starts in Ana's own week: same holder, so no handover, but the reason is shown from 18:00.
+    const d16 = day(cal, "2026-10-16");
+    expect(d16.handovers).toEqual([]);
+    expect(d16.segments.map((s) => [s.person?.name, s.toPct, s.reason, s.overrideId])).toEqual([
+      ["Ana", 75, null, null],
+      ["Ana", 100, "Férias", "ferias"],
+    ]);
+    expect(d16.labels).toEqual(["Férias"]);
+    expect(describeDay(d16)).toBe("16/10: com Ana; exceção: Férias");
+
+    // The Sunday handover to Bruno does not happen; Ana keeps the child until Thursday 18:00.
+    expect(names(day(cal, "2026-10-18"))).toEqual(["Ana"]);
+    expect(names(day(cal, "2026-10-21"))).toEqual(["Ana"]);
+    expect(handovers(cal)).not.toContain("2026-10-18 18:00 Ana>Bruno");
+    expect(handovers(cal)).toContain("2026-10-22 18:00 Ana>Bruno");
+
+    // Labelled on its first day and again at the start of the next week row only.
+    expect(days(cal).filter((d) => d.labels.length > 0).map((d) => d.date)).toEqual(["2026-10-16", "2026-10-19"]);
+    expect(describeDay(day(cal, "2026-10-19"))).toBe("19/10: com Ana (Férias)");
+    expect(describeDay(day(cal, "2026-10-22"))).toBe("22/10: com Ana (Férias); troca às 18:00 para Bruno");
+
+    expect(cal.exceptions).toEqual([
+      {
+        id: "ferias",
+        person: { memberId: "ana", name: "Ana", color: "#2f6f5e" },
+        reason: "Férias",
+        period: "de 16/10/2026 18:00 a 22/10/2026 18:00",
+      },
+    ]);
+    expectAgreesWithHolder(cal, inp);
+  });
+
+  it("the exception created last wins where two overlap", () => {
+    const inp = input("2026-10", { overrides: [holiday, holidays] });
+    const cal = buildMonthCalendar(inp);
+    expect(names(day(cal, "2026-10-20"))).toEqual(["Bruno"]);
+    expect(day(cal, "2026-10-20").labels).toEqual(["Feriado"]);
+    expect(handovers(cal)).toContain("2026-10-20 00:00 Ana>Bruno");
+    expect(handovers(cal)).toContain("2026-10-21 00:00 Bruno>Ana");
+    expect(describeDay(day(cal, "2026-10-20"))).toBe("20/10: troca às 00:00 para Bruno (Feriado)");
+    expect(describeDay(day(cal, "2026-10-21"))).toBe("21/10: troca às 00:00 para Ana (Férias)");
+    expect(day(cal, "2026-10-21").labels).toEqual(["Férias"]);
+    expectAgreesWithHolder(cal, inp);
+
+    // Swapping the creation order lets "Férias" cover the holiday.
+    const swapped = input("2026-10", {
+      overrides: [{ ...holiday, created_at: "2026-09-01T10:00:00Z" }, holidays],
+    });
+    expect(names(day(buildMonthCalendar(swapped), "2026-10-20"))).toEqual(["Ana"]);
+  });
+
+  it("lists only the month's exceptions, by start, but labels every day of the grid", () => {
+    const cal = buildMonthCalendar(input("2026-10", { overrides: [nextMonth, holiday, holidays] }));
+    expect(cal.exceptions.map((e) => e.reason)).toEqual(["Férias", "Feriado"]);
+    // 01/11 is in the October grid (last row), outside the month.
+    expect(day(cal, "2026-11-01").labels).toEqual(["Aniversário"]);
   });
 });
 

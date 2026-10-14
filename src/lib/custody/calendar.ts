@@ -1,7 +1,8 @@
 import type { CustodyHolder, CustodyOverride, CustodyRule } from "./holder";
 import { getCustodyHolder } from "./holder";
 import { dayNumber, localDayTimeToInstant, toWallClock } from "./timezone";
-import { familySchedule, getNextHandover, person, type HomeMember, type HomePerson } from "./today";
+import { describeOverridePeriod } from "./override-form";
+import { familySchedule, getNextChange, holderAndOverride, person, type HomeMember, type HomePerson } from "./today";
 
 /**
  * Monthly calendar (RF-06, T-10): every day of the month grid colored by who has the child, with
@@ -91,6 +92,7 @@ export type CalendarSegment = {
   toPct: number;
   /** Override reason when an exception sets the holder. */
   reason: string | null;
+  overrideId: string | null;
 };
 
 export type CalendarHandover = {
@@ -99,6 +101,10 @@ export type CalendarHandover = {
   time: string;
   from: HomePerson | null;
   to: HomePerson | null;
+  /** Reason of the exception that starts here, if any. */
+  reason: string | null;
+  /** At 00:00 local: the day starts with the new holder. */
+  atDayStart: boolean;
 };
 
 export type CalendarDay = {
@@ -108,6 +114,20 @@ export type CalendarDay = {
   isToday: boolean;
   segments: CalendarSegment[];
   handovers: CalendarHandover[];
+  /**
+   * Reasons shown in the cell: an exception is labelled on the day it starts and again at the
+   * start of each week row it spans, so every row of a long holiday says why.
+   */
+  labels: string[];
+};
+
+/** An exception in force during the month, for the list under the grid (RF-07). */
+export type CalendarException = {
+  id: string;
+  person: HomePerson;
+  reason: string;
+  /** "de 24/12/2026 18:00 a 26/12/2026 18:00" in the family zone. */
+  period: string;
 };
 
 export type MonthCalendar = {
@@ -118,6 +138,8 @@ export type MonthCalendar = {
   nextMonth: string;
   /** Rows of 7 days, Monday first. */
   weeks: CalendarDay[][];
+  /** Exceptions overlapping the month, by start. */
+  exceptions: CalendarException[];
 };
 
 export type CalendarInput = {
@@ -131,7 +153,7 @@ export type CalendarInput = {
 
 type Change = { atMs: number; holder: CustodyHolder | null };
 
-/** Holder at `startMs` and every change of holder in (startMs, endMs). */
+/** Holder at `startMs` and every change of holder or of exception in (startMs, endMs). */
 function changesBetween(input: CalendarInput, startMs: number, endMs: number): { initial: Change; changes: Change[] } {
   const schedule = familySchedule(input);
   const initial = { atMs: startMs, holder: getCustodyHolder(new Date(startMs), schedule) };
@@ -139,7 +161,7 @@ function changesBetween(input: CalendarInput, startMs: number, endMs: number): {
   let t = startMs;
   for (;;) {
     const horizonDays = Math.ceil((endMs - t) / MS_PER_DAY) + 1;
-    const next = getNextHandover(new Date(t), schedule, horizonDays);
+    const next = getNextChange(new Date(t), schedule, horizonDays, holderAndOverride);
     if (!next || next.at.getTime() >= endMs) break;
     t = next.at.getTime();
     changes.push({ atMs: t, holder: next.holder });
@@ -158,6 +180,13 @@ export function buildMonthCalendar(input: CalendarInput): MonthCalendar {
   const today = dayNumber(toWallClock(input.now.getTime(), timezone));
   const toPerson = (h: CustodyHolder | null) => (h ? person(h.memberId, members) : null);
   const reasonOf = (h: CustodyHolder | null) => (h?.source === "override" ? h.reason : null);
+  const segment = (h: CustodyHolder | null, fromPct: number, toPct: number): CalendarSegment => ({
+    person: toPerson(h),
+    fromPct,
+    toPct,
+    reason: reasonOf(h),
+    overrideId: h?.source === "override" ? h.overrideId : null,
+  });
 
   const { initial, changes } =
     input.rules.length > 0 || input.overrides.length > 0
@@ -167,6 +196,8 @@ export function buildMonthCalendar(input: CalendarInput): MonthCalendar {
   const days: CalendarDay[] = [];
   let current = initial;
   let ci = 0;
+  // Exception in force at the end of the previous day, to label only where one starts.
+  let previousOverrideId: string | null = null;
   for (let day = range.firstDay; day <= range.lastDay; day++) {
     const dayStart = localDayTimeToInstant(day, MIDNIGHT, timezone);
     const dayEnd = localDayTimeToInstant(day + 1, MIDNIGHT, timezone);
@@ -177,29 +208,37 @@ export function buildMonthCalendar(input: CalendarInput): MonthCalendar {
     for (; ci < changes.length && changes[ci].atMs < dayEnd; ci++) {
       const change = changes[ci];
       if (change.atMs > segStart) {
-        segments.push({
-          person: toPerson(current.holder),
-          fromPct: percentOfDay(segStart, dayStart, dayEnd),
-          toPct: percentOfDay(change.atMs, dayStart, dayEnd),
-          reason: reasonOf(current.holder),
-        });
+        segments.push(
+          segment(current.holder, percentOfDay(segStart, dayStart, dayEnd), percentOfDay(change.atMs, dayStart, dayEnd)),
+        );
         segStart = change.atMs;
       }
-      const at = toWallClock(change.atMs, timezone);
-      handovers.push({
-        atMs: change.atMs,
-        time: `${String(at.hour).padStart(2, "0")}:${String(at.minute).padStart(2, "0")}`,
-        from: toPerson(current.holder),
-        to: toPerson(change.holder),
-      });
+      // An exception that keeps the child with the same member is not a handover.
+      if ((current.holder?.memberId ?? null) !== (change.holder?.memberId ?? null)) {
+        const at = toWallClock(change.atMs, timezone);
+        handovers.push({
+          atMs: change.atMs,
+          time: `${String(at.hour).padStart(2, "0")}:${String(at.minute).padStart(2, "0")}`,
+          from: toPerson(current.holder),
+          to: toPerson(change.holder),
+          reason: reasonOf(change.holder),
+          atDayStart: change.atMs === dayStart,
+        });
+      }
       current = change;
     }
-    segments.push({
-      person: toPerson(current.holder),
-      fromPct: percentOfDay(segStart, dayStart, dayEnd),
-      toPct: 100,
-      reason: reasonOf(current.holder),
+    segments.push(segment(current.holder, percentOfDay(segStart, dayStart, dayEnd), 100));
+
+    const rowStart = (day - range.firstDay) % 7 === 0;
+    const labels: string[] = [];
+    segments.forEach((s, i) => {
+      // Segments split only where the holder or the exception changes, so a later segment with
+      // an exception is always one that starts here.
+      const continued = i === 0 && !rowStart && s.overrideId === previousOverrideId;
+      if (s.reason && !continued && !labels.includes(s.reason)) labels.push(s.reason);
     });
+    previousOverrideId = segments[segments.length - 1].overrideId;
+
     const date = new Date(day * MS_PER_DAY);
     days.push({
       date: isoDate(day),
@@ -208,17 +247,33 @@ export function buildMonthCalendar(input: CalendarInput): MonthCalendar {
       isToday: day === today,
       segments,
       handovers,
+      labels,
     });
   }
 
   const weeks: CalendarDay[][] = [];
   for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+
+  const next = addMonths(input.month, 1);
+  const monthStart = localDayTimeToInstant(dayNumber({ ...input.month, day: 1 }), MIDNIGHT, timezone);
+  const monthEnd = localDayTimeToInstant(dayNumber({ ...next, day: 1 }), MIDNIGHT, timezone);
+  const exceptions = input.overrides
+    .filter((o) => Date.parse(o.ends_at) > monthStart && Date.parse(o.starts_at) < monthEnd)
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at) || Date.parse(a.created_at) - Date.parse(b.created_at))
+    .map((o) => ({
+      id: o.id,
+      person: person(o.member_id, members),
+      reason: o.reason,
+      period: describeOverridePeriod(o, timezone),
+    }));
+
   return {
     month: formatMonth(input.month),
     title: `${MONTHS[input.month.month - 1]} de ${input.month.year}`,
     prevMonth: formatMonth(addMonths(input.month, -1)),
-    nextMonth: formatMonth(addMonths(input.month, 1)),
+    nextMonth: formatMonth(next),
     weeks,
+    exceptions,
   };
 }
 
@@ -230,14 +285,22 @@ export function dayBackground(segments: readonly CalendarSegment[]): string {
   return `linear-gradient(to right, ${stops.join(", ")})`;
 }
 
-/** Screen-reader text: "18/10: com Ana; troca às 18:00 para Bruno". */
+/**
+ * Screen-reader text: "18/10: com Ana; troca às 18:00 para Bruno", with the reason of any
+ * exception that applies ("troca às 18:00 para Bruno (Férias)", "exceção: Feriado").
+ */
 export function describeDay(day: CalendarDay): string {
   const [, month, d] = day.date.split("-");
   const who = (p: HomePerson | null) => (p ? `com ${p.name}` : "sem guarda definida");
   const first = day.segments[0];
-  const parts = [`${who(first.person)}${first.reason ? ` (${first.reason})` : ""}`];
+  // A handover at 00:00 already says who has the child from the start of the day.
+  const parts = day.handovers[0]?.atDayStart ? [] : [`${who(first.person)}${first.reason ? ` (${first.reason})` : ""}`];
   for (const h of day.handovers) {
-    parts.push(h.to ? `troca às ${h.time} para ${h.to.name}` : `às ${h.time} a guarda termina`);
+    const reason = h.reason ? ` (${h.reason})` : "";
+    parts.push(h.to ? `troca às ${h.time} para ${h.to.name}${reason}` : `às ${h.time} a guarda termina`);
+  }
+  for (const label of day.labels) {
+    if (!parts.some((p) => p.includes(`(${label})`))) parts.push(`exceção: ${label}`);
   }
   return `${d}/${month}: ${parts.join("; ")}`;
 }

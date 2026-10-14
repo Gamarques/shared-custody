@@ -140,6 +140,40 @@ describe("calendar page (RF-06)", () => {
     expect(cell(html, "2026-10-08")).toContain('aria-label="08/10: com Ana (Aniversário); troca às 01:00 para Bruno"');
   });
 
+  it("shows each exception in the grid with its reason and lists the month's exceptions (RF-07)", async () => {
+    results = family({
+      custody_overrides: [
+        {
+          id: "o1",
+          starts_at: "2026-10-16T17:00:00+00:00", // Friday 18:00 in Lisbon, in Ana's week
+          ends_at: "2026-10-22T17:00:00+00:00",
+          member_id: "m1",
+          reason: "Férias",
+          created_at: "2026-10-01T10:00:00+00:00",
+        },
+      ],
+    });
+    const html = await render();
+    // Labelled where it starts and at the start of the next week row; all its days are marked.
+    const labelled = [...html.matchAll(/data-date="([\d-]+)"(?:(?!<\/td>).)*data-testid="reason">Férias</g)].map((m) => m[1]);
+    expect(labelled).toEqual(["2026-10-16", "2026-10-19"]);
+    for (const date of ["2026-10-16", "2026-10-18", "2026-10-22"]) expect(cell(html, date)).toContain("day exception");
+    expect(cell(html, "2026-10-15")).not.toContain("exception");
+    // The rule's Sunday handover is overridden: Ana all day.
+    expect(cell(html, "2026-10-18")).toContain("background:#2f6f5e");
+    expect(cell(html, "2026-10-18")).not.toContain('data-testid="handover"');
+    expect(cell(html, "2026-10-22")).toContain('aria-label="22/10: com Ana (Férias); troca às 18:00 para Bruno"');
+
+    const list = /data-testid="month-exceptions">(.*?)<\/ul>/.exec(html)![1].replace(/<[^>]+>/g, "");
+    expect(list).toBe(" Férias: com Ana de 16/10/2026 18:00 a 22/10/2026 18:00");
+    expect(html).toContain('href="/excecoes"');
+  });
+
+  it("says when the month has no exceptions", async () => {
+    results = family();
+    expect(await render()).toContain("Nenhuma exceção neste mês.");
+  });
+
   it("links to the rule screen when no rule exists", async () => {
     results = family({ custody_rules: [] });
     const html = await render();

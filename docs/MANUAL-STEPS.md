@@ -236,3 +236,42 @@ client, not a real PostgREST.
    - insert an override in the SQL editor (`custody_overrides`): its days take the override
      member's color and the cell's tooltip shows the reason (the override screen is T-11).
 3. Offline reading of the calendar is T-12; for now only the generic page cache from T-06 applies.
+
+## T-11 — Custody exceptions: swapped days, school breaks, holidays (RF-07)
+
+Status: **code done; SQL executed locally (PGlite), not on a live Supabase project or on a
+device**. `/excecoes` (linked from the home and the calendar) lists the upcoming and current
+exceptions, folds the past ones, and has a form: who keeps the child, start and end date and
+time (local to the family zone, RNF-04), and a reason with quick picks ("Troca de dias",
+"Férias", "Feriado"). Exceptions are never edited, only added or removed: removing one makes the
+rule apply again for its period. In `/calendario` the days an exception covers take the
+member's color, carry a bottom bar, and show the reason on the day it starts and at the start of
+each week row it spans; a rule handover inside an exception is not drawn; and a list "Exceções
+do mês" under the grid gives each reason with its period. When two exceptions overlap, the one
+created last wins (business rule 4).
+
+Migration `20261014000500_custody_overrides.sql` replaces the `for all` policy with select,
+insert and delete policies for family members, revokes `update`, sets `created_at` to the server
+clock on insert (so precedence cannot be forged by the client), and limits one exception to
+366 days. Covered by `src/lib/custody/custody-overrides.sql.test.ts` (RLS on PGlite),
+`calendar.test.ts`, `override-form.test.ts` and the page tests. The supabase-js insert and
+delete calls from the browser were only tested against mocks, not a real PostgREST.
+
+1. Apply the migration: `npx supabase db push`. File:
+   `supabase/migrations/20261014000500_custody_overrides.sql`.
+2. Verify with two members of one family (A, B) and a saved rule (T-08), e.g. Sunday 18:00:
+   - A opens `/excecoes`, picks A, from a Friday 18:00 in A's week to the next Thursday 18:00
+     (in what would be B's week), clicks "Férias" and "Adicionar exceção"; the exception appears
+     under "Próximas e em curso" with "Criada por A";
+   - B opens `/calendario` for that month: those days are in A's color with "Férias" on the
+     Friday (and on the Monday, as the period spans two rows), the Sunday handover is gone,
+     "⇄ 18:00" shows on the Thursday, and "Exceções do mês" lists "Férias: com A de ... a ...";
+   - B adds an overlapping one-day "Feriado" with B inside that period: that day shows B and
+     "Feriado" (created last wins);
+   - while an exception is in force, `/` shows its member and "Exceção: <reason>";
+   - B removes "Feriado" on `/excecoes` (confirmation dialog): the calendar shows "Férias" again;
+   - through the API with A's session, `supabase.from('custody_overrides').update({...})` fails
+     with `42501`; inserting with `created_at: '2099-01-01'` stores the server time instead;
+   - a user of another family sees no rows and cannot insert or delete them.
+3. Any member can add or remove any exception of the family. No approval by the other member
+   and no notification (notifications are out of this task's scope).

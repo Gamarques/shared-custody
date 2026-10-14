@@ -90,7 +90,10 @@ function Calendar({ calendar }: { calendar: MonthCalendar }) {
           <tr key={week[0].date}>
             {week.map((day) => {
               const first = day.segments[0].person;
-              const classes = ["day", day.inMonth ? "" : "outside", day.isToday ? "today" : ""].filter(Boolean);
+              const exception = day.segments.some((s) => s.overrideId);
+              const classes = ["day", day.inMonth ? "" : "outside", day.isToday ? "today" : "", exception ? "exception" : ""].filter(
+                Boolean,
+              );
               return (
                 <td
                   key={day.date}
@@ -108,6 +111,11 @@ function Calendar({ calendar }: { calendar: MonthCalendar }) {
                   {day.handovers.map((h) => (
                     <span key={h.atMs} className="handover" data-testid="handover">
                       ⇄ {h.time}
+                    </span>
+                  ))}
+                  {day.labels.map((reason) => (
+                    <span key={reason} className="reason" data-testid="reason">
+                      {reason}
                     </span>
                   ))}
                 </td>
@@ -173,7 +181,29 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         <li>
           <span className="handover">⇄</span> hora da troca de guarda (a cor do dia se divide)
         </li>
+        <li>
+          <span className="swatch exception-swatch" /> exceção à regra, com o motivo
+        </li>
       </ul>
+
+      <section>
+        <h2>Exceções do mês</h2>
+        {calendar.exceptions.length > 0 ? (
+          <ul data-testid="month-exceptions">
+            {calendar.exceptions.map((e) => (
+              <li key={e.id}>
+                <span className="swatch" style={{ background: e.person.color ?? NO_HOLDER_COLOR }} /> <strong>{e.reason}</strong>:
+                com {e.person.name} {e.period}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Nenhuma exceção neste mês.</p>
+        )}
+        <p>
+          <Link href="/excecoes">Adicionar ou remover exceções</Link>
+        </p>
+      </section>
 
       <p>
         <Link href="/">Voltar</Link>

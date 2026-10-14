@@ -131,6 +131,9 @@ export default async function Home() {
             <Link href="/guarda">Regra de guarda</Link>
           </p>
           <p>
+            <Link href="/excecoes">Exceções (troca de dias, férias, feriados)</Link>
+          </p>
+          <p>
             <Link href="/convidar">Convidar o outro responsável</Link>
           </p>
         </>

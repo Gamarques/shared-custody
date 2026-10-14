@@ -69,7 +69,7 @@ def main():
             "and document the manual step in docs/MANUAL-STEPS.md. Do not fabricate results. When done, `git add -A && git commit -m \"" + tid + ": ...\"` and "
             "end with a 3-line summary of what was built, test status, and any gaps."
         )
-        cmd = ["claude", "-p", prompt, "--model", model, "--effort", effort, "--max-turns", str(turns),
+        cmd = ["claude", "-p", prompt, "--model", model, "--effort", effort, "--max-turns", str(int(turns * float(os.environ.get("TURN_MULT", "1")))),
                "--permission-mode", "acceptEdits", "--allowedTools", "Bash", "Edit", "Write", "Read", "Glob", "Grep"]
         res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
         (LOGS / f"{tid}.{model}.log").write_text(res.stdout + "\n--STDERR--\n" + res.stderr, encoding="utf-8")

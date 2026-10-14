@@ -131,6 +131,7 @@ describe("home page: com quem está hoje (RF-05)", () => {
     const html = renderToStaticMarkup(await Home());
     expect(html).toContain("A regra de guarda ainda não foi definida.");
     expect(html).toContain('href="/guarda"');
+    expect(html).toContain('href="/excecoes"');
     expect(html).not.toContain("countdown");
   });
 
