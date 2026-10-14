@@ -64,6 +64,30 @@ describe("updateSession", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
+  it("lets users without a family open an invite link", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest(`http://localhost/convite/${"a".repeat(64)}`));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("sends anonymous invitees to /login and back to the invite", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: null } });
+    const path = `/convite/${"a".repeat(64)}`;
+    const res = await updateSession(new NextRequest(`http://localhost${path}`));
+    expect(new URL(res.headers.get("location")!).searchParams.get("next")).toBe(path);
+  });
+
+  it("still sends users without a family to /onboarding from /convidar", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest("http://localhost/convidar"));
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
+  });
+
   it("sends users with a family away from /onboarding", async () => {
     configure();
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });

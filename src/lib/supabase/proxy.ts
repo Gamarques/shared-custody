@@ -36,8 +36,9 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     return NextResponse.redirect(url);
   }
 
-  // Signed-in users without a family go through onboarding (RF-02/RF-03).
-  if (data.user && !pathname.startsWith("/auth") && !pathname.startsWith("/api")) {
+  // Signed-in users without a family go through onboarding (RF-02/RF-03),
+  // except on an invite link, where they join an existing family instead.
+  if (data.user && !pathname.startsWith("/auth") && !pathname.startsWith("/api") && !pathname.startsWith("/convite/")) {
     const { data: membership } = await supabase.from("members").select("id").eq("user_id", data.user.id).limit(1);
     const hasFamily = (membership?.length ?? 0) > 0;
     let target: string | null = null;

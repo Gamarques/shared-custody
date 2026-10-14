@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export default function Home() {
@@ -10,6 +11,11 @@ export default function Home() {
       <p className="status" data-testid="supabase-status">
         {configured ? "Supabase configurado." : "Supabase ainda não configurado (ver .env.example)."}
       </p>
+      {configured && (
+        <p>
+          <Link href="/convidar">Convidar o outro responsável</Link>
+        </p>
+      )}
     </main>
   );
 }

@@ -1,0 +1,5 @@
+T-02 Login por magic link -> jev=moderate(0.70) model=sonnet
+  exit=0 tail: 'cked Supabase), `tsc` clean, `next build` OK. Committed as T-02.\nGaps: not verified against a live Supabase project (no real e-mail or session). Steps are in `docs/MANUAL-STEPS.md`: redirect URLs, SMTP rate limit, manual verify. No migration or RLS in T-02 since it adds no tables; RLS comes in T-05.'
+T-03 Criar família, nome de exibição e cor -> jev=moderate(0.66) model=sonnet
+  exit=0 tail: 'ion was only checked by static SQL assertions and never run on a real Postgres, so RLS is untested live; live Supabase verification is in MANUAL-STEPS.\nGaps: child name (RF-03) is not stored, since the `children` table comes in T-05; invites (RF-02 link) are T-04. I left `tools/run.log` uncommitted.'
+T-04 Convite do outro responsável por link -> jev=moderate(0.34) model=opus

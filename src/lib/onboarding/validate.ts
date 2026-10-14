@@ -8,14 +8,22 @@ export interface OnboardingInput {
 
 export type OnboardingErrors = Partial<Record<keyof OnboardingInput, string>>;
 
+export type MemberProfileInput = Pick<OnboardingInput, "displayName" | "color">;
+
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
-export function validateOnboarding(input: OnboardingInput): OnboardingErrors {
+/** Display name and color, shared by onboarding and invite acceptance. */
+export function validateMemberProfile(input: MemberProfileInput): OnboardingErrors {
   const errors: OnboardingErrors = {};
-  const family = input.familyName.trim();
   const name = input.displayName.trim();
-  if (family.length < 1 || family.length > 80) errors.familyName = "Informe o nome da família (até 80 caracteres).";
   if (name.length < 1 || name.length > 40) errors.displayName = "Informe seu nome de exibição (até 40 caracteres).";
   if (!HEX_COLOR.test(input.color)) errors.color = "Escolha uma cor.";
+  return errors;
+}
+
+export function validateOnboarding(input: OnboardingInput): OnboardingErrors {
+  const errors = validateMemberProfile(input);
+  const family = input.familyName.trim();
+  if (family.length < 1 || family.length > 80) errors.familyName = "Informe o nome da família (até 80 caracteres).";
   return errors;
 }

@@ -1,0 +1,72 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { PGlite } from "@electric-sql/pglite";
+import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
+
+const MIGRATIONS_DIR = "supabase/migrations";
+
+/**
+ * Minimal stand-in for what Supabase provides before our migrations run:
+ * the anon/authenticated roles, auth.users, auth.uid() and the default grants
+ * that make RLS (not table privileges) the real access gate.
+ */
+const SUPABASE_STUB = `
+create role anon nologin;
+create role authenticated nologin;
+create schema auth;
+create table auth.users (id uuid primary key, email text);
+create function auth.uid() returns uuid language sql stable as $$
+  select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+$$;
+grant usage on schema public, auth to anon, authenticated;
+grant execute on function auth.uid() to anon, authenticated;
+alter default privileges in schema public grant all on tables to anon, authenticated;
+alter default privileges in schema public grant all on sequences to anon, authenticated;
+`;
+
+export type TestDb = {
+  db: PGlite;
+  /** Runs fn as the `authenticated` role with auth.uid() = userId (null = anon). */
+  as<T>(userId: string | null, fn: () => Promise<T>): Promise<T>;
+  /** Creates an auth.users row and returns its id. */
+  createUser(email: string): Promise<string>;
+};
+
+/** Fresh in-memory Postgres with every migration in supabase/migrations applied in order. */
+export async function createTestDb(): Promise<TestDb> {
+  const db = new PGlite({ extensions: { pgcrypto } });
+  await db.exec(SUPABASE_STUB);
+  const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
+  for (const file of files) await db.exec(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
+
+  return {
+    db,
+    async as(userId, fn) {
+      await db.exec(userId ? "set role authenticated" : "set role anon");
+      await db.query("select set_config('request.jwt.claim.sub', $1, false)", [userId ?? ""]);
+      try {
+        return await fn();
+      } finally {
+        await db.exec("reset role");
+        await db.query("select set_config('request.jwt.claim.sub', '', false)");
+      }
+    },
+    async createUser(email) {
+      const { rows } = await db.query<{ id: string }>(
+        "insert into auth.users (id, email) values (gen_random_uuid(), $1) returning id",
+        [email],
+      );
+      return rows[0].id;
+    },
+  };
+}
+
+/** SQLSTATE of a failed query, or null if it succeeded. */
+export async function sqlState(p: Promise<unknown>): Promise<string | null> {
+  try {
+    await p;
+    return null;
+  } catch (e) {
+    return (e as { code?: string }).code ?? "unknown";
+  }
+}

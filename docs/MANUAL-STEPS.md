@@ -96,3 +96,27 @@ Supabase client and check the migration statically; the SQL was never executed o
    - as a second, unrelated user, `select * from families` / `members` returns no rows (RLS);
    - a third insert into `members` for the same family fails (max 2).
 3. The child name (RF-03) is not stored yet: the `children` table arrives with the full schema in T-05.
+
+## T-04 — Invite the other responsible adult by link
+
+Status: **code done; SQL executed locally, not on a live Supabase project**. The migrations
+(T-03 and T-04) now run in the test suite on an in-memory Postgres (PGlite, `src/test/pg.ts`)
+with a small stub of what Supabase provides (`anon`/`authenticated` roles, `auth.users`,
+`auth.uid()`, default grants). That covers the invite functions and RLS, but it is not the real
+Supabase stack (PostgREST, GoTrue, real JWTs), so the steps below are still needed.
+
+1. Apply the migration: `npx supabase db push`. File: `supabase/migrations/20261014000200_invites.sql`.
+2. The app does **not** send the invite e-mail itself: `/convidar` shows the link to copy and,
+   when an e-mail is given, a `mailto:` link that opens the member's own mail app. Sending from
+   the server would need an SMTP/e-mail provider (e.g. Resend) and a server-side secret; not in
+   the MVP.
+3. Verify with two real e-mails (A and B) and a third one (C):
+   - A signs in, creates the family, opens `/convidar`, generates a link (optionally with B's e-mail);
+   - B opens the link in another browser, is sent to `/login`, signs in via magic link, comes back
+     to `/convite/<token>`, picks a name and a color (A's color is not offered), clicks
+     "Entrar na família" and lands on `/`;
+   - in the SQL editor: two rows in `members` for the family (`owner`, `member`) and the invite
+     has `accepted_at` set;
+   - `/convidar` now says the family is complete; C opening the old link sees
+     "Este convite já foi usado." and cannot join; `select create_invite()` as A fails with `IV005`.
+4. Invites expire after 7 days; generating a new link revokes the previous pending one.
