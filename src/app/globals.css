@@ -36,3 +36,26 @@ p {
   color: var(--muted);
   font-size: 0.875rem;
 }
+
+h2 {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.holder {
+  font-size: 1.25rem;
+}
+
+.member-badge {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--muted);
+  font-weight: 600;
+}
+
+.countdown {
+  font-size: 1.125rem;
+  font-weight: 600;
+}

@@ -26,7 +26,7 @@ No public URL exists until the steps below are performed.
 ```bash
 cp .env.example .env.local   # then paste the two values
 npm install
-npm run dev                  # http://localhost:3000 should say "Supabase configurado."
+npm run dev                  # http://localhost:3000/api/health should say "supabaseConfigured":true
 ```
 
 `GET /api/health` returns `{"ok":true,"supabaseConfigured":true}` when the variables are valid.
@@ -39,7 +39,7 @@ npm run dev                  # http://localhost:3000 should say "Supabase config
 3. In **Settings > Environment Variables**, add `NEXT_PUBLIC_SUPABASE_URL` and
    `NEXT_PUBLIC_SUPABASE_ANON_KEY` for Production, Preview and Development.
 4. Deploy. If the variables were added after the first deploy, **redeploy**: `NEXT_PUBLIC_*`
-   values are inlined at build time, and the home page is statically prerendered.
+   values are inlined at build time (the home is rendered per request since T-09).
 
 Alternative with the CLI: `npx vercel link`, `npx vercel env add NEXT_PUBLIC_SUPABASE_URL`,
 `npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY`, then `npx vercel --prod`.
@@ -180,3 +180,31 @@ order instead. Covered by `src/lib/custody/custody-rules.sql.test.ts` and `holde
      `.delete()` fail with `42501` (permission denied), and the row count stays at 2.
 3. Any member can change the rule and can choose a past "vale a partir de" to correct a
    mistake; old versions stay in the history. No approval by the other member (out of MVP scope).
+
+## T-09 — Home: who has the child today and the next handover (RF-05)
+
+Status: **code done and unit-tested; not verified against a live Supabase project or on a
+device**. `/` shows "<child> está com <member>" in the member's color (text color picked for
+contrast), the override reason when one is in force, the next handover ("Domingo, 18/10, às
+18:00, com Bruno") and a countdown ("Faltam 4 dias e 8 horas") that updates every 30 s and
+reloads the page once the handover passes. All times are in the family time zone (RNF-04).
+The data comes from one PostgREST request (`members` with embedded `families`, `children`,
+`members`, `custody_rules` and the `custody_overrides` that have not ended), per RNF-07.
+No new tables or policies: the existing RLS (T-05, T-08) applies to every embedded table, and
+`src/lib/custody/home-data.sql.test.ts` checks those reads under RLS on PGlite. The embedded
+select itself was only tested against a mocked client, not a real PostgREST.
+
+1. No migration to apply for this task.
+2. Verify with a family of two members (A, B) and a saved rule (T-08):
+   - open `/` as A: the child's name (or "A criança" if no child row exists yet), the current
+     holder in their color, the next handover with the other member, and the countdown;
+   - compare with the rule: on the handover day before the handover time the current holder
+     is still the previous one; after it, the page shows the other member (wait or reload);
+   - insert an override in the SQL editor covering now (`custody_overrides`, member B): `/`
+     shows B and "Exceção: <reason>", and the next handover is the end of the override;
+   - with the network throttled to "Fast 4G" in DevTools, `/` loads in under 2 s and the
+     Network tab shows a single `rest/v1/members?select=...` request for the home data (RNF-07,
+     final check in T-24).
+3. With only one member (before B joins), odd weeks show "o outro responsável" without a color.
+4. Known limit: the child's name is read from `children`, but onboarding does not write that
+   table yet (see T-05 notes); until it does, the home says "A criança".
