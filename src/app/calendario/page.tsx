@@ -12,8 +12,11 @@ import {
   type MonthCalendar,
 } from "@/lib/custody/calendar";
 import type { CustodyOverride, CustodyRule } from "@/lib/custody/holder";
+import { toWallClock } from "@/lib/custody/timezone";
 import { textColorOn, type HomeMember } from "@/lib/custody/today";
+import { formatSavedAt } from "@/lib/pwa/offline";
 import { createClient } from "@/lib/supabase/server";
+import { OfflineCopy } from "./OfflineCopy";
 
 // Per-user data that depends on the clock: never prerender.
 export const dynamic = "force-dynamic";
@@ -31,7 +34,7 @@ const CALENDAR_SELECT =
   "custody_rules(id, starts_on, first_member_id, handover_weekday, handover_time, valid_from, valid_to, created_at), " +
   "custody_overrides(id, starts_at, ends_at, member_id, reason, created_at))";
 
-type Loaded = { calendar: MonthCalendar; members: HomeMember[]; hasRule: boolean };
+type Loaded = { calendar: MonthCalendar; members: HomeMember[]; hasRule: boolean; savedAt: string };
 
 async function loadCalendar(now: Date, monthParam: string | undefined): Promise<Loaded | null> {
   const supabase = await createClient();
@@ -69,6 +72,8 @@ async function loadCalendar(now: Date, monthParam: string | undefined): Promise<
     }),
     members,
     hasRule: rules.length > 0,
+    // Offline, the stored copy of this page is shown as is: this tells how old it is.
+    savedAt: formatSavedAt(toWallClock(now.getTime(), family.timezone)),
   };
 }
 
@@ -149,11 +154,12 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       </main>
     );
   }
-  const { calendar, members, hasRule } = loaded;
+  const { calendar, members, hasRule, savedAt } = loaded;
 
   return (
     <main>
       <h1>Calendário</h1>
+      <OfflineCopy canonicalPath={`/calendario?mes=${calendar.month}`} />
       <nav className="month-nav">
         <Link href={`/calendario?mes=${calendar.prevMonth}`} aria-label="Mês anterior">
           ‹ Anterior
@@ -171,6 +177,9 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       )}
 
       <Calendar calendar={calendar} />
+      <p className="status" data-testid="saved-at">
+        Atualizado em {savedAt}
+      </p>
 
       <ul className="legend" data-testid="legend">
         {members.map((m) => (

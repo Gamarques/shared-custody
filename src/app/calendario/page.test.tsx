@@ -182,6 +182,14 @@ describe("calendar page (RF-06)", () => {
     expect(html).not.toContain('data-testid="handover"');
   });
 
+  it("stamps when the page was generated, for the offline copy (RF-16)", async () => {
+    results = family();
+    const html = await render();
+    expect(html).toContain('data-testid="saved-at">Atualizado em 14/10/2026 10:00<');
+    // Online at render time: no offline notice in the markup.
+    expect(html).not.toContain('data-testid="offline-notice"');
+  });
+
   it("handles a missing family", async () => {
     results = [{ data: null }];
     expect(await render()).toContain("Não foi possível carregar a família.");

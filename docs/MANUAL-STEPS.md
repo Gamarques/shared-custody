@@ -235,7 +235,7 @@ client, not a real PostgREST.
      the old handover day, the later ones show the new one;
    - insert an override in the SQL editor (`custody_overrides`): its days take the override
      member's color and the cell's tooltip shows the reason (the override screen is T-11).
-3. Offline reading of the calendar is T-12; for now only the generic page cache from T-06 applies.
+3. Offline reading of the calendar: see T-12.
 
 ## T-11 — Custody exceptions: swapped days, school breaks, holidays (RF-07)
 
@@ -275,3 +275,50 @@ delete calls from the browser were only tested against mocks, not a real PostgRE
    - a user of another family sees no rows and cannot insert or delete them.
 3. Any member can add or remove any exception of the family. No approval by the other member
    and no notification (notifications are out of this task's scope).
+
+## T-12 — Calendar readable offline (RF-16)
+
+Status: **code done; service worker tested in a simulated environment (vitest with an in-memory
+Cache Storage and a network that can be switched off), not in a real browser or on a device**.
+The acceptance criterion ("in airplane mode, the month already seen opens") needs a phone, a
+production build served over HTTPS and a live Supabase project, so it is still to be verified.
+
+How it works:
+
+- `public/sw.js` (cache version `v2`) stores every page loaded by a full navigation (network
+  first, the stored copy only when the network fails), as in T-06, and now also:
+  - answers a `cache-pages` message from `/calendario`: the page asks for a copy of the URL on
+    screen and of its canonical form `/calendario?mes=YYYY-MM`, plus the `/_next/static/`
+    scripts and styles it loaded. This covers months reached with the "Anterior"/"Próximo"
+    links (client-side navigation, which the worker never sees as a page load) and the first
+    visit (whose scripts were fetched before the worker was in control). Offline, a link click
+    fails to fetch from the server and Next.js falls back to a full navigation, which the worker
+    answers from the stored copy;
+  - keeps the 40 pages stored most recently;
+  - deletes all stored pages when "Sair" posts to `/auth/signout` (they contain the family's
+    data); icons and scripts stay;
+  - never stores redirects, `/api/` or `/auth/` responses.
+- `/calendario` shows "Atualizado em dd/mm/aaaa hh:mm" (family zone) under the grid, so an
+  offline copy says how old it is, and a notice "Sem conexão: este é o calendário salvo neste
+  aparelho..." while the device is offline.
+- Covered by `src/lib/pwa/sw.test.ts`, `src/lib/pwa/offline.test.ts` and the calendar page test.
+
+Verification (Android/Chrome and iOS/Safari, app installed from the T-06 steps, logged in, with
+a rule saved):
+
+1. Online, open the app, go to "Calendário" (current month), then "Próximo ›" once.
+2. Close the app. Turn on airplane mode.
+3. Open the app again, go to "Calendário": the current month opens with the colors and
+   handovers, the "Sem conexão" notice and the "Atualizado em" time of step 1.
+4. "Próximo ›" opens the next month (seen in step 1). Another "Próximo ›" (never seen) shows the
+   "Sem conexão" fallback page.
+5. Turn airplane mode off and reload: the notice disappears and "Atualizado em" shows now.
+6. "Sair", then in airplane mode open `/calendario`: the fallback page shows, not the old data.
+   In Chrome DevTools > Application > Cache Storage, `pages-v2` is gone after signing out.
+
+Known limits:
+
+- iOS may evict the storage of a PWA that is not opened for a few weeks, and Safari outside the
+  home screen keeps less (see "Riscos" in `docs/plano-mvp.md`).
+- Only months already opened while online are available; nothing is prefetched.
+- After a deploy, `shell-v2` keeps the old build's scripts until the cache version is raised.
