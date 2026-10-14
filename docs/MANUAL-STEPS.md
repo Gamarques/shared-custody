@@ -81,3 +81,18 @@ Supabase client; no real e-mail was sent and no real session was created.
 
 RLS: T-02 adds no tables (Supabase manages `auth.users`), so no migration is needed here.
 Table policies and isolation tests come with T-05.
+
+## T-03 — Family onboarding
+
+Status: **code done, not verified against a live Supabase project**. Unit tests mock the
+Supabase client and check the migration statically; the SQL was never executed on Postgres.
+
+1. Apply the migration: `npx supabase db push` (linked project) or `npx supabase db reset`
+   (local stack). File: `supabase/migrations/20261014000100_families_members.sql`.
+2. Verify with a brand-new e-mail:
+   - sign in, get redirected to `/onboarding`; fill family name, display name and color, click
+     "Criar família", land on `/`; `/onboarding` then redirects to `/`;
+   - in the SQL editor: one row in `families` and one in `members` (`role = owner`);
+   - as a second, unrelated user, `select * from families` / `members` returns no rows (RLS);
+   - a third insert into `members` for the same family fails (max 2).
+3. The child name (RF-03) is not stored yet: the `children` table arrives with the full schema in T-05.

@@ -2,8 +2,12 @@ import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const getUser = vi.fn();
+const members = vi.fn();
 vi.mock("@supabase/ssr", () => ({
-  createServerClient: () => ({ auth: { getUser } }),
+  createServerClient: () => ({
+    auth: { getUser },
+    from: () => ({ select: () => ({ eq: () => ({ limit: () => members() }) }) }),
+  }),
 }));
 
 import { updateSession } from "./proxy";
@@ -39,8 +43,33 @@ describe("updateSession", () => {
   it("lets signed-in users through", async () => {
     configure();
     getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [{ id: "m1" }] });
     const res = await updateSession(new NextRequest("http://localhost/"));
     expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("sends signed-in users without a family to /onboarding", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest("http://localhost/"));
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
+  });
+
+  it("lets users without a family stay on /onboarding", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest("http://localhost/onboarding"));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("sends users with a family away from /onboarding", async () => {
+    configure();
+    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    members.mockResolvedValue({ data: [{ id: "m1" }] });
+    const res = await updateSession(new NextRequest("http://localhost/onboarding"));
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/");
   });
 
   it("does nothing when Supabase is not configured", async () => {

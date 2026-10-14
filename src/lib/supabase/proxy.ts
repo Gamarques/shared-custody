@@ -35,5 +35,20 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     if (pathname !== "/") url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
+
+  // Signed-in users without a family go through onboarding (RF-02/RF-03).
+  if (data.user && !pathname.startsWith("/auth") && !pathname.startsWith("/api")) {
+    const { data: membership } = await supabase.from("members").select("id").eq("user_id", data.user.id).limit(1);
+    const hasFamily = (membership?.length ?? 0) > 0;
+    let target: string | null = null;
+    if (!hasFamily && pathname !== "/onboarding") target = "/onboarding";
+    else if (hasFamily && pathname === "/onboarding") target = "/";
+    if (target) {
+      const url = request.nextUrl.clone();
+      url.pathname = target;
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
   return response;
 }
