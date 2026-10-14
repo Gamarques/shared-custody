@@ -8,3 +8,4 @@ next-env.d.ts
 .vercel
 supabase/.temp
 supabase/.branches
+tools/run.log
