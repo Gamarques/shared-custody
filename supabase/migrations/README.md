@@ -3,9 +3,11 @@
 SQL migrations live here, named `<timestamp>_<description>.sql`, and are applied in order by
 `supabase db push` (linked project) or `supabase db reset` (local stack).
 
-T-01 creates no tables. The initial schema, `is_family_member()` and the RLS policies for every
-table (see "Modelo de dados" in `docs/plano-mvp.md`) arrive in T-05. Every new table must enable
-RLS in the same migration that creates it.
+All 9 tables of "Modelo de dados" (`docs/plano-mvp.md`) exist after T-05
+(`20261014000300_core_schema_rls.sql`). Every new table must enable RLS in the same migration
+that creates it, use composite foreign keys `(member_id, family_id) -> members(id, family_id)`
+for member references, and be added to `TABLES` in `src/test/rls-isolation.sql.test.ts`
+(the test fails if a public table is missing from that list or has RLS disabled).
 
 ## Tests
 

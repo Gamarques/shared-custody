@@ -120,3 +120,23 @@ Supabase stack (PostgREST, GoTrue, real JWTs), so the steps below are still need
    - `/convidar` now says the family is complete; C opening the old link sees
      "Este convite já foi usado." and cannot join; `select create_invite()` as A fails with `IV005`.
 4. Invites expire after 7 days; generating a new link revokes the previous pending one.
+
+## T-05 — Schema, RLS and isolation tests
+
+Status: **code done; SQL executed locally (PGlite), not on a live Supabase project**.
+`src/test/rls-isolation.sql.test.ts` checks that a user of another family, a user without a
+family and `anon` can neither read nor write any row of any table. The test database is a stub,
+not the real Supabase stack (PostgREST, GoTrue, real JWTs, `postgres`/`supabase_admin` default
+privileges), so these steps are still needed:
+
+1. Apply the migration: `npx supabase db push`. File:
+   `supabase/migrations/20261014000300_core_schema_rls.sql`.
+2. In **Database > Tables**, check that RLS is on for all 9 tables (the dashboard also warns
+   about tables without RLS in the Security Advisor; it should show none).
+3. Verify through the API with two real users in different families (A, C): with C's session,
+   `supabase.from('<table>').select('*')` returns only C's rows for every table, and an insert
+   with A's `family_id` fails with `42501` / "new row violates row-level security policy".
+4. Check that `anon` cannot read tables: with only the anon key (no session),
+   `GET /rest/v1/families` returns `401`/`42501`, not `[]` with rows.
+5. Not done here: the expense audit trigger (T-17), the Storage bucket policies for receipts
+   (T-14), and saving the child's name in onboarding (the `children` table now exists).
