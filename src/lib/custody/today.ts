@@ -150,7 +150,19 @@ export type TodayInput = {
   childName: string | null;
 };
 
-function person(memberId: string, members: readonly HomeMember[]): HomePerson {
+/** Schedule for the family's members; a family with one member gets a stand-in for the second. */
+export function familySchedule(
+  input: Pick<TodayInput, "timezone" | "members" | "rules" | "overrides">,
+): CustodySchedule {
+  return {
+    timezone: input.timezone,
+    memberIds: input.members.length === 1 ? [input.members[0].id, NOT_JOINED] : input.members.map((m) => m.id),
+    rules: input.rules,
+    overrides: input.overrides,
+  };
+}
+
+export function person(memberId: string, members: readonly HomeMember[]): HomePerson {
   if (memberId === NOT_JOINED) return { memberId: null, name: "o outro responsável", color: null };
   const m = members.find((x) => x.id === memberId);
   return m
@@ -163,12 +175,7 @@ export function buildTodayView(input: TodayInput): TodayView {
   const childName = input.childName?.trim() || "A criança";
   if (input.rules.length === 0) return { kind: "no-rule", childName };
 
-  const schedule: CustodySchedule = {
-    timezone: input.timezone,
-    memberIds: input.members.length === 1 ? [input.members[0].id, NOT_JOINED] : input.members.map((m) => m.id),
-    rules: input.rules,
-    overrides: input.overrides,
-  };
+  const schedule = familySchedule(input);
   const nowMs = input.now.getTime();
   const holder = getCustodyHolder(input.now, schedule);
   const next = getNextHandover(input.now, schedule);

@@ -125,6 +125,9 @@ export default async function Home() {
         <>
           <CustodyToday view={view} nowMs={now.getTime()} />
           <p>
+            <Link href="/calendario">Calendário do mês</Link>
+          </p>
+          <p>
             <Link href="/guarda">Regra de guarda</Link>
           </p>
           <p>

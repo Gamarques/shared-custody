@@ -208,3 +208,31 @@ select itself was only tested against a mocked client, not a real PostgREST.
 3. With only one member (before B joins), odd weeks show "o outro responsável" without a color.
 4. Known limit: the child's name is read from `children`, but onboarding does not write that
    table yet (see T-05 notes); until it does, the home says "A criança".
+
+## T-10 — Monthly calendar with colored weeks (RF-06)
+
+Status: **code done and unit-tested; not verified against a live Supabase project or on a
+device**. `/calendario` shows the month as whole Monday-to-Sunday weeks (days of the previous
+and next month dimmed). Each day has the color of the member who has the child; on a handover
+day the cell is split left to right at the handover time (75% for 18:00, 76% on the 25-hour
+day summer time ends) and shows "⇄ 18:00". `?mes=YYYY-MM` opens another month, with links to
+the previous and next one; today is outlined. All days and times are in the family time zone
+(RNF-04). Each cell's `aria-label` says who has the child and when the handover happens.
+The page reads the family zone first (it decides which days the grid covers), then one
+embedded `members` request with the rule versions and only the overrides that overlap the
+days shown. No new tables or policies: `src/lib/custody/calendar-data.sql.test.ts` checks the
+reads under the existing RLS on PGlite. The embedded select was only tested against a mocked
+client, not a real PostgREST.
+
+1. No migration to apply for this task.
+2. Verify with a family of two members (A, B) and a saved rule (T-08), e.g. Sunday 18:00:
+   - open `/calendario` (or "Calendário do mês" on the home): every Monday-to-Saturday run is
+     one color, alternating each week, and every Sunday is split with "⇄ 18:00";
+   - compare a few days with the home (`/`): the color of today matches "com quem está hoje";
+   - open the month with the end of summer time (`/calendario?mes=2026-10`): the handover on
+     25/10 is still marked 18:00;
+   - save a new rule version with another weekday (T-08): the weeks before `valid_from` keep
+     the old handover day, the later ones show the new one;
+   - insert an override in the SQL editor (`custody_overrides`): its days take the override
+     member's color and the cell's tooltip shows the reason (the override screen is T-11).
+3. Offline reading of the calendar is T-12; for now only the generic page cache from T-06 applies.
