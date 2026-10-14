@@ -139,7 +139,7 @@ privileges), so these steps are still needed:
 4. Check that `anon` cannot read tables: with only the anon key (no session),
    `GET /rest/v1/families` returns `401`/`42501`, not `[]` with rows.
 5. Not done here: the expense audit trigger (T-17), the Storage bucket policies for receipts
-   (T-14), and saving the child's name in onboarding (the `children` table now exists).
+   (done in T-14), and saving the child's name in onboarding (the `children` table now exists).
 
 ## T-06 — PWA base (manifest, icons, service worker)
 
@@ -359,3 +359,30 @@ own family (the default share). Covered by `src/lib/expenses/expenses.sql.test.t
 3. Gaps: the receipt photo of RF-08 arrives in T-14 (`receipt_path` stays null); the expense
    list (T-15) does not exist yet, so the page only confirms the saved expense. Either member
    can change the family default, without the other's approval.
+
+## T-14 — Receipt upload with client compression
+
+Status: **code and policies done and tested locally; not verified against a live Supabase
+project or a real phone camera**. The form compresses the photo in the browser (canvas, JPEG,
+longer side up to 1600 px, quality 0.8 down to 0.4, then smaller pictures) until it is at most
+300 KB, uploads it to the private `receipts` bucket at `<family_id>/<uuid>.jpg` and stores the
+path in `expenses.receipt_path`. `ReceiptLink` (src/app/despesas/ReceiptLink.tsx) opens a
+receipt through a 60 s signed URL; the expense list (T-15) must render it. Tests:
+`src/lib/receipts/*.test.ts` (compression search with a fake encoder, path, signed URL call)
+and `receipts.sql.test.ts` (bucket private, policies, `receipt_path` check; on PGlite with a
+stub of the `storage` schema).
+
+Not tested: the canvas/`createImageBitmap` path itself (needs a browser), and real Storage.
+
+1. Apply the migration: `npx supabase db push` (file `20261014000700_receipts_storage.sql`).
+   It creates the bucket with `public = false`, 500 KB limit, `image/jpeg` only. If the
+   dashboard shows the bucket as public, switch it off.
+2. In **Storage > Policies**, check the 4 policies "receipts: members ..." on `storage.objects`.
+3. As A, on `/despesas/nova`, pick a 3-6 MB photo from the camera, fill the form and save.
+   In **Storage > receipts** the object is under A's family id and is about 300 KB or less
+   (check on Android and on iOS Safari/PWA; HEIC photos must also work).
+4. Open the object's public URL (`/storage/v1/object/public/receipts/...`): must return an
+   error, not the image.
+5. With a user of another family, `supabase.storage.from('receipts').createSignedUrl(<A's
+   path>, 60)` must fail, and `list` must show nothing. A signed URL made by A must stop
+   working after 60 s.

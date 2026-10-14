@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import {
   CATEGORIES,
   describeSavedExpense,
@@ -14,6 +14,8 @@ import {
   type SplitMember,
 } from "@/lib/expenses/expense-form";
 import { formatBps } from "@/lib/expenses/money";
+import { checkReceiptFile, compressReceiptPhoto, receiptErrorMessage } from "@/lib/receipts/compress";
+import { RECEIPT_BUCKET, receiptPath } from "@/lib/receipts/receipts";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -36,6 +38,9 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
   const [submitError, setSubmitError] = useState("");
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptError, setReceiptError] = useState("");
+  const receiptInput = useRef<HTMLInputElement>(null);
   const defaultPercent = formatBps(defaultShareBps);
 
   // The family default changed (saved below on the same page): follow it unless edited here.
@@ -56,17 +61,48 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
     setSubmitError("");
     setSaved("");
     if (Object.keys(found).length > 0) return;
+    const check = receipt ? checkReceiptFile(receipt) : "ok";
+    if (receipt && check !== "ok") {
+      setReceiptError(receiptErrorMessage(null, check));
+      return;
+    }
+    setReceiptError("");
     setBusy(true);
-    const row = toExpenseInsert(familyId, form);
-    const { error } = await createClient().from("expenses").insert(row);
+    const supabase = createClient();
+    let path: string | null = null;
+    if (receipt) {
+      let photo: Blob;
+      try {
+        photo = await compressReceiptPhoto(receipt);
+      } catch (err) {
+        setBusy(false);
+        setReceiptError(receiptErrorMessage(err));
+        return;
+      }
+      path = receiptPath(familyId, crypto.randomUUID());
+      const { error: uploadError } = await supabase.storage
+        .from(RECEIPT_BUCKET)
+        .upload(path, photo, { contentType: "image/jpeg", upsert: false });
+      if (uploadError) {
+        setBusy(false);
+        setReceiptError("Não foi possível enviar a foto. Tente novamente.");
+        return;
+      }
+    }
+    const row = toExpenseInsert(familyId, form, path);
+    const { error } = await supabase.from("expenses").insert(row);
     setBusy(false);
     if (error) {
+      // Do not leave an orphan photo behind.
+      if (path) await supabase.storage.from(RECEIPT_BUCKET).remove([path]);
       setSubmitError(expenseSaveErrorMessage(error.code));
       return;
     }
     setSaved(`Despesa registrada: ${describeSavedExpense(row, currency)}. Aguarda a confirmação do outro responsável.`);
     setForm({ ...initial, spentOn: form.spentOn, paidBy: form.paidBy, payerPercent: defaultPercent });
     setPercentEdited(false);
+    setReceipt(null);
+    if (receiptInput.current) receiptInput.current.value = "";
   }
 
   const split = describeSplit(form, members, currency);
@@ -150,6 +186,21 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
           {split}
         </p>
       )}
+
+      <label htmlFor="receipt">Comprovante (foto, opcional)</label>
+      <input
+        id="receipt"
+        ref={receiptInput}
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          setReceipt(e.target.files?.[0] ?? null);
+          setReceiptError("");
+          setSaved("");
+        }}
+      />
+      <p>A foto é reduzida para cerca de 300 KB antes do envio e só os dois responsáveis a veem.</p>
+      {receiptError && <p role="alert">{receiptError}</p>}
 
       <button type="submit" disabled={busy}>
         {busy ? "Salvando…" : "Registrar despesa"}

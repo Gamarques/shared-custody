@@ -5,7 +5,7 @@ import { formatBps, formatCents, MAX_AMOUNT_CENTS, parseAmountToCents, parsePerc
 /**
  * Expense form (RF-08, RF-09, T-13). The amount is typed as text and stored as integer cents;
  * the payer's share comes prefilled with the family default (families.default_payer_share_bps)
- * and can be changed for each expense. The receipt photo arrives in T-14.
+ * and can be changed for each expense. The receipt photo (T-14) is uploaded first; its path goes in `receipt_path`.
  */
 
 /** Same values as the expenses.category check; the labels are what the screen shows. */
@@ -90,7 +90,7 @@ export function validateExpenseForm(
 }
 
 /** Row for `insert into expenses`; call only when validateExpenseForm found nothing. */
-export function toExpenseInsert(familyId: string, input: ExpenseFormInput) {
+export function toExpenseInsert(familyId: string, input: ExpenseFormInput, receiptPath: string | null = null) {
   const amountCents = parseAmountToCents(input.amount);
   const payerShareBps = parsePercentToBps(input.payerPercent);
   if (amountCents === null || payerShareBps === null) throw new Error("Invalid expense");
@@ -102,6 +102,7 @@ export function toExpenseInsert(familyId: string, input: ExpenseFormInput) {
     description: input.description.trim(),
     category: input.category,
     payer_share_bps: payerShareBps,
+    receipt_path: receiptPath,
   };
 }
 

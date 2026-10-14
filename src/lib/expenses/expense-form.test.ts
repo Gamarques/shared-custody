@@ -98,7 +98,12 @@ describe("toExpenseInsert", () => {
       description: "Dentista",
       category: "escola",
       payer_share_bps: 3000,
+      receipt_path: null,
     });
+  });
+
+  it("carries the uploaded receipt path when there is one", () => {
+    expect(toExpenseInsert("f1", valid(), "f1/abc.jpg").receipt_path).toBe("f1/abc.jpg");
   });
 
   it("never sends status, receipt or authorship (the database sets them)", () => {
