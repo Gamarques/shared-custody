@@ -162,6 +162,13 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
       <p>
         <Link href="/despesas/nova">Nova despesa</Link>
       </p>
+      {filters.month && (
+        <p>
+          <a href={`/despesas/exportar?mes=${filters.month}`} download>
+            Exportar mês em CSV
+          </a>
+        </p>
+      )}
       <p>
         <Link href="/">Voltar</Link>
       </p>

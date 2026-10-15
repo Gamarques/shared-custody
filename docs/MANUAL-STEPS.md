@@ -519,3 +519,19 @@ Status: **not done yet** (needs the real Supabase project from T-01).
 2. Verify as a signed-in member: register a settlement on `/saldo`; the balance drops and the
    settlement appears under "Acertos de contas". Updating or deleting it from the SQL API must
    fail with `permission denied`. A mistaken settlement is undone by registering the opposite one.
+
+## T-22 — CSV export of the month's expenses
+
+Status: **code done, not checked in real Excel yet** (needs the live project from T-01 and Excel).
+
+No migration: the export reads `expenses` and `members` through the signed-in user's session, so
+the RLS of T-05 applies. Covered by `src/lib/expenses/expense-csv.test.ts` and
+`src/app/despesas/exportar/route.test.ts` (BOM bytes, accents, month range, soft-deleted rows excluded).
+
+1. Open `/despesas`, pick a month with accented descriptions (e.g. "Ação de São João"), click
+   "Exportar mês em CSV".
+2. Open the downloaded `despesas-AAAA-MM.csv` by double click in Excel (pt/EU locale): accents must
+   show correctly and the nine columns must split. Check the same in LibreOffice or Excel for
+   Mac if available.
+3. Known limits: the file uses `;` as separator and decimal commas (pt/EU Excel); an Excel with
+   an English-US locale may need Data > From Text/CSV and `;` as delimiter.
