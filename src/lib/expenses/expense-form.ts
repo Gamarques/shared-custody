@@ -1,6 +1,6 @@
 import { formatDate } from "@/lib/custody/rule-form";
 import { parseDate } from "@/lib/custody/timezone";
-import { formatBps, formatCents, MAX_AMOUNT_CENTS, parseAmountToCents, parsePercentToBps, splitExpense } from "./money";
+import { centsToInput, formatBps, formatCents, MAX_AMOUNT_CENTS, parseAmountToCents, parsePercentToBps, splitExpense } from "./money";
 
 /**
  * Expense form (RF-08, RF-09, T-13). The amount is typed as text and stored as integer cents;
@@ -106,6 +106,31 @@ export function toExpenseInsert(familyId: string, input: ExpenseFormInput, recei
   };
 }
 
+/** Columns sent by `update expenses` when editing (RF-17); the receipt is kept as it is. */
+export function toExpenseUpdate(input: ExpenseFormInput) {
+  const { family_id: _family, receipt_path: _receipt, ...rest } = toExpenseInsert("", input);
+  return rest;
+}
+
+/** Form values of a stored expense, for the edit screen. */
+export function expenseToForm(row: {
+  amount_cents: number;
+  spent_on: string;
+  description: string;
+  category: string;
+  paid_by: string;
+  payer_share_bps: number;
+}): ExpenseFormInput {
+  return {
+    amount: centsToInput(row.amount_cents),
+    spentOn: row.spent_on,
+    description: row.description,
+    category: row.category,
+    paidBy: row.paid_by,
+    payerPercent: formatBps(row.payer_share_bps),
+  };
+}
+
 export type SplitMember = { id: string; name: string };
 
 /**
@@ -146,6 +171,8 @@ export function expenseSaveErrorMessage(code: string | undefined): string {
       return "Quem pagou não faz parte da família.";
     case "42501":
       return "Você não tem permissão para registrar despesas nesta família.";
+    case "55000":
+      return "Esta despesa foi excluída e não pode mais ser alterada.";
     default:
       return "Não foi possível salvar a despesa. Tente novamente.";
   }

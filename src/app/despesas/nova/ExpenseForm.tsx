@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import {
   CATEGORIES,
@@ -8,6 +9,7 @@ import {
   DESCRIPTION_MAX_LENGTH,
   expenseSaveErrorMessage,
   toExpenseInsert,
+  toExpenseUpdate,
   validateExpenseForm,
   type ExpenseFormErrors,
   type ExpenseFormInput,
@@ -27,10 +29,13 @@ type Props = {
   /** Family default share; refills the percent while the person has not changed it. */
   defaultShareBps: number;
   initial: ExpenseFormInput;
+  /** Edit mode (RF-17): updates this expense instead of inserting; the receipt is kept. */
+  expenseId?: string;
 };
 
-/** Registers an expense (RF-08) with the payer's share for this expense (RF-09). */
-export function ExpenseForm({ familyId, currency, today, members, defaultShareBps, initial }: Props) {
+/** Registers (RF-08) or edits (RF-17) an expense, with the payer's share for this expense (RF-09). */
+export function ExpenseForm({ familyId, currency, today, members, defaultShareBps, initial, expenseId }: Props) {
+  const router = useRouter();
   const [form, setForm] = useState<ExpenseFormInput>(initial);
   const [percentEdited, setPercentEdited] = useState(false);
   const [shownDefault, setShownDefault] = useState(defaultShareBps);
@@ -61,6 +66,22 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
     setSubmitError("");
     setSaved("");
     if (Object.keys(found).length > 0) return;
+    if (expenseId) {
+      setBusy(true);
+      const { error: updateError } = await createClient()
+        .from("expenses")
+        .update(toExpenseUpdate(form))
+        .eq("id", expenseId)
+        .eq("family_id", familyId);
+      setBusy(false);
+      if (updateError) {
+        setSubmitError(expenseSaveErrorMessage(updateError.code));
+        return;
+      }
+      router.push("/despesas");
+      router.refresh();
+      return;
+    }
     const check = receipt ? checkReceiptFile(receipt) : "ok";
     if (receipt && check !== "ok") {
       setReceiptError(receiptErrorMessage(null, check));
@@ -187,23 +208,27 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
         </p>
       )}
 
-      <label htmlFor="receipt">Comprovante (foto, opcional)</label>
-      <input
-        id="receipt"
-        ref={receiptInput}
-        type="file"
-        accept="image/*"
-        onChange={(e) => {
-          setReceipt(e.target.files?.[0] ?? null);
-          setReceiptError("");
-          setSaved("");
-        }}
-      />
-      <p>A foto é reduzida para cerca de 300 KB antes do envio e só os dois responsáveis a veem.</p>
-      {receiptError && <p role="alert">{receiptError}</p>}
+      {!expenseId && (
+        <>
+          <label htmlFor="receipt">Comprovante (foto, opcional)</label>
+          <input
+            id="receipt"
+            ref={receiptInput}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              setReceipt(e.target.files?.[0] ?? null);
+              setReceiptError("");
+              setSaved("");
+            }}
+          />
+          <p>A foto é reduzida para cerca de 300 KB antes do envio e só os dois responsáveis a veem.</p>
+          {receiptError && <p role="alert">{receiptError}</p>}
+        </>
+      )}
 
       <button type="submit" disabled={busy}>
-        {busy ? "Salvando…" : "Registrar despesa"}
+        {busy ? "Salvando…" : expenseId ? "Salvar alterações" : "Registrar despesa"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}
       {saved && <p role="status">{saved}</p>}

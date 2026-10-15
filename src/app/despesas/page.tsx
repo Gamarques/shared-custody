@@ -8,6 +8,7 @@ import { canDecide, STATUS_LABELS } from "@/lib/expenses/expense-decision";
 import { formatBps, formatCents } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionButtons } from "./DecisionButtons";
+import { DeleteExpenseButton } from "./DeleteExpenseButton";
 import { ReceiptLink } from "./ReceiptLink";
 
 // Per-user data that depends on the clock: never prerender.
@@ -149,6 +150,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
                     <p data-testid="dispute-comment">Motivo: {e.dispute_comment}</p>
                   )}
                   {canDecide(e, mine.id ?? null) && <DecisionButtons expenseId={e.id} />}
+                  <Link href={`/despesas/${e.id}/editar`}>Editar</Link> <DeleteExpenseButton expenseId={e.id} />{" "}
                   <Link href={`/despesas/${e.id}/historico`}>Histórico</Link>
                 </li>
               ))}

@@ -449,3 +449,25 @@ Covered by `src/lib/expenses/expense-audit.sql.test.ts`, `expense-history.test.t
 4. Note: the `service_role` key and the SQL editor bypass RLS but not these triggers. A
    superuser can still disable triggers; the audit protects against the app and its users, not
    against the database administrator.
+
+## T-18: edit and logical deletion of expenses (RF-17)
+
+Migration `20261015000200_expense_edit_delete.sql` replaces the `expenses_guard_decision` trigger
+(T-16). Server rules on `UPDATE`: a deleted expense is final (no edit, restore or second delete,
+`55000`); `family_id` never changes; `deleted_at` is stamped with the server clock; editing the
+amount, payer, date, description, category, share or receipt of a confirmed or disputed expense
+returns it to `pending` and clears the decision (plan rule 5). Deletion is an `UPDATE` of
+`deleted_at`: the row stays and the audit (T-17) records it as `delete`.
+
+Screens: `/despesas/<id>/editar` (link "Editar") and button "Excluir" with confirmation on
+`/despesas`. The receipt photo is kept on edit; replacing it is not part of this task.
+
+Covered by `src/lib/expenses/expense-edit-delete.sql.test.ts`.
+
+1. Apply the migration: `npx supabase db push`.
+2. Verify with two members (A, B) on the live project:
+   - A creates an expense, B confirms, A edits the amount: status shows "Pendente" and B sees
+     Confirmar/Contestar again;
+   - A clicks "Excluir" and confirms: it leaves `/despesas`, and `/despesas/<id>/historico`
+     still shows the creation and the "Excluiu a despesa" entries;
+   - opening `/despesas/<id>/editar` of a deleted expense shows "não encontrada ou já excluída".
