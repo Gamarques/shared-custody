@@ -509,3 +509,13 @@ outsider) and `src/app/saldo/page.test.tsx`.
    so a settlement paid in November for an October debt shows as a credit in November; use
    "Todo o período" for the running balance. With only one member the page asks to invite the
    other one instead of showing a number.
+
+## T-21 — Settlements migration on the live project
+
+Status: **not done yet** (needs the real Supabase project from T-01).
+
+1. Apply `supabase/migrations/20261015000300_settlements.sql` (`supabase db push`, or paste it in
+   the SQL editor after the earlier migrations).
+2. Verify as a signed-in member: register a settlement on `/saldo`; the balance drops and the
+   settlement appears under "Acertos de contas". Updating or deleting it from the SQL API must
+   fail with `permission denied`. A mistaken settlement is undone by registering the opposite one.

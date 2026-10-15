@@ -25,6 +25,9 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: "u1" } } }) }, from: query }),
 }));
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => {} }) }));
+vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({}) }));
+
 import BalancePage from "./page";
 
 // The plan's "Exemplo de saldo": Ana (m1) owes Bruno (m2) 6,00.
@@ -104,6 +107,23 @@ describe("balance page (RF-13)", () => {
     const html = await render();
     expect(html).toContain("Ninguém deve nada neste período.");
     expect(html).toContain("já descontados 1 acerto (6,00 €)");
+  });
+
+  it("lists settlements in the history and offers the form prefilled with the debt", async () => {
+    queue({
+      settlements: [{ id: "s1", from_member: "m1", to_member: "m2", amount_cents: 2_50, settled_on: "2026-10-12", note: "pix" }],
+    });
+    const html = await render();
+    expect(html).toContain('data-testid="settlement"');
+    expect(html).toContain("Ana pagou a Bruno");
+    expect(html).toContain("pix");
+    expect(html).toContain('data-testid="settlement-form"');
+    expect(html).toContain('value="3,50"'); // 6,00 debt minus the 2,50 already settled
+  });
+
+  it("says when there is no settlement", async () => {
+    queue();
+    expect(await render()).toContain("Nenhum acerto neste período.");
   });
 
   it("a settlement larger than the debt flips the direction", async () => {

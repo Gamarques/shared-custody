@@ -15,7 +15,10 @@ import {
 } from "@/lib/balance/balance-view";
 import { ALL_MONTHS } from "@/lib/expenses/expense-list";
 import { formatCents, splitExpense } from "@/lib/expenses/money";
+import { centsToInput } from "@/lib/expenses/money";
+import { todayIn } from "@/lib/custody/rule-form";
 import { createClient } from "@/lib/supabase/server";
+import { SettlementForm } from "./SettlementForm";
 
 // Per-user data that depends on the clock: never prerender.
 export const dynamic = "force-dynamic";
@@ -32,7 +35,14 @@ type ExpenseRow = {
   description: string;
   dispute_comment: string | null;
 };
-type SettlementRow = { from_member: string; to_member: string; amount_cents: number; settled_on: string };
+type SettlementRow = {
+  id?: string;
+  from_member: string;
+  to_member: string;
+  amount_cents: number;
+  settled_on: string;
+  note?: string | null;
+};
 
 function Shell({ children }: { children: ReactNode }) {
   return (
@@ -135,7 +145,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
     .is("deleted_at", null);
   let settlementQuery = supabase
     .from("settlements")
-    .select("from_member, to_member, amount_cents, settled_on")
+    .select("id, from_member, to_member, amount_cents, settled_on, note")
     .eq("family_id", mine.family_id);
   if (bounds.from) {
     expenseQuery = expenseQuery.gte("spent_on", bounds.from);
@@ -162,6 +172,16 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
   }
   const disputedRows = expenses.filter((e) => e.status === "disputed");
   const settledCents = settlements.reduce((sum, s) => sum + s.amount_cents, 0);
+
+  const today = todayIn(timezone);
+  // Prefill: the debtor pays the creditor the whole debt; with no debt, the caller pays.
+  const debtorId = balance?.debtor ?? mine.id ?? a.id;
+  const settlementInitial = {
+    amount: balance && balance.amountCents > 0 ? centsToInput(balance.amountCents) : "",
+    settledOn: today,
+    fromMember: debtorId,
+    note: "",
+  };
 
   return (
     <Shell>
@@ -198,6 +218,25 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
               )}
               .
             </p>
+          </section>
+
+          <section data-testid="settlements">
+            <h3>Acertos de contas</h3>
+            {settlements.length === 0 ? (
+              <p>Nenhum acerto neste período.</p>
+            ) : (
+              <ul>
+                {settlements.map((s, i) => (
+                  <li key={s.id ?? i} data-testid="settlement">
+                    {formatDate(s.settled_on)} · <strong>{formatCents(s.amount_cents, currency)}</strong> —{" "}
+                    {names[s.from_member] ?? "?"} pagou a {names[s.to_member] ?? "?"}
+                    {s.note && <>. {s.note}</>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <h4>Registrar acerto</h4>
+            <SettlementForm familyId={mine.family_id} members={members} initial={settlementInitial} today={today} />
           </section>
 
           <section data-testid="disputed">
