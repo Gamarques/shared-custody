@@ -70,6 +70,7 @@ describe("expense list page (RF-10)", () => {
     expect(html).toContain("Dentista");
     expect(html).toContain("Bruno");
     expect(html).toMatch(/Total:.*40,49.*2 despesas/);
+    expect(html).toContain('href="/despesas/e1/historico"');
   });
 
   it("applies month, category and payer filters", async () => {

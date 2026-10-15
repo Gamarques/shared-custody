@@ -2,6 +2,13 @@
 
 export const MAX_DISPUTE_COMMENT = 500;
 
+/** Screen labels of expenses.status. */
+export const STATUS_LABELS: Readonly<Record<string, string>> = {
+  pending: "Pendente",
+  confirmed: "Confirmada",
+  disputed: "Contestada",
+};
+
 /** Trimmed comment, or an error message in pt-BR when a dispute comment is blank or too long. */
 export function validateDisputeComment(raw: string): { ok: true; comment: string } | { ok: false; error: string } {
   const comment = raw.trim();

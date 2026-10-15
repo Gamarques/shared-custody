@@ -138,7 +138,7 @@ privileges), so these steps are still needed:
    with A's `family_id` fails with `42501` / "new row violates row-level security policy".
 4. Check that `anon` cannot read tables: with only the anon key (no session),
    `GET /rest/v1/families` returns `401`/`42501`, not `[]` with rows.
-5. Not done here: the expense audit trigger (T-17), the Storage bucket policies for receipts
+5. Not done here: the expense audit trigger (done in T-17), the Storage bucket policies for receipts
    (done in T-14), and saving the child's name in onboarding (the `children` table now exists).
 
 ## T-06 — PWA base (manifest, icons, service worker)
@@ -399,3 +399,53 @@ Not tested: the RPC calls against a real PostgREST (tests use PGlite and a mocke
    status "Contestada" and the comment "Motivo: ..." shows for both. An empty comment must be refused.
 4. In the SQL editor / client, `update expenses set status = 'confirmed'` as A must fail
    with "expense status can only change through confirm_expense or dispute_expense".
+
+## T-17 — Expense audit trigger and history screen (RF-12, RNF-03)
+
+Status: **code done; SQL executed locally (PGlite), not on a live Supabase project; the history
+screen was only rendered in tests with a mocked client**.
+
+Migration `20261015000100_expense_audit.sql`:
+
+- trigger `expenses_audit` (after insert or update on `expenses`, `security definer`) writes one
+  `expense_audit` row per change with the full row before (`old_data`) and after (`new_data`),
+  `changed_by = auth.uid()` and the server time. `action` is `insert`, `update`, or `delete` when
+  `deleted_at` goes from null to a value (logical delete, RF-17 / T-18). An update that changes
+  nothing (apart from `updated_at`) writes no row. Confirm/dispute (T-16) are recorded as updates
+  by the member who decided;
+- a direct `INSERT` into `expense_audit` is refused (`42501`) for every role, including the
+  table owner, so all rows come from the trigger;
+- `UPDATE`, `DELETE` and `TRUNCATE` on `expense_audit` are refused for every role (`AU001`).
+  The only exception is the cascade when a whole family is deleted (same rule as
+  `custody_rules`). As a consequence an expense can never be hard-deleted on its own;
+- new column `seq` (identity) orders rows within one transaction; the foreign key from
+  `changed_by` to `auth.users` was dropped so deleting an auth user never has to rewrite audit
+  rows (the user id stays as a historical fact).
+
+Screen: `/despesas/<id>/historico` (link "Histórico" on each item of `/despesas`) lists the
+changes newest first: "Criou / Alterou / Confirmou / Contestou / Excluiu / Restaurou a despesa",
+who, when (family time zone) and each changed field as "antes → depois". Receipts show as
+"anexado / substituído / sem comprovante", never by path. A deleted expense keeps its history
+at the same URL.
+
+Covered by `src/lib/expenses/expense-audit.sql.test.ts`, `expense-history.test.ts`,
+`src/app/despesas/[id]/historico/page.test.tsx` and `src/test/rls-isolation.sql.test.ts`.
+
+1. Apply the migration: `npx supabase db push`.
+2. Verify with two members of one family (A, B):
+   - A creates an expense; B disputes it; A edits the amount (SQL editor or T-18 screen once it
+     exists); B confirms. `/despesas/<id>/historico` shows 4 entries with the right names and
+     times, and the amount change as "100,00 € → 120,00 €";
+   - in the SQL editor (role `postgres`): `update expense_audit set action = 'x'`,
+     `delete from expense_audit` and `truncate expense_audit` all fail with "expense audit rows
+     are immutable"; `insert into expense_audit ...` fails with "expense audit rows are written
+     only by the expenses_audit trigger"; `delete from expenses where id = '<id>'` also fails;
+   - through the API with A's session, `supabase.from('expense_audit').insert/update/delete`
+     fail with `42501`; a user of another family reads no rows.
+3. Data erasure (GDPR): deleting the family row removes its expenses and audit. Removing a
+   single expense or audit row requires the table owner to disable the triggers explicitly
+   (`alter table expense_audit disable trigger expense_audit_immutable`), which is itself visible
+   in the database logs. Do not do this as routine.
+4. Note: the `service_role` key and the SQL editor bypass RLS but not these triggers. A
+   superuser can still disable triggers; the audit protects against the app and its users, not
+   against the database administrator.

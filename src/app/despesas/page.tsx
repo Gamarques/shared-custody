@@ -4,7 +4,7 @@ import { currentMonth, formatMonth } from "@/lib/custody/calendar";
 import { formatDate } from "@/lib/custody/rule-form";
 import { categoryLabel, CATEGORIES } from "@/lib/expenses/expense-form";
 import { ALL_MONTHS, monthDateRange, parseExpenseFilters, totalCents } from "@/lib/expenses/expense-list";
-import { canDecide } from "@/lib/expenses/expense-decision";
+import { canDecide, STATUS_LABELS } from "@/lib/expenses/expense-decision";
 import { formatBps, formatCents } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/server";
 import { DecisionButtons } from "./DecisionButtons";
@@ -27,8 +27,6 @@ type ExpenseRow = {
   receipt_path: string | null;
   dispute_comment: string | null;
 };
-
-const STATUS_LABELS: Record<string, string> = { pending: "Pendente", confirmed: "Confirmada", disputed: "Contestada" };
 
 /** Expense list (RF-10) filtered by month, category and payer, with the total of the filter. */
 export default async function ExpensesPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -151,6 +149,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
                     <p data-testid="dispute-comment">Motivo: {e.dispute_comment}</p>
                   )}
                   {canDecide(e, mine.id ?? null) && <DecisionButtons expenseId={e.id} />}
+                  <Link href={`/despesas/${e.id}/historico`}>Histórico</Link>
                 </li>
               ))}
             </ul>

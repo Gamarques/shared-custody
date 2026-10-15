@@ -67,12 +67,7 @@ async function seed(f: Omit<Family, "expense">): Promise<Family> {
      values ($1, $2, $3, 600, '2026-10-12')`,
     [f.id, f.otherMember, f.ownerMember],
   );
-  // The audit trigger arrives in T-17; until then audit rows are written by the owner role.
-  await t.db.query(
-    `insert into expense_audit (expense_id, family_id, changed_by, action, new_data)
-     values ($1, $2, $3, 'insert', '{}')`,
-    [expense, f.id, f.owner],
-  );
+  // The expense insert above wrote its expense_audit row through the audit trigger (T-17).
   await t.db.query("insert into invites (family_id, created_by) values ($1, $2)", [f.id, f.owner]);
   return { ...f, expense };
 }
@@ -304,11 +299,15 @@ describe("another family writes nothing (RNF-01)", () => {
     expect(repoint).toBe("23503");
   });
 
-  it("audit rows of family 2 cannot reference an expense of family 1", async () => {
+  it("audit rows are written only by the trigger, so none can point at another family", async () => {
     const state = await sqlState(
       t.db.query("insert into expense_audit (expense_id, family_id, action) values ($1, $2, 'update')", [f1.expense, f2.id]),
     );
-    expect(state).toBe("23503");
+    expect(state).toBe("42501");
+    const { rows } = await t.db.query<{ n: number }>(
+      "select count(*)::int as n from expense_audit a join expenses e on e.id = a.expense_id where e.family_id <> a.family_id",
+    );
+    expect(rows[0].n).toBe(0);
   });
 
   it("TRUNCATE, which ignores RLS, is not allowed to clients", async () => {
