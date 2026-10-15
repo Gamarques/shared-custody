@@ -1,3 +1,5 @@
+import { isDemoMode } from "@/lib/demo/mode";
+
 /**
  * Public Supabase settings. Both values are safe to ship to the browser:
  * the anon key only grants what RLS policies allow.
@@ -54,8 +56,12 @@ export function getPublicEnv(): PublicEnv {
   });
 }
 
-/** True when the Supabase variables are present and valid; never throws. */
+/**
+ * True when the Supabase variables are present and valid, or in demo mode (DEMO_MODE=1),
+ * where the fake in-memory client stands in for Supabase; never throws.
+ */
 export function isSupabaseConfigured(): boolean {
+  if (isDemoMode()) return true;
   try {
     getPublicEnv();
     return true;

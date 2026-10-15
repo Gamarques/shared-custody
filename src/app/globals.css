@@ -207,3 +207,16 @@ h2 {
   cursor: pointer;
   font: inherit;
 }
+
+/* Demo mode (DEMO_MODE=1): always visible, so fake data is never mistaken for real data. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.5rem 1rem;
+  background: #fde047;
+  color: #1c1917;
+  font-size: 0.875rem;
+  text-align: center;
+  border-bottom: 2px solid #a16207;
+}

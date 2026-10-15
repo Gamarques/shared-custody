@@ -10,3 +10,5 @@ next-env.d.ts
 supabase/.temp
 supabase/.branches
 tools/run.log
+tools/__pycache__
+tools/run-*.log

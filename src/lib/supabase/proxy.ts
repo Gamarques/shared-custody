@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isPublicPath } from "@/lib/auth/paths";
+import { isDemoMode } from "@/lib/demo/mode";
+import { createDemoServerClient } from "@/lib/demo/server";
 import { getPublicEnv, isSupabaseConfigured } from "@/lib/env";
 import { getSessionUser } from "./session-user";
 
@@ -12,19 +14,21 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   let response = NextResponse.next({ request });
   if (!isSupabaseConfigured()) return response;
 
-  const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
-        for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
-      },
-    },
-  });
+  const supabase = isDemoMode()
+    ? // Demo mode: no session cookie; the fake client is always signed in as Ana.
+      (createDemoServerClient() as unknown as ReturnType<typeof createServerClient>)
+    : createServerClient(getPublicEnv().supabaseUrl, getPublicEnv().supabaseAnonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
+            response = NextResponse.next({ request });
+            for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
+          },
+        },
+      });
 
   // Verified locally when the project uses asymmetric signing keys: no Auth request (RNF-07).
   const user = await getSessionUser(supabase);

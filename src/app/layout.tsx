@@ -3,6 +3,7 @@ import "./globals.css";
 import { SessionBar } from "./SessionBar";
 import { ServiceWorkerRegister } from "./ServiceWorkerRegister";
 import { THEME_COLOR } from "@/lib/pwa/manifest";
+import { isDemoMode } from "@/lib/demo/mode";
 
 export const metadata: Metadata = {
   title: "Guarda Compartilhada",
@@ -22,6 +23,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pt">
       <body>
+        {isDemoMode() && (
+          <div className="demo-banner" role="status" data-testid="demo-banner">
+            <strong>DEMO</strong> · dados fictícios em memória, sem Supabase. Sessão da Ana. Reiniciar o servidor repõe os
+            dados.
+          </div>
+        )}
         <ServiceWorkerRegister />
         <SessionBar />
         {children}

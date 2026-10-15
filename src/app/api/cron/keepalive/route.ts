@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/demo/mode";
 import { getPublicEnv, isSupabaseConfigured } from "@/lib/env";
 import { isAuthorizedCron, pingSupabase } from "@/lib/keepalive/keepalive";
 
@@ -11,6 +12,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return Response.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  if (isDemoMode()) {
+    // No Supabase project to keep awake: the demo runs on in-memory data.
+    return Response.json({ ok: true, demo: true });
   }
   if (!isSupabaseConfigured()) {
     console.error(JSON.stringify({ event: "supabase_keepalive", ok: false, error: "supabase env not configured" }));

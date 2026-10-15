@@ -615,3 +615,20 @@ Steps:
 Known iOS limits to expect (not bugs of the app): a magic link opened from Mail goes to Safari,
 whose storage is separate from the installed app; iOS may evict the offline copy of an app not
 opened for weeks (see T-12); push notifications are out of the MVP.
+
+## DEMO — Demo mode in a real browser
+
+Status: **partly verified**. `npm run demo` was started locally and every main page (`/`,
+`/calendario`, `/guarda`, `/excecoes`, `/despesas`, `/despesas/nova`, `/saldo`, `/convidar`,
+`/login`, an expense history and the CSV export) was fetched with curl and rendered the seed data
+(home: "Leonor está com Ana"; `/saldo`: "Ana deve 6,00 € a Bruno", with the "Em disputa" line). A
+write sent to `POST /api/demo` the way the browser client does showed up on `/despesas` and
+changed `/saldo`. The forms themselves were not clicked through in a browser.
+
+Steps:
+
+1. `npm run demo`, open <http://localhost:3000> in a browser; the yellow DEMO banner is at the top.
+2. Add an expense with a photo in `/despesas/nova`, open its receipt from `/despesas`, edit it,
+   confirm "Dentista", record a settlement in `/saldo`, add and remove an exception in `/excecoes`,
+   save a new rule in `/guarda`. Each change must appear on the pages without errors in the console.
+3. Restart the server: the seed data is back.
