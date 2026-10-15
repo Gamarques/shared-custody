@@ -17,9 +17,16 @@ function query(table: string) {
   return q;
 }
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: "u1" } } }) }, from: query }),
+  // Only getClaims: the home must not ask Supabase Auth for the user (RNF-07).
+  createClient: async () => ({ auth: { getClaims: async () => claims }, from: query }),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh() {} }) }));
+let claims: unknown = { data: { claims: { sub: "u1" } }, error: null };
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh() {} }),
+  redirect: (to: string) => {
+    throw new Error(`redirect:${to}`);
+  },
+}));
 
 import Home from "./page";
 import { GET } from "./api/health/route";
@@ -143,11 +150,26 @@ describe("home page: com quem está hoje (RF-05)", () => {
     expect(html).toMatch(/Domingo, 18\/10, às 18:00, com <span[^>]*>Ana</);
   });
 
-  it("uses a default label without a child and handles a missing family", async () => {
+  it("uses a default label without a child and handles a failed query", async () => {
     result = family({ children: [] });
     expect(renderToStaticMarkup(await Home())).toContain("A criança está com");
-    result = { data: null };
+    result = { data: null, error: { code: "PGRST000", message: "down" } };
     expect(renderToStaticMarkup(await Home())).toContain("Não foi possível carregar a família.");
+  });
+
+  it("sends a user without a family to /onboarding (the proxy skips that check on /)", async () => {
+    result = { data: null, error: null };
+    await expect(Home()).rejects.toThrow("redirect:/onboarding");
+  });
+
+  it("sends a session that does not verify to /login", async () => {
+    claims = { data: null, error: { message: "Invalid JWT signature" } };
+    try {
+      await expect(Home()).rejects.toThrow("redirect:/login");
+      expect(calls).toHaveLength(0);
+    } finally {
+      claims = { data: { claims: { sub: "u1" } }, error: null };
+    }
   });
 });
 

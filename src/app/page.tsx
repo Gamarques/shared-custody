@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { isSupabaseConfigured } from "@/lib/env";
 import type { CustodyOverride, CustodyRule } from "@/lib/custody/holder";
 import { buildTodayView, textColorOn, type HomeMember, type HomePerson, type TodayView } from "@/lib/custody/today";
 import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/supabase/session-user";
 import { HandoverCountdown } from "./HandoverCountdown";
 
 // Per-user data that changes with the clock: never prerender.
@@ -37,13 +39,17 @@ function MemberBadge({ person, testId }: { person: HomePerson; testId: string })
 
 async function loadToday(now: Date): Promise<TodayView | null> {
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  const { data } = await supabase
+  // The token is verified locally (no Auth request), so the query below is the only round trip
+  // to Supabase on this page; src/proxy.ts skips its membership check for "/" (RNF-07).
+  const user = await getSessionUser(supabase);
+  if (!user) redirect("/login");
+  const { data, error } = await supabase
     .from("members")
     .select(HOME_SELECT)
-    .eq("user_id", userData.user?.id ?? "")
+    .eq("user_id", user.id)
     .gt("families.custody_overrides.ends_at", now.toISOString())
     .maybeSingle();
+  if (!error && !data) redirect("/onboarding");
   const family = (data as { families: FamilyRow | null } | null)?.families ?? null;
   if (!family) return null;
 

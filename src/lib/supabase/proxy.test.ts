@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const getUser = vi.fn();
+// The proxy reads the user through getClaims (src/lib/supabase/session-user.ts).
+const getClaims = vi.fn();
 const members = vi.fn();
 vi.mock("@supabase/ssr", () => ({
   createServerClient: () => ({
-    auth: { getUser },
+    auth: { getClaims },
     from: () => ({ select: () => ({ eq: () => ({ limit: () => members() }) }) }),
   }),
 }));
@@ -17,15 +18,24 @@ function configure() {
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
 }
 
+function signedIn(id: string) {
+  getClaims.mockResolvedValue({ data: { claims: { sub: id } }, error: null });
+}
+
+function anonymous() {
+  getClaims.mockResolvedValue({ data: null, error: null });
+}
+
 afterEach(() => {
   vi.unstubAllEnvs();
-  getUser.mockReset();
+  getClaims.mockReset();
+  members.mockReset();
 });
 
 describe("updateSession", () => {
   it("redirects anonymous users to /login keeping next", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: null } });
+    anonymous();
     const res = await updateSession(new NextRequest("http://localhost/despesas?x=1"));
     expect(res.status).toBe(307);
     const loc = new URL(res.headers.get("location")!);
@@ -35,14 +45,14 @@ describe("updateSession", () => {
 
   it("lets anonymous users reach /login", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: null } });
+    anonymous();
     const res = await updateSession(new NextRequest("http://localhost/login"));
     expect(res.headers.get("location")).toBeNull();
   });
 
   it("lets signed-in users through", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [{ id: "m1" }] });
     const res = await updateSession(new NextRequest("http://localhost/"));
     expect(res.headers.get("location")).toBeNull();
@@ -50,15 +60,23 @@ describe("updateSession", () => {
 
   it("sends signed-in users without a family to /onboarding", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [] });
-    const res = await updateSession(new NextRequest("http://localhost/"));
+    const res = await updateSession(new NextRequest("http://localhost/despesas"));
     expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
+  });
+
+  it("does not query members on the home, which checks the family in its own query (RNF-07)", async () => {
+    configure();
+    signedIn("u1");
+    const res = await updateSession(new NextRequest("http://localhost/"));
+    expect(res.headers.get("location")).toBeNull();
+    expect(members).not.toHaveBeenCalled();
   });
 
   it("lets users without a family stay on /onboarding", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [] });
     const res = await updateSession(new NextRequest("http://localhost/onboarding"));
     expect(res.headers.get("location")).toBeNull();
@@ -66,7 +84,7 @@ describe("updateSession", () => {
 
   it("lets users without a family open an invite link", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [] });
     const res = await updateSession(new NextRequest(`http://localhost/convite/${"a".repeat(64)}`));
     expect(res.headers.get("location")).toBeNull();
@@ -74,7 +92,7 @@ describe("updateSession", () => {
 
   it("sends anonymous invitees to /login and back to the invite", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: null } });
+    anonymous();
     const path = `/convite/${"a".repeat(64)}`;
     const res = await updateSession(new NextRequest(`http://localhost${path}`));
     expect(new URL(res.headers.get("location")!).searchParams.get("next")).toBe(path);
@@ -82,7 +100,7 @@ describe("updateSession", () => {
 
   it("still sends users without a family to /onboarding from /convidar", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [] });
     const res = await updateSession(new NextRequest("http://localhost/convidar"));
     expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
@@ -90,7 +108,7 @@ describe("updateSession", () => {
 
   it("sends users with a family away from /onboarding", async () => {
     configure();
-    getUser.mockResolvedValue({ data: { user: { id: "u1" } } });
+    signedIn("u1");
     members.mockResolvedValue({ data: [{ id: "m1" }] });
     const res = await updateSession(new NextRequest("http://localhost/onboarding"));
     expect(new URL(res.headers.get("location")!).pathname).toBe("/");
@@ -101,6 +119,6 @@ describe("updateSession", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
     const res = await updateSession(new NextRequest("http://localhost/"));
     expect(res.headers.get("location")).toBeNull();
-    expect(getUser).not.toHaveBeenCalled();
+    expect(getClaims).not.toHaveBeenCalled();
   });
 });

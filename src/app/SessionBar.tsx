@@ -1,14 +1,15 @@
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/supabase/session-user";
 
 export async function SessionBar() {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return null;
+  // Rendered on every page: verify the token locally instead of asking Supabase Auth (RNF-07).
+  const user = await getSessionUser(await createClient());
+  if (!user) return null;
   return (
     <form action="/auth/signout" method="post" data-testid="session-bar">
-      <span>{data.user.email}</span> <button type="submit">Sair</button>
+      <span>{user.email}</span> <button type="submit">Sair</button>
     </form>
   );
 }

@@ -20,6 +20,7 @@ npm run dev                  # http://localhost:3000
 | `npm run build` / `npm start` | Production build and server |
 | `npm test` | Unit tests (vitest) |
 | `npm run typecheck` | TypeScript check |
+| `node tools/perf-home.mjs` | Lab measurement of the home on emulated 4G (see `docs/qa-e2e.md`) |
 
 ## Layout
 

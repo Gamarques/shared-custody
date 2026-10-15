@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getReceiptUrl } from "@/lib/receipts/receipts";
+import { getReceiptUrl, openReceipt } from "@/lib/receipts/receipts";
 import { createClient } from "@/lib/supabase/client";
 
 /** Opens a receipt through a fresh short-lived signed URL (RNF-08); the bucket is private. */
@@ -10,12 +10,8 @@ export function ReceiptLink({ path }: { path: string }) {
 
   async function open() {
     setError("");
-    const url = await getReceiptUrl(createClient().storage, path);
-    if (!url) {
-      setError("Não foi possível abrir o comprovante.");
-      return;
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
+    const opened = await openReceipt(window, () => getReceiptUrl(createClient().storage, path));
+    if (!opened) setError("Não foi possível abrir o comprovante.");
   }
 
   return (

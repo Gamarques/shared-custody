@@ -569,3 +569,49 @@ A local `next start` returned 401 without the secret and 500 "supabase not confi
    hour, and a skipped run still leaves at most 7 days between pings; there is no alert yet if
    the project is already paused (the "alerta no primeiro uso após pausa" from the risk table is
    not part of T-23).
+
+## T-24 — QA end-to-end on Android and iOS (RNF-05, RNF-07)
+
+Status: **not done on devices**. The acceptance criterion ("Fluxo completo sem erro nos dois
+sistemas; home abaixo de 2 s em 4G") needs a real Android phone, a real iPhone, the deploy and the
+live Supabase project from T-01, none of which exist here. What was done locally, with the measured
+numbers, and the full device test script are in [`docs/qa-e2e.md`](qa-e2e.md):
+
+- `src/test/e2e-flow.sql.test.ts`: the whole journey of two guardians (family, invite, rule,
+  exception, expenses, confirm/dispute, edit, delete, audit, balance, settlement, CSV) on PGlite
+  with every migration, plus an outsider who must see nothing. Passes; it is not the real
+  PostgREST/GoTrue stack.
+- `node tools/perf-home.mjs`: production build in headless Chrome with phone and 4G emulation
+  against a local Supabase stand-in. Home on the 4G profile: ~0.7 s first visit, ~0.2 s repeat; one
+  Supabase request per render. On DevTools' "Slow 4G" preset a first visit reaches the load event
+  at ~2.7 s (content visible at ~1.4 s). Lab numbers on a desktop, not a phone.
+- Fixes: iOS zoom on form fields (16 px text), receipt pop-up blocked on iOS, home reduced from
+  4 to 1 request to Supabase (`getClaims()` instead of `getUser()` in the proxy, session bar and
+  home; no membership check in the proxy for `/`).
+
+Steps:
+
+1. **JWT signing keys.** In Supabase > Project Settings > JWT Keys, check that the project signs
+   tokens with an asymmetric key (ECC P-256 or RSA). If it still uses the legacy JWT secret, migrate
+   (create a standby asymmetric key, rotate it in, keep the legacy one as previously used until all
+   sessions renew). Without this, `getClaims()` falls back to one request to Supabase Auth per call
+   (proxy, session bar, home): still correct, but the home loses most of the T-24 gain.
+2. **Same region for Vercel and Supabase.** In Vercel > Project > Settings > Functions, set the
+   Function Region to the one next to the Supabase project (for example Supabase `eu-central-1`
+   Frankfurt with Vercel `fra1`, or `eu-west-2` London with `lhr1`). The default `iad1` (US East)
+   adds roughly 80–100 ms to every request from the server to a European database. Redeploy.
+3. **Run the device script** in `docs/qa-e2e.md`, section 2, on one Android phone (Chrome) and one
+   iPhone (Safari), with the app installed to the home screen, and fill in its results table.
+   Every FAIL becomes an issue with a screenshot; the criterion is met only with no FAIL on either
+   system.
+4. **Measure the home on 4G** on both phones (step 26 of the script: Wi-Fi off, LTE, cold start,
+   median of 5, with `chrome://inspect` on Android and Safari Web Inspector on iOS for the exact
+   load time). Write the numbers in the results table. If the median is over 2 s, check first the
+   server duration of `GET /` in Vercel (region, cold start), then the JavaScript size.
+5. Optional, to repeat the lab measurement after changes: `node tools/perf-home.mjs` (needs Chrome
+   or Edge; `--runs`, `--supabase-latency <ms>`, `--waterfall`, `--skip-build`). Exit code 1 when the
+   4G profile is over 2 s, the home does not render, or the page logs an error.
+
+Known iOS limits to expect (not bugs of the app): a magic link opened from Mail goes to Safari,
+whose storage is separate from the installed app; iOS may evict the offline copy of an app not
+opened for weeks (see T-12); push notifications are out of the MVP.

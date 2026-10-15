@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-perf
 .env*
 !.env.example
 tools/logs
