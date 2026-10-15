@@ -535,3 +535,37 @@ the RLS of T-05 applies. Covered by `src/lib/expenses/expense-csv.test.ts` and
    Mac if available.
 3. Known limits: the file uses `;` as separator and decimal commas (pt/EU Excel); an Excel with
    an English-US locale may need Data > From Text/CSV and `;` as delimiter.
+
+## T-23 — Keepalive cron so the free Supabase project does not pause (RNF-06)
+
+Status: **code done, weekly run not confirmed yet** (needs the Vercel deploy and the live Supabase
+project from T-01; a cron only runs on a production deployment).
+
+What exists locally: `vercel.json` schedules `GET /api/cron/keepalive` at `0 6 * * 1,4` (Monday and
+Thursday, 06:00 UTC; at most 4 days between runs, under the ~7 days that pause a free project,
+and within the Hobby limit of one run per day). The route checks `Authorization: Bearer
+<CRON_SECRET>`, calls the `keepalive_ping()` RPC (migration `20261015000400_keepalive_ping.sql`,
+returns `now()`, reads no table) and writes one JSON log line with `"event":"supabase_keepalive"`.
+Covered by `src/lib/keepalive/*.test.ts` and `src/app/api/cron/keepalive/route.test.ts`.
+A local `next start` returned 401 without the secret and 500 "supabase not configured" with it
+(no `.env.local` here); the success path against a real project is not verified.
+
+1. Apply `supabase/migrations/20261015000400_keepalive_ping.sql` (`supabase db push`, or paste it
+   in the SQL editor). Check: `curl -X POST "$NEXT_PUBLIC_SUPABASE_URL/rest/v1/rpc/keepalive_ping"
+   -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -H "Content-Type: application/json" -d '{}'`
+   returns a timestamp.
+2. In Vercel > Project Settings > Environment Variables, add `CRON_SECRET` for Production
+   (`openssl rand -hex 32`). Without it every call returns 401 and the cron does nothing.
+3. Redeploy to production. Vercel > Project > Settings > Cron Jobs must list
+   `/api/cron/keepalive` with the schedule above. Click "Run" once: the response is 200 and
+   Vercel > Logs (filter `supabase_keepalive`) shows `"ok":true` with the database time.
+4. Acceptance ("Execução semanal confirmada nos logs"): after 7 days, filter the logs for
+   `supabase_keepalive` and confirm at least two scheduled runs (Monday and Thursday) with
+   `"ok":true`. Note that the Hobby plan keeps runtime logs for a short time only (about 1 hour
+   at the time of writing), so check soon after a run, or use a Log Drain / Pro plan for longer
+   history. Supabase > Project > Reports (API requests) also shows the RPC calls.
+5. A failed ping returns 502 and logs with `console.error` (`"ok":false`, HTTP status and body),
+   so it shows as an error in Vercel Logs. Known limit: Hobby cron timing is precise only to the
+   hour, and a skipped run still leaves at most 7 days between pings; there is no alert yet if
+   the project is already paused (the "alerta no primeiro uso após pausa" from the risk table is
+   not part of T-23).

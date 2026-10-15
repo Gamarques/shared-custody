@@ -12,10 +12,12 @@ describe("safeNextPath", () => {
 });
 
 describe("isPublicPath", () => {
-  it("allows login, auth and health only", () => {
+  it("allows login, auth, health and cron only", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/auth/callback")).toBe(true);
     expect(isPublicPath("/api/health")).toBe(true);
+    expect(isPublicPath("/api/cron/keepalive")).toBe(true);
+    expect(isPublicPath("/api/cronx")).toBe(false);
     expect(isPublicPath("/")).toBe(false);
     expect(isPublicPath("/loginx")).toBe(false);
   });
