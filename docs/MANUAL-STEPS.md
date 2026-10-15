@@ -471,3 +471,41 @@ Covered by `src/lib/expenses/expense-edit-delete.sql.test.ts`.
    - A clicks "Excluir" and confirms: it leaves `/despesas`, and `/despesas/<id>/historico`
      still shows the creation and the "Excluiu a despesa" entries;
    - opening `/despesas/<id>/editar` of a deleted expense shows "não encontrada ou já excluída".
+
+## T-20 — Balance screen with the "em disputa" line (RF-13)
+
+Status: **code done; reads checked under RLS on PGlite, not on a live Supabase project; the page
+was only rendered in tests with a mocked client**. `/saldo` (linked from the home as "Saldo")
+shows, for a period, one sentence saying who owes whom ("Ana deve 6,00 € a Bruno." or "Ninguém
+deve nada neste período."), how many expenses are in it and the settlements already deducted.
+Below it, the "Em disputa" section keeps disputed expenses out of the balance (business rule 4):
+how many, what they would add if accepted, and each one with its date, amount, payer, the other
+member's part, the dispute reason and a link to its history.
+
+Period: the current month in the family zone by default; another month with `?mes=YYYY-MM` (and
+"‹ Anterior" / "Próximo ›" links); `?mes=todos` for everything; or a date range
+`?de=YYYY-MM-DD&ate=YYYY-MM-DD` with both days included. An invalid or reversed range shows the
+current month with a notice. Expenses are filtered by `spent_on`, settlements by `settled_on`,
+deleted expenses are never read. The arithmetic is `computeBalance` (T-19).
+
+No new tables or policies, so no migration: the page reads `expenses` and `settlements` under
+the RLS of T-05. Covered by `src/lib/balance/balance-view.test.ts`,
+`src/lib/balance/balance-screen.sql.test.ts` (the page's filters under RLS, both members and an
+outsider) and `src/app/saldo/page.test.tsx`.
+
+1. No migration to apply for this task.
+2. Verify with two members of one family (A, B) on the live project:
+   - A records 100,00 € paid by A at 50% and B records 80,00 € paid by B at 30%, both this month;
+     `/saldo` as A and as B says "A deve 6,00 € a B." and "2 despesas no saldo";
+   - A disputes a third expense paid by B (45,50 € at 50%) on `/despesas`: the main sentence
+     stays at 6,00 €; "Em disputa" shows "Fora do saldo: 1 despesa. Se aceitas, A deveria 22,75 €
+     a B por elas." with the reason; after B edits it (back to pending, T-18) it moves into the
+     main balance;
+   - open "‹ Anterior", "Todo o período" and a "De / Até" range that ends on an expense's date:
+     that expense is included;
+   - insert a settlement in the SQL editor (`settlements`, from A to B, 6,00 €, a date this
+     month): `/saldo` says "Ninguém deve nada neste período." (the settlement screen is T-21).
+3. Known limits: the balance of a single month nets only that month's expenses and settlements,
+   so a settlement paid in November for an October debt shows as a credit in November; use
+   "Todo o período" for the running balance. With only one member the page asks to invite the
+   other one instead of showing a number.

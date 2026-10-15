@@ -140,6 +140,9 @@ export default async function Home() {
             <Link href="/despesas/nova">Nova despesa</Link>
           </p>
           <p>
+            <Link href="/saldo">Saldo</Link>
+          </p>
+          <p>
             <Link href="/convidar">Convidar o outro responsável</Link>
           </p>
         </>
