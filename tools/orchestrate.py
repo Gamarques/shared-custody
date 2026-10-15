@@ -60,6 +60,7 @@ def main():
         model, effort, turns = ROUTE[(choice, conf >= 0.6)]
         print(f"{tid} {t['title'][:60]} -> jev={choice}({conf:.2f}) model={model}", flush=True)
         prompt = (
+            "/caveman ultra\n"
             f"You are implementing task {tid} of the plan in docs/plano-mvp.md (read it first, esp. Requisitos, Modelo de dados, Regras de negocio).\n"
             f"Task: {t['title']}\nRequirements: {t['req']}\nAcceptance criteria: {t['accept']}\n\n"
             "Rules: work in the existing repo (earlier tasks are already committed; inspect before writing). TypeScript, "

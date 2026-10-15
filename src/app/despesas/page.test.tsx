@@ -25,6 +25,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: async () => ({ auth: { getUser: async () => ({ data: { user: { id: "u1" } } }) }, from: query }),
 }));
 vi.mock("@/lib/supabase/client", () => ({ createClient: () => ({}) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh() {} }) }));
 
 import ExpensesPage from "./page";
 
@@ -35,7 +36,7 @@ const expenses = [
 
 function queue(rows: unknown[] | null = expenses) {
   results.members = [
-    { data: { family_id: "f1", families: { timezone: "Europe/Lisbon", currency: "EUR" } } },
+    { data: { id: "m2", family_id: "f1", families: { timezone: "Europe/Lisbon", currency: "EUR" } } },
     { data: [{ id: "m1", display_name: "Ana" }, { id: "m2", display_name: "Bruno" }] },
   ];
   results.expenses = [rows ? { data: rows } : { data: null, error: { message: "boom" } }];
@@ -105,5 +106,15 @@ describe("expense list page (RF-10)", () => {
     const html = await render();
     expect(html).toContain('role="alert"');
     expect(html).not.toContain("Total:");
+  });
+
+  it("shows decision buttons only on expenses paid by the other member, and the dispute comment", async () => {
+    queue([
+      { ...expenses[0], dispute_comment: null },
+      { ...expenses[1], id: "e3", paid_by: "m2", status: "disputed", dispute_comment: "valor errado" },
+    ]);
+    const html = await render();
+    expect(html.match(/data-testid="decision"/g)?.length).toBe(1);
+    expect(html).toContain("Motivo: valor errado");
   });
 });

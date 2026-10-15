@@ -386,3 +386,16 @@ Not tested: the canvas/`createImageBitmap` path itself (needs a browser), and re
 5. With a user of another family, `supabase.storage.from('receipts').createSignedUrl(<A's
    path>, 60)` must fail, and `list` must show nothing. A signed URL made by A must stop
    working after 60 s.
+
+## T-16 — Confirm or dispute an expense (RF-11)
+
+Not tested: the RPC calls against a real PostgREST (tests use PGlite and a mocked client).
+
+1. Apply the migration: `npx supabase db push` (file `20261014000800_expense_decision.sql`).
+   It adds `dispute_comment`, `decided_by`, `decided_at`, the functions `confirm_expense` and
+   `dispute_expense`, and a trigger that blocks direct updates of the status.
+2. As A (payer), create an expense. On `/despesas` A sees no "Confirmar"/"Contestar" buttons.
+3. As B, confirm it: status becomes "Confirmada". Create another, dispute it with a comment:
+   status "Contestada" and the comment "Motivo: ..." shows for both. An empty comment must be refused.
+4. In the SQL editor / client, `update expenses set status = 'confirmed'` as A must fail
+   with "expense status can only change through confirm_expense or dispute_expense".

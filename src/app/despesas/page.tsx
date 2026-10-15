@@ -4,8 +4,10 @@ import { currentMonth, formatMonth } from "@/lib/custody/calendar";
 import { formatDate } from "@/lib/custody/rule-form";
 import { categoryLabel, CATEGORIES } from "@/lib/expenses/expense-form";
 import { ALL_MONTHS, monthDateRange, parseExpenseFilters, totalCents } from "@/lib/expenses/expense-list";
+import { canDecide } from "@/lib/expenses/expense-decision";
 import { formatBps, formatCents } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/server";
+import { DecisionButtons } from "./DecisionButtons";
 import { ReceiptLink } from "./ReceiptLink";
 
 // Per-user data that depends on the clock: never prerender.
@@ -23,6 +25,7 @@ type ExpenseRow = {
   payer_share_bps: number;
   status: string;
   receipt_path: string | null;
+  dispute_comment: string | null;
 };
 
 const STATUS_LABELS: Record<string, string> = { pending: "Pendente", confirmed: "Confirmada", disputed: "Contestada" };
@@ -43,10 +46,10 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const { data: userData } = await supabase.auth.getUser();
   const { data: me } = await supabase
     .from("members")
-    .select("family_id, families(timezone, currency)")
+    .select("id, family_id, families(timezone, currency)")
     .eq("user_id", userData.user?.id ?? "")
     .maybeSingle();
-  const mine = me as { family_id: string; families: { timezone: string; currency: string } | null } | null;
+  const mine = me as { id?: string; family_id: string; families: { timezone: string; currency: string } | null } | null;
   if (!mine?.families) {
     return (
       <main>
@@ -73,7 +76,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
 
   let query = supabase
     .from("expenses")
-    .select("id, paid_by, amount_cents, spent_on, description, category, payer_share_bps, status, receipt_path")
+    .select("id, paid_by, amount_cents, spent_on, description, category, payer_share_bps, status, receipt_path, dispute_comment")
     .eq("family_id", mine.family_id)
     .is("deleted_at", null);
   if (filters.month) {
@@ -144,6 +147,10 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
                       <ReceiptLink path={e.receipt_path} />
                     </>
                   )}
+                  {e.status === "disputed" && e.dispute_comment && (
+                    <p data-testid="dispute-comment">Motivo: {e.dispute_comment}</p>
+                  )}
+                  {canDecide(e, mine.id ?? null) && <DecisionButtons expenseId={e.id} />}
                 </li>
               ))}
             </ul>
