@@ -233,8 +233,8 @@ async function main() {
           await shot("solo", w, "convidar-form");
           await click('main button[type="submit"]');
           await sleep(400);
-          const generated = await exists("input[aria-label='Link do convite']");
-          await shot("solo", w, "convidar-link-generated", { note: generated ? "link input visible" : "link NOT generated" });
+          const generated = await exists("[aria-label='Link do convite']");
+          await shot("solo", w, "convidar-link-generated", { note: generated ? "link field visible" : "link NOT generated" });
         },
       ],
       "no-family": [

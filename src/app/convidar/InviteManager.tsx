@@ -76,7 +76,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
           {pending.email && <p>Só {pending.email} poderá aceitar.</p>}
         </div>
         <div className={styles.linkBox}>
-          <input readOnly value={url} aria-label="Link do convite" onFocus={(e) => e.target.select()} />
+          <textarea readOnly rows={3} value={url} aria-label="Link do convite" onFocus={(e) => e.target.select()} />
           <button
             type="button"
             className="btn btn-primary"
@@ -85,7 +85,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
               setCopied(true);
             }}
           >
-            <Icon name={copied ? "check" : "swap"} size={16} />
+            <Icon name={copied ? "check" : "copy"} size={16} />
             {copied ? "Copiado" : "Copiar link"}
           </button>
         </div>

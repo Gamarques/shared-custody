@@ -6,14 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-006: Ícone errado em "Copiar link" e link truncado sem indicação em /convidar
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `.next-perf/visual-qa/states/convidar-link-generated-390.png` (visto por mim): "Copiar link" usa o ícone de setas trocadas (o mesmo de "Regra de guarda"); em 390 o link fica cortado no input sem sinal de que continua
-- Expected: ícone de copiar (ou sem ícone) no botão; link legível/selecionável (campo com fade/ellipsis claro ou em linha própria)
-- Acceptance: captura em 390 e 1280 conferida; `npm test` e `npm run build` passam
-- Severity: low
-- Status: open
-
 ### TODO-007: Confirmação de exclusão de despesa desalinhada em 390
 - Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
 - Evidence: `states/despesas-delete-confirm-390.png` (visto por mim): painel "Excluir esta despesa?" flutua à direita dos ícones de ação, deixando vazio grande e ícones soltos à esquerda
@@ -103,3 +95,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: nova migration; Security Advisor sem WARN em shared_custody; `npm test` (PGlite) e `npm run build` passam.
 - Severity: low
 - Status: done (Jev 3.98, 2026-10-17) - migration `20261017000100_advisor_hardening.sql` aplicada no remoto; Advisor sem WARN em shared_custody; teste `src/test/db-hygiene.sql.test.ts`
+
+### TODO-006: Ícone errado em "Copiar link" e link truncado sem indicação em /convidar
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `.next-perf/visual-qa/states/convidar-link-generated-390.png` (visto por mim): "Copiar link" usa o ícone de setas trocadas (o mesmo de "Regra de guarda"); em 390 o link fica cortado no input sem sinal de que continua
+- Expected: ícone de copiar (ou sem ícone) no botão; link legível/selecionável (campo com fade/ellipsis claro ou em linha própria)
+- Acceptance: captura em 390 e 1280 conferida; `npm test` e `npm run build` passam
+- Severity: low
+- Status: done (Jev 3.18, 2026-10-17) - icone copy, link em textarea que quebra linha (rows=3 + field-sizing), botao largura total em 390
