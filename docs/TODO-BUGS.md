@@ -6,22 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-007: Confirmação de exclusão de despesa desalinhada em 390
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `states/despesas-delete-confirm-390.png` (visto por mim): painel "Excluir esta despesa?" flutua à direita dos ícones de ação, deixando vazio grande e ícones soltos à esquerda
-- Expected: painel alinhado à linha, na largura do card em 390, sem deixar os ícones soltos
-- Acceptance: captura da confirmação em 390 sem vazio/desalinhamento; `npm run qa:states` sem falhas; `npm test` passa
-- Severity: medium
-- Status: open
-
-### TODO-008: Confirmação de exclusão sobrepõe a linha seguinte em 1280
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `states/despesas-delete-confirm-1280.png` (relato do agente; confirmado por mim): popover cobre Estado/Valor de "Dentista" e parte de "Contestar" da linha acima
-- Expected: confirmação não cobre conteúdo de outras linhas
-- Acceptance: captura 1280 da confirmação sem sobreposição de conteúdo
-- Severity: low
-- Status: open
-
 ### TODO-009: Link "Definir a regra de guarda" com 18px de altura em /calendario vazio (390)
 - Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
 - Evidence: aviso touch do `npm run qa:states` em `empty-calendario-390`
@@ -103,3 +87,19 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: captura em 390 e 1280 conferida; `npm test` e `npm run build` passam
 - Severity: low
 - Status: done (Jev 3.18, 2026-10-17) - icone copy, link em textarea que quebra linha (rows=3 + field-sizing), botao largura total em 390
+
+### TODO-007: Confirmação de exclusão de despesa desalinhada em 390
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `states/despesas-delete-confirm-390.png` (visto por mim): painel "Excluir esta despesa?" flutua à direita dos ícones de ação, deixando vazio grande e ícones soltos à esquerda
+- Expected: painel alinhado à linha, na largura do card em 390, sem deixar os ícones soltos
+- Acceptance: captura da confirmação em 390 sem vazio/desalinhamento; `npm run qa:states` sem falhas; `npm test` passa
+- Severity: medium
+- Status: done (Jev 3.14, 2026-10-17) - confirmacao virou <dialog> modal centralizado (390 e 1280); corrigida cor dos botoes herdada de .actions
+
+### TODO-008: Confirmação de exclusão sobrepõe a linha seguinte em 1280
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `states/despesas-delete-confirm-1280.png` (relato do agente; confirmado por mim): popover cobre Estado/Valor de "Dentista" e parte de "Contestar" da linha acima
+- Expected: confirmação não cobre conteúdo de outras linhas
+- Acceptance: captura 1280 da confirmação sem sobreposição de conteúdo
+- Severity: low
+- Status: done (Jev 3.14, 2026-10-17) - resolvida junto com a 007 (modal nao cobre linhas)

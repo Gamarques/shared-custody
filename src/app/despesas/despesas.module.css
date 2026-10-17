@@ -242,16 +242,18 @@
 }
 
 .actions a,
-.actions button {
+.actions > button,
+.actions .deleteWrap > button {
   color: var(--muted);
 }
 
 .actions a:hover,
-.actions button:hover {
+.actions > button:hover,
+.actions .deleteWrap > button:hover {
   color: var(--fg);
 }
 
-.actions button.dangerHover:hover {
+.actions .deleteWrap > button.dangerHover:hover {
   background: var(--danger-soft);
   color: var(--danger);
 }
@@ -313,11 +315,11 @@
 }
 
 .confirmDelete {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  width: min(24rem, calc(100vw - 2 * var(--space-4)));
+  margin: auto;
+  padding: var(--space-5);
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-lg);
   color: var(--fg);
@@ -326,31 +328,34 @@
   text-align: left;
 }
 
-.confirmDelete p {
-  margin: 0;
+.confirmDelete::backdrop {
+  background: rgba(20, 24, 22, 0.45);
+}
+
+.confirmTitle {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-lg);
+}
+
+.confirmDelete .confirmText {
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
 }
 
 .confirmDelete [role="alert"] {
-  margin: 0;
+  margin: 0 0 var(--space-3);
 }
 
 .confirmButtons {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--space-2);
 }
 
 .deleteWrap {
   position: relative;
   display: inline-flex;
-}
-
-.confirmDelete {
-  position: absolute;
-  top: calc(100% + var(--space-1));
-  right: 0;
-  z-index: var(--z-overlay);
-  width: min(18rem, 80vw);
 }
 
 .receipt {
@@ -512,12 +517,6 @@
   .extraBody {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .confirmDelete {
-    position: static;
-    box-shadow: none;
-    width: 100%;
   }
 
   .deleteWrap {
