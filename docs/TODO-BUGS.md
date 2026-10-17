@@ -6,14 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-003: Mock de next/font/google em mobile.test.ts não revisado
-- Found: 2026-10-16 ao rodar a suíte (alteração feita por um agente em `src/lib/pwa/mobile.test.ts`)
-- Evidence: o teste ganhou `vi.mock("next/font/google", ...)`; não confirmei se é necessário nem se enfraquece o teste
-- Expected: confirmar que o mock é o mínimo necessário e que o teste ainda verifica o que dizia verificar (T-24).
-- Acceptance: sem o mock o teste falha pelo motivo documentado; com ele continua cobrindo as mesmas asserções.
-- Severity: low
-- Status: open
-
 ### TODO-004: Telas e estados nunca vistos em navegador
 - Found: 2026-10-16 relatos dos agentes de redesign
 - Evidence: `/onboarding` redireciona para a home no modo demo; não vistos: link gerado em /convidar, formulário de aceitar convite, estados vazios, erro de carga, hover/foco, confirmação de exclusão de despesa
@@ -47,3 +39,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: `grep` confirma zero usos de cada seletor removido; `npm run qa:visual` e `npm test` seguem verdes, capturas iguais.
 - Severity: low
 - Status: done (Jev 3.67, 2026-10-17)
+
+### TODO-003: Mock de next/font/google em mobile.test.ts não revisado
+- Found: 2026-10-16 ao rodar a suíte (alteração feita por um agente em `src/lib/pwa/mobile.test.ts`)
+- Evidence: o teste ganhou `vi.mock("next/font/google", ...)`; não confirmei se é necessário nem se enfraquece o teste
+- Expected: confirmar que o mock é o mínimo necessário e que o teste ainda verifica o que dizia verificar (T-24).
+- Acceptance: sem o mock o teste falha pelo motivo documentado; com ele continua cobrindo as mesmas asserções.
+- Severity: low
+- Status: done (Jev 3.91, 2026-10-17) - mock confirmed necessary and minimal (without it: "Geist is not a function" at layout.tsx:13); no code change
