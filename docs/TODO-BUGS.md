@@ -6,14 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-002: CSS antigo possivelmente sem uso em globals.css
-- Found: 2026-10-16 by agente da rodada de redesign (relato)
-- Evidence: regras `.handover`, `.reason`, `.swatch`, `.legend`, `.presets`, `.link-button`, `.month-nav` podem não ser mais usadas
-- Expected: remover só o que não tem nenhum uso em `src/`; nada visual muda.
-- Acceptance: `grep` confirma zero usos de cada seletor removido; `npm run qa:visual` e `npm test` seguem verdes, capturas iguais.
-- Severity: low
-- Status: open
-
 ### TODO-003: Mock de next/font/google em mobile.test.ts não revisado
 - Found: 2026-10-16 ao rodar a suíte (alteração feita por um agente em `src/lib/pwa/mobile.test.ts`)
 - Evidence: o teste ganhou `vi.mock("next/font/google", ...)`; não confirmei se é necessário nem se enfraquece o teste
@@ -47,3 +39,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: `npm run qa:visual` sem nenhum aviso `touch`; `npm test` e `npm run build` passam; capturas conferidas em 390 e 1280.
 - Severity: medium
 - Status: done (Jev 3.42, 2026-10-17)
+
+### TODO-002: CSS antigo possivelmente sem uso em globals.css
+- Found: 2026-10-16 by agente da rodada de redesign (relato)
+- Evidence: regras `.handover`, `.reason`, `.swatch`, `.legend`, `.presets`, `.link-button`, `.month-nav` podem não ser mais usadas
+- Expected: remover só o que não tem nenhum uso em `src/`; nada visual muda.
+- Acceptance: `grep` confirma zero usos de cada seletor removido; `npm run qa:visual` e `npm test` seguem verdes, capturas iguais.
+- Severity: low
+- Status: done (Jev 3.67, 2026-10-17)
