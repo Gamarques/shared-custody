@@ -6,38 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-009: Link "Definir a regra de guarda" com 18px de altura em /calendario vazio (390)
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: aviso touch do `npm run qa:states` em `empty-calendario-390`
-- Expected: alvo de toque >= 44px
-- Acceptance: `npm run qa:states` sem aviso touch; `npm run qa:visual` segue sem avisos
-- Severity: medium
-- Status: open
-
-### TODO-010: Texto truncado em cards: "Nenhuma contest…" (390, /despesas vazio) e "Definir a regra de gu…" (sidebar 1280, home vazia)
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `states/empty-despesas-390.png`, `states/empty-home-1280.png` (relato do agente; confirmado por mim)
-- Expected: texto completo (quebra de linha) ou rótulo mais curto, sem corte
-- Acceptance: capturas conferidas sem texto cortado em 390 e 1280
-- Severity: low
-- Status: open
-
-### TODO-011: "Todos os meses" em /despesas parece texto solto, sem aparência de link/botão
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `states/empty-despesas-390.png` (relato do agente; confirmado por mim)
-- Expected: ação reconhecível como clicável (btn secundário/link) e alvo >= 44px
-- Acceptance: captura 390 conferida; sem aviso touch
-- Severity: low
-- Status: open
-
-### TODO-012: Links "Despesas" e "Voltar" no rodapé de /saldo pequenos e sem destaque
-- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
-- Evidence: `saldo-390.png` (visto por mim): texto pequeno solto no fim da página
-- Expected: links do rodapé com aparência de ação e alvo >= 44px, ou removidos se redundantes com a barra inferior
-- Acceptance: captura 390 conferida; sem aviso touch; `npm test` passa
-- Severity: low
-- Status: open
-
 ## Done
 
 ### TODO-001: Botões e links abaixo de 44px de altura no celular
@@ -103,3 +71,35 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: captura 1280 da confirmação sem sobreposição de conteúdo
 - Severity: low
 - Status: done (Jev 3.14, 2026-10-17) - resolvida junto com a 007 (modal nao cobre linhas)
+
+### TODO-009: Link "Definir a regra de guarda" com 18px de altura em /calendario vazio (390)
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: aviso touch do `npm run qa:states` em `empty-calendario-390`
+- Expected: alvo de toque >= 44px
+- Acceptance: `npm run qa:states` sem aviso touch; `npm run qa:visual` segue sem avisos
+- Severity: medium
+- Status: done (Jev 3.42, 2026-10-17) - corrigida (avaliada em conjunto com 009-012); capturas empty-* conferidas em 390 e 1280
+
+### TODO-010: Texto truncado em cards: "Nenhuma contest…" (390, /despesas vazio) e "Definir a regra de gu…" (sidebar 1280, home vazia)
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `states/empty-despesas-390.png`, `states/empty-home-1280.png` (relato do agente; confirmado por mim)
+- Expected: texto completo (quebra de linha) ou rótulo mais curto, sem corte
+- Acceptance: capturas conferidas sem texto cortado em 390 e 1280
+- Severity: low
+- Status: done (Jev 3.42, 2026-10-17) - corrigida (avaliada em conjunto com 009-012); capturas empty-* conferidas em 390 e 1280
+
+### TODO-011: "Todos os meses" em /despesas parece texto solto, sem aparência de link/botão
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `states/empty-despesas-390.png` (relato do agente; confirmado por mim)
+- Expected: ação reconhecível como clicável (btn secundário/link) e alvo >= 44px
+- Acceptance: captura 390 conferida; sem aviso touch
+- Severity: low
+- Status: done (Jev 3.42, 2026-10-17) - corrigida (avaliada em conjunto com 009-012); capturas empty-* conferidas em 390 e 1280
+
+### TODO-012: Links "Despesas" e "Voltar" no rodapé de /saldo pequenos e sem destaque
+- Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
+- Evidence: `saldo-390.png` (visto por mim): texto pequeno solto no fim da página
+- Expected: links do rodapé com aparência de ação e alvo >= 44px, ou removidos se redundantes com a barra inferior
+- Acceptance: captura 390 conferida; sem aviso touch; `npm test` passa
+- Severity: low
+- Status: done (Jev 3.42, 2026-10-17) - corrigida (avaliada em conjunto com 009-012); capturas empty-* conferidas em 390 e 1280

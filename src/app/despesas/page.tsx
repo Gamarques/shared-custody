@@ -181,7 +181,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
               <RowIcon name="filter" size={16} />
               Filtrar
             </button>
-            <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-ghost">
+            <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-secondary">
               Todos os meses
             </Link>
           </div>
@@ -212,7 +212,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
                         <RowIcon name="plus" size={16} />
                         Nova despesa
                       </Link>
-                      <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-ghost">
+                      <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-secondary">
                         Todos os meses
                       </Link>
                     </div>

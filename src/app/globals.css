@@ -586,11 +586,9 @@ button[type="submit"]:not(:only-child) {
 }
 
 .holder-chip-value {
-  overflow: hidden;
   font-size: var(--text-sm);
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .holder-chip-meta {
@@ -1264,11 +1262,9 @@ button[type="submit"]:not(:only-child) {
 }
 
 .stat-hint {
-  overflow: hidden;
   color: var(--muted);
   font-size: var(--text-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .stat-hint-up {

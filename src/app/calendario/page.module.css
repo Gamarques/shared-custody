@@ -56,6 +56,7 @@
 
 .notice {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
   margin: 0 0 var(--space-4);
@@ -71,9 +72,12 @@
   flex: none;
 }
 
-.notice a {
-  color: inherit;
-  font-weight: 650;
+.noticeText {
+  flex: 1 1 12rem;
+}
+
+.notice .btn {
+  color: var(--fg);
 }
 
 .calendar {

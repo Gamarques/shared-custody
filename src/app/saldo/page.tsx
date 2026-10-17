@@ -53,10 +53,10 @@ function Shell({ children, actions }: { children: ReactNode; actions?: ReactNode
       <PageHeader title="Saldo" subtitle="Divisão das despesas, acertos de contas e disputas." actions={actions} />
       {children}
       <div className={styles.footer}>
-        <Link href="/despesas" className="btn btn-ghost btn-sm">
+        <Link href="/despesas" className="btn btn-secondary">
           Despesas
         </Link>
-        <Link href="/" className="btn btn-ghost btn-sm">
+        <Link href="/" className="btn btn-secondary">
           Voltar
         </Link>
       </div>

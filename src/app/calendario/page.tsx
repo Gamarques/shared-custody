@@ -176,9 +176,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
       {!hasRule && (
         <p className={styles.notice}>
           <Icon name="info" size={18} />
-          <span>
-            A regra de guarda ainda não foi definida. <Link href="/guarda">Definir a regra de guarda</Link>
-          </span>
+          <span className={styles.noticeText}>A regra de guarda ainda não foi definida.</span>
+          <Link href="/guarda" className="btn btn-secondary btn-sm">
+            Definir a regra de guarda
+          </Link>
         </p>
       )}
 
