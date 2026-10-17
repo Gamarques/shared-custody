@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { headers } from "next/headers";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { Card, EmptyState, PageHeader } from "../_components/ui";
+import styles from "./page.module.css";
 import { InviteManager, type PendingInvite } from "./InviteManager";
 
 // Per-user data: never prerender, even when built without Supabase env vars.
@@ -12,7 +13,7 @@ export default async function InviteOtherPage() {
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Convidar o outro responsável</h1>
+        <PageHeader title="Convidar o outro responsável" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -54,15 +55,18 @@ export default async function InviteOtherPage() {
 
   return (
     <main>
-      <h1>Convidar o outro responsável</h1>
-      {full ? (
-        <p>A família já tem os dois responsáveis. Não é possível convidar mais ninguém.</p>
-      ) : (
-        <InviteManager origin={origin} familyName={familyName} initialPending={pending} />
-      )}
-      <p>
-        <Link href="/">Voltar</Link>
-      </p>
+      <PageHeader title="Convidar o outro responsável" />
+      <div className={styles.column}>
+        {full ? (
+          <Card>
+            <EmptyState icon="check" title="A família já tem os dois responsáveis.">
+              Não é possível convidar mais ninguém.
+            </EmptyState>
+          </Card>
+        ) : (
+          <InviteManager origin={origin} familyName={familyName} initialPending={pending} />
+        )}
+      </div>
     </main>
   );
 }

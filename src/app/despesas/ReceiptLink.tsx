@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { getReceiptUrl, openReceipt } from "@/lib/receipts/receipts";
 import { createClient } from "@/lib/supabase/client";
+import { RowIcon } from "./RowIcons";
+import styles from "./despesas.module.css";
 
 /** Opens a receipt through a fresh short-lived signed URL (RNF-08); the bucket is private. */
 export function ReceiptLink({ path }: { path: string }) {
@@ -16,10 +18,15 @@ export function ReceiptLink({ path }: { path: string }) {
 
   return (
     <>
-      <button type="button" className="link-button" onClick={open}>
+      <button type="button" className={styles.receipt} onClick={open}>
+        <RowIcon name="paperclip" size={14} />
         Ver comprovante
       </button>
-      {error && <p role="alert">{error}</p>}
+      {error && (
+        <p role="alert" className={styles.receiptError}>
+          {error}
+        </p>
+      )}
     </>
   );
 }

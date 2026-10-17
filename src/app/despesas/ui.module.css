@@ -1,0 +1,265 @@
+/* Shared look for the expenses and balance screens (forms, buttons, rows). Reuses the global
+   tokens (--fg, --muted, --accent, --bg); everything else is local to this module. */
+
+.page {
+  --line: #e3e3dc;
+  --surface: #ffffff;
+  --accent-soft: #e6f0ec;
+  --danger: #a4262c;
+  --radius: 0.75rem;
+  max-width: 40rem;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.page h1 {
+  margin: 0 0 1.25rem;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.page h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.page h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+
+.page h4 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.page p {
+  text-wrap: pretty;
+}
+
+.lead {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.hint {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  max-width: 62ch;
+}
+
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: #fff7d6;
+  border: 1px solid #e8d98a;
+}
+
+.status {
+  margin: 0.75rem 0 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.error {
+  margin: 0.375rem 0 0;
+  color: var(--danger);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Forms ---------- */
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  min-width: 0;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #c9cbc4;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 400;
+  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.field textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 111, 94, 0.25);
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+}
+
+.inlineLink {
+  justify-self: start;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- Buttons and links ---------- */
+
+.btn,
+.btnPrimary,
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 0.5rem;
+  border: 1px solid #c9cbc4;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 100ms ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: #f1f1ec;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #265c4e;
+  border-color: #265c4e;
+}
+
+.btnDanger {
+  color: var(--danger);
+  border-color: #e4b9bb;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #fbeeee;
+}
+
+.btn:active:not(:disabled),
+.btnPrimary:active:not(:disabled),
+.btnDanger:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btnPrimary:disabled,
+.btnDanger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible,
+.btnPrimary:focus-visible,
+.btnDanger:focus-visible,
+.textLink:focus-visible,
+.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--accent);
+  font-weight: 500;
+  text-underline-offset: 0.2em;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--muted);
+  text-underline-offset: 0.2em;
+}
+
+.footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btnPrimary,
+  .btnDanger,
+  .field input,
+  .field select,
+  .field textarea {
+    transition: none;
+  }
+  .btn:active:not(:disabled),
+  .btnPrimary:active:not(:disabled),
+  .btnDanger:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* A <button> that looks like a text link (opens something, does not navigate). */
+.linkButton {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.linkButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

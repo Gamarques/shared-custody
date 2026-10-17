@@ -5,6 +5,8 @@ import { useState, type FormEvent } from "react";
 import { inviteErrorMessage } from "@/lib/invites/invites";
 import { MEMBER_COLORS, validateMemberProfile, type OnboardingErrors } from "@/lib/onboarding/validate";
 import { createClient } from "@/lib/supabase/client";
+import { ColorPicker } from "../../_auth/ColorPicker";
+import styles from "../../_auth/auth.module.css";
 
 export function AcceptInviteForm({ token, takenColors }: { token: string; takenColors: string[] }) {
   const router = useRouter();
@@ -38,26 +40,19 @@ export function AcceptInviteForm({ token, takenColors }: { token: string; takenC
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <label htmlFor="displayName">Seu nome de exibição</label>
-      <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} />
-      {errors.displayName && <p role="alert">{errors.displayName}</p>}
+    <form className={styles.form} onSubmit={onSubmit}>
+      <div className="field">
+        <label htmlFor="displayName">Seu nome de exibição</label>
+        <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} />
+        {errors.displayName && <p role="alert">{errors.displayName}</p>}
+      </div>
 
-      <fieldset>
-        <legend>Sua cor</legend>
-        {colors.map((c) => (
-          <label key={c} style={{ marginRight: "0.75rem" }}>
-            <input type="radio" name="color" value={c} checked={color === c} onChange={() => setColor(c)} />
-            <span
-              aria-label={c}
-              style={{ background: c, display: "inline-block", width: "1rem", height: "1rem", marginLeft: "0.25rem" }}
-            />
-          </label>
-        ))}
-      </fieldset>
-      {errors.color && <p role="alert">{errors.color}</p>}
+      <div>
+        <ColorPicker colors={colors} value={color} onChange={setColor} />
+        {errors.color && <p role="alert">{errors.color}</p>}
+      </div>
 
-      <button type="submit" disabled={busy}>
+      <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
         {busy ? "Entrando…" : "Entrar na família"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}

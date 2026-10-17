@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { isValidEmail, safeNextPath } from "@/lib/auth/paths";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "../_components/Icon";
+import styles from "../_auth/auth.module.css";
 
 export function LoginForm({ next }: { next: string }) {
   const [email, setEmail] = useState("");
@@ -31,24 +33,33 @@ export function LoginForm({ next }: { next: string }) {
   }
 
   if (state === "sent") {
-    return <p role="status">Link enviado para {email}. Abra o e-mail neste aparelho e toque no link para entrar.</p>;
+    return (
+      <p role="status" className={styles.sent}>
+        <span className={styles.sentIcon}>
+          <Icon name="check" size={16} />
+        </span>
+        <span>Link enviado para {email}. Abra o e-mail neste aparelho e toque no link para entrar.</span>
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <label htmlFor="email">E-mail</label>
-      <input
-        id="email"
-        type="email"
-        autoComplete="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <button type="submit" disabled={state === "sending"}>
+    <form className={styles.form} onSubmit={onSubmit}>
+      <div className="field">
+        <label htmlFor="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      {state === "error" && <p role="alert">{message}</p>}
+      <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending"}>
         {state === "sending" ? "Enviando…" : "Enviar link de acesso"}
       </button>
-      {state === "error" && <p role="alert">{message}</p>}
     </form>
   );
 }

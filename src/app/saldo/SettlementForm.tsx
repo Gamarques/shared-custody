@@ -9,6 +9,7 @@ import {
   type SettlementFormInput,
 } from "@/lib/balance/settlement-form";
 import { createClient } from "@/lib/supabase/client";
+import styles from "./saldo.module.css";
 
 type Member = { id: string; display_name: string };
 
@@ -50,8 +51,8 @@ export function SettlementForm({
   }
 
   return (
-    <form onSubmit={submit} data-testid="settlement-form">
-      <label>
+    <form onSubmit={submit} data-testid="settlement-form" className={styles.form}>
+      <label className={styles.field}>
         Quem pagou
         <select value={form.fromMember} onChange={(e) => set({ fromMember: e.target.value })}>
           {members.map((m) => (
@@ -61,26 +62,26 @@ export function SettlementForm({
           ))}
         </select>
       </label>
-      {errors.fromMember && <p role="alert">{errors.fromMember}</p>}
-      <label>
+      {errors.fromMember && <p role="alert" className={styles.error}>{errors.fromMember}</p>}
+      <label className={styles.field}>
         Valor
         <input inputMode="decimal" value={form.amount} onChange={(e) => set({ amount: e.target.value })} />
       </label>
-      {errors.amount && <p role="alert">{errors.amount}</p>}
-      <label>
+      {errors.amount && <p role="alert" className={styles.error}>{errors.amount}</p>}
+      <label className={styles.field}>
         Data
         <input type="date" max={today} value={form.settledOn} onChange={(e) => set({ settledOn: e.target.value })} />
       </label>
-      {errors.settledOn && <p role="alert">{errors.settledOn}</p>}
-      <label>
+      {errors.settledOn && <p role="alert" className={styles.error}>{errors.settledOn}</p>}
+      <label className={styles.field}>
         Observação
         <input value={form.note} maxLength={200} onChange={(e) => set({ note: e.target.value })} />
       </label>
-      {errors.note && <p role="alert">{errors.note}</p>}
-      <button type="submit" disabled={busy}>
+      {errors.note && <p role="alert" className={styles.error}>{errors.note}</p>}
+      <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
         Registrar acerto
       </button>
-      {failed && <p role="alert">Não foi possível registrar o acerto.</p>}
+      {failed && <p role="alert" className={styles.error}>Não foi possível registrar o acerto.</p>}
     </form>
   );
 }

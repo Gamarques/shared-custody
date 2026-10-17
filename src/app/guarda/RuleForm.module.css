@@ -1,0 +1,54 @@
+/* Fields sit in a two-column grid when the card is wide enough (container query). */
+
+.form {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@container (min-width: 26rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .span {
+    grid-column: 1 / -1;
+  }
+}
+
+.grid > :global(.field) {
+  margin: 0;
+}
+
+.hint {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.form [role="alert"] {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 479px) {
+  .actions > button {
+    width: 100%;
+  }
+}

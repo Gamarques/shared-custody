@@ -16,7 +16,10 @@ import { toWallClock } from "@/lib/custody/timezone";
 import { textColorOn, type HomeMember } from "@/lib/custody/today";
 import { formatSavedAt } from "@/lib/pwa/offline";
 import { createClient } from "@/lib/supabase/server";
+import { Icon } from "../_components/Icon";
+import { Card, EmptyState, PageHeader } from "../_components/ui";
 import { OfflineCopy } from "./OfflineCopy";
+import styles from "./page.module.css";
 
 // Per-user data that depends on the clock: never prerender.
 export const dynamic = "force-dynamic";
@@ -79,7 +82,7 @@ async function loadCalendar(now: Date, monthParam: string | undefined): Promise<
 
 function Calendar({ calendar }: { calendar: MonthCalendar }) {
   return (
-    <table className="calendar" data-testid="calendar">
+    <table className={styles.calendar} data-testid="calendar">
       <caption>{calendar.title}</caption>
       <thead>
         <tr>
@@ -110,16 +113,16 @@ function Calendar({ calendar }: { calendar: MonthCalendar }) {
                   aria-current={day.isToday ? "date" : undefined}
                   title={describeDay(day)}
                 >
-                  <span className="day-number" style={{ color: textColorOn(first?.color ?? NO_HOLDER_COLOR) }}>
+                  <span className={styles.dayNumber} style={{ color: textColorOn(first?.color ?? NO_HOLDER_COLOR) }}>
                     {day.day}
                   </span>
                   {day.handovers.map((h) => (
-                    <span key={h.atMs} className="handover" data-testid="handover">
+                    <span key={h.atMs} className={styles.handover} data-testid="handover">
                       ⇄ {h.time}
                     </span>
                   ))}
                   {day.labels.map((reason) => (
-                    <span key={reason} className="reason" data-testid="reason">
+                    <span key={reason} className={styles.reason} data-testid="reason">
                       {reason}
                     </span>
                   ))}
@@ -138,7 +141,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Calendário</h1>
+        <PageHeader title="Calendário" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -149,7 +152,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   if (!loaded) {
     return (
       <main>
-        <h1>Calendário</h1>
+        <PageHeader title="Calendário" />
         <p>Não foi possível carregar a família.</p>
       </main>
     );
@@ -157,66 +160,85 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   const { calendar, members, hasRule, savedAt } = loaded;
 
   return (
-    <main>
-      <h1>Calendário</h1>
+    <main className="page-wide">
+      <PageHeader
+        title="Calendário"
+        subtitle="Quem fica com a criança em cada dia, com as trocas e exceções."
+        actions={
+          <Link className="btn btn-secondary" href="/excecoes">
+            <Icon name="exception" size={18} />
+            Exceções
+          </Link>
+        }
+      />
       <OfflineCopy canonicalPath={`/calendario?mes=${calendar.month}`} />
-      <nav className="month-nav">
-        <Link href={`/calendario?mes=${calendar.prevMonth}`} aria-label="Mês anterior">
-          ‹ Anterior
-        </Link>
-        <strong data-testid="month-title">{calendar.title}</strong>
-        <Link href={`/calendario?mes=${calendar.nextMonth}`} aria-label="Próximo mês">
-          Próximo ›
-        </Link>
-      </nav>
 
       {!hasRule && (
-        <p>
-          A regra de guarda ainda não foi definida. <Link href="/guarda">Definir a regra de guarda</Link>
+        <p className={styles.notice}>
+          <Icon name="info" size={18} />
+          <span>
+            A regra de guarda ainda não foi definida. <Link href="/guarda">Definir a regra de guarda</Link>
+          </span>
         </p>
       )}
 
-      <Calendar calendar={calendar} />
-      <p className="status" data-testid="saved-at">
-        Atualizado em {savedAt}
-      </p>
+      <div className={styles.layout}>
+        <section className={`card ${styles.board}`} aria-label="Calendário do mês">
+          <nav className={styles.nav}>
+            <Link className="btn btn-secondary btn-icon" href={`/calendario?mes=${calendar.prevMonth}`} aria-label="Mês anterior">
+              <Icon name="chevronRight" size={18} className={styles.flip} />
+            </Link>
+            <strong className={styles.navTitle} data-testid="month-title">
+              {calendar.title}
+            </strong>
+            <Link className="btn btn-secondary btn-icon" href={`/calendario?mes=${calendar.nextMonth}`} aria-label="Próximo mês">
+              <Icon name="chevronRight" size={18} />
+            </Link>
+          </nav>
+          <Calendar calendar={calendar} />
+          <p className={styles.saved} data-testid="saved-at">
+            Atualizado em {savedAt}
+          </p>
+        </section>
 
-      <ul className="legend" data-testid="legend">
-        {members.map((m) => (
-          <li key={m.id}>
-            <span className="swatch" style={{ background: m.color }} /> {m.display_name}
-          </li>
-        ))}
-        <li>
-          <span className="handover">⇄</span> hora da troca de guarda (a cor do dia se divide)
-        </li>
-        <li>
-          <span className="swatch exception-swatch" /> exceção à regra, com o motivo
-        </li>
-      </ul>
-
-      <section>
-        <h2>Exceções do mês</h2>
-        {calendar.exceptions.length > 0 ? (
-          <ul data-testid="month-exceptions">
-            {calendar.exceptions.map((e) => (
-              <li key={e.id}>
-                <span className="swatch" style={{ background: e.person.color ?? NO_HOLDER_COLOR }} /> <strong>{e.reason}</strong>:
-                com {e.person.name} {e.period}
+        <aside className={styles.side}>
+          <Card title="Legenda">
+            <ul className={styles.legend} data-testid="legend">
+              {members.map((m) => (
+                <li key={m.id}>
+                  <span className={styles.swatch} style={{ background: m.color }} /> {m.display_name}
+                </li>
+              ))}
+              <li>
+                <span className={styles.legendHandover}>⇄</span> hora da troca de guarda (a cor do dia se divide)
               </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Nenhuma exceção neste mês.</p>
-        )}
-        <p>
-          <Link href="/excecoes">Adicionar ou remover exceções</Link>
-        </p>
-      </section>
+              <li>
+                <span className={`${styles.swatch} ${styles.exceptionSwatch}`} /> exceção à regra, com o motivo
+              </li>
+            </ul>
+          </Card>
 
-      <p>
-        <Link href="/">Voltar</Link>
-      </p>
+          <Card title="Exceções do mês">
+            {calendar.exceptions.length > 0 ? (
+              <ul className={styles.exceptions} data-testid="month-exceptions">
+                {calendar.exceptions.map((e) => (
+                  <li key={e.id}>
+                    <span className={styles.swatch} style={{ background: e.person.color ?? NO_HOLDER_COLOR }} />{" "}
+                    <span>
+                      <strong>{e.reason}</strong>: com {e.person.name} {e.period}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState icon="exception" title="Nenhuma exceção neste mês." />
+            )}
+            <Link className={`btn btn-secondary btn-block ${styles.manage}`} href="/excecoes">
+              Adicionar ou remover exceções
+            </Link>
+          </Card>
+        </aside>
+      </div>
     </main>
   );
 }

@@ -8,8 +8,11 @@ import {
 } from "@/lib/custody/override-form";
 import { latestRule, todayIn } from "@/lib/custody/rule-form";
 import { createClient } from "@/lib/supabase/server";
+import { Icon } from "../_components/Icon";
+import { Badge, Card, EmptyState, PageHeader } from "../_components/ui";
 import { DeleteOverrideButton } from "./DeleteOverrideButton";
 import { OverrideForm } from "./OverrideForm";
+import styles from "./page.module.css";
 
 // Per-user data that depends on the clock: never prerender.
 export const dynamic = "force-dynamic";
@@ -31,9 +34,11 @@ function OverrideItem({
   const author = members.find((m) => m.user_id === o.created_by);
   return (
     <li data-testid="override">
-      <span className="swatch" style={{ background: member?.color }} /> <strong>{o.reason}</strong>: com{" "}
-      {member?.display_name ?? "responsável removido"} {describeOverridePeriod(o, timezone)}
-      {author ? `. Criada por ${author.display_name}` : ""}.{" "}
+      <span className={styles.swatch} style={{ background: member?.color }} />{" "}
+      <span className={styles.text}>
+        <strong>{o.reason}</strong>: com {member?.display_name ?? "responsável removido"} {describeOverridePeriod(o, timezone)}
+        {author ? `. Criada por ${author.display_name}` : ""}.
+      </span>{" "}
       {canDelete && <DeleteOverrideButton id={o.id} reason={o.reason} />}
     </li>
   );
@@ -44,7 +49,7 @@ export default async function OverridesPage() {
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Exceções</h1>
+        <PageHeader title="Exceções" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -62,7 +67,7 @@ export default async function OverridesPage() {
   if (!family) {
     return (
       <main>
-        <h1>Exceções</h1>
+        <PageHeader title="Exceções" />
         <p>Não foi possível carregar a família.</p>
       </main>
     );
@@ -95,50 +100,55 @@ export default async function OverridesPage() {
   const memberIds = members.map((m) => m.id);
 
   return (
-    <main>
-      <h1>Exceções</h1>
-      <p>
-        Uma exceção muda com quem a criança fica num período (troca de dias, férias, feriado) e prevalece sobre a regra
-        semanal. Se duas exceções se sobrepõem, vale a criada por último. Datas e horas no fuso {timezone}.
-      </p>
+    <main className={`page-wide ${styles.page}`}>
+      <PageHeader
+        title="Exceções"
+        subtitle={`Uma exceção muda com quem a criança fica num período (troca de dias, férias, feriado) e prevalece sobre a regra semanal. Se duas exceções se sobrepõem, vale a criada por último. Datas e horas no fuso ${timezone}.`}
+        actions={
+          <Link className="btn btn-secondary" href="/calendario">
+            <Icon name="calendar" size={18} />
+            Ver no calendário
+          </Link>
+        }
+      />
 
-      <section>
-        <h2>Próximas e em curso</h2>
-        {upcoming.length > 0 ? (
-          <ul data-testid="upcoming-overrides">
-            {upcoming.map((o) => (
-              <OverrideItem key={o.id} o={o} timezone={timezone} members={members} canDelete />
-            ))}
-          </ul>
-        ) : (
-          <p>Nenhuma exceção prevista.</p>
+      <div className={styles.layout}>
+        <Card
+          className={styles.listCard}
+          title="Próximas e em curso"
+          action={upcoming.length > 0 ? <Badge tone="accent">{upcoming.length}</Badge> : undefined}
+        >
+          {upcoming.length > 0 ? (
+            <ul className={styles.list} data-testid="upcoming-overrides">
+              {upcoming.map((o) => (
+                <OverrideItem key={o.id} o={o} timezone={timezone} members={members} canDelete />
+              ))}
+            </ul>
+          ) : (
+            <EmptyState icon="exception" title="Nenhuma exceção prevista." />
+          )}
+        </Card>
+
+        <Card className={styles.formCard} title="Nova exceção">
+          <OverrideForm
+            familyId={familyId}
+            timezone={timezone}
+            members={members.map((m) => ({ id: m.id, name: m.display_name }))}
+            initial={initialOverrideForm(today, rule?.handover_time ?? null, memberIds)}
+          />
+        </Card>
+
+        {past.length > 0 && (
+          <details className={`card ${styles.past}`}>
+            <summary>Exceções passadas ({past.length})</summary>
+            <ul className={styles.list} data-testid="past-overrides">
+              {past.map((o) => (
+                <OverrideItem key={o.id} o={o} timezone={timezone} members={members} canDelete={false} />
+              ))}
+            </ul>
+          </details>
         )}
-      </section>
-
-      <section>
-        <h2>Nova exceção</h2>
-        <OverrideForm
-          familyId={familyId}
-          timezone={timezone}
-          members={members.map((m) => ({ id: m.id, name: m.display_name }))}
-          initial={initialOverrideForm(today, rule?.handover_time ?? null, memberIds)}
-        />
-      </section>
-
-      {past.length > 0 && (
-        <details>
-          <summary>Exceções passadas ({past.length})</summary>
-          <ul data-testid="past-overrides">
-            {past.map((o) => (
-              <OverrideItem key={o.id} o={o} timezone={timezone} members={members} canDelete={false} />
-            ))}
-          </ul>
-        </details>
-      )}
-
-      <p>
-        <Link href="/calendario">Ver no calendário</Link> · <Link href="/">Voltar</Link>
-      </p>
+      </div>
     </main>
   );
 }

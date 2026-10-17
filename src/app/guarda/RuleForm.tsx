@@ -13,6 +13,7 @@ import {
   type RuleFormInput,
 } from "@/lib/custody/rule-form";
 import { createClient } from "@/lib/supabase/client";
+import styles from "./RuleForm.module.css";
 
 export type MemberOption = { id: string; name: string };
 
@@ -71,56 +72,71 @@ export function RuleForm({ familyId, members, initial, today }: Props) {
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <label htmlFor="firstMember">Quem fica com a criança na primeira semana</label>
-      <select id="firstMember" value={form.firstMemberId} onChange={(e) => update({ firstMemberId: e.target.value })}>
-        {members.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </select>
-      {errors.firstMemberId && <p role="alert">{errors.firstMemberId}</p>}
+    <form className={styles.form} onSubmit={onSubmit}>
+      <div className={styles.grid}>
+        <div className={`field ${styles.span}`}>
+          <label htmlFor="firstMember">Quem fica com a criança na primeira semana</label>
+          <select id="firstMember" value={form.firstMemberId} onChange={(e) => update({ firstMemberId: e.target.value })}>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          {errors.firstMemberId && <p role="alert">{errors.firstMemberId}</p>}
+        </div>
 
-      <label htmlFor="weekday">Dia da troca</label>
-      <select id="weekday" value={form.handoverWeekday} onChange={(e) => onWeekday(Number(e.target.value))}>
-        {WEEKDAYS.map((name, i) => (
-          <option key={name} value={i}>
-            {name}
-          </option>
-        ))}
-      </select>
-      {errors.handoverWeekday && <p role="alert">{errors.handoverWeekday}</p>}
+        <div className="field">
+          <label htmlFor="weekday">Dia da troca</label>
+          <select id="weekday" value={form.handoverWeekday} onChange={(e) => onWeekday(Number(e.target.value))}>
+            {WEEKDAYS.map((name, i) => (
+              <option key={name} value={i}>
+                {name}
+              </option>
+            ))}
+          </select>
+          {errors.handoverWeekday && <p role="alert">{errors.handoverWeekday}</p>}
+        </div>
 
-      <label htmlFor="handoverTime">Hora da troca</label>
-      <input id="handoverTime" type="time" value={form.handoverTime} onChange={(e) => update({ handoverTime: e.target.value })} />
-      {errors.handoverTime && <p role="alert">{errors.handoverTime}</p>}
+        <div className="field">
+          <label htmlFor="handoverTime">Hora da troca</label>
+          <input id="handoverTime" type="time" value={form.handoverTime} onChange={(e) => update({ handoverTime: e.target.value })} />
+          {errors.handoverTime && <p role="alert">{errors.handoverTime}</p>}
+        </div>
 
-      <label htmlFor="startsOn">Data da primeira troca</label>
-      <input id="startsOn" type="date" value={form.startsOn} onChange={(e) => onStartsOn(e.target.value)} />
-      {errors.startsOn && <p role="alert">{errors.startsOn}</p>}
+        <div className="field">
+          <label htmlFor="startsOn">Data da primeira troca</label>
+          <input id="startsOn" type="date" value={form.startsOn} onChange={(e) => onStartsOn(e.target.value)} />
+          {errors.startsOn && <p role="alert">{errors.startsOn}</p>}
+        </div>
+
+        {isChange && (
+          <div className="field">
+            <label htmlFor="validFrom">Nova regra vale a partir de</label>
+            <input
+              id="validFrom"
+              type="date"
+              value={form.validFrom ?? ""}
+              onChange={(e) => update({ validFrom: e.target.value })}
+            />
+            {errors.validFrom && <p role="alert">{errors.validFrom}</p>}
+          </div>
+        )}
+      </div>
 
       {isChange && (
-        <>
-          <label htmlFor="validFrom">Nova regra vale a partir de</label>
-          <input
-            id="validFrom"
-            type="date"
-            value={form.validFrom ?? ""}
-            onChange={(e) => update({ validFrom: e.target.value })}
-          />
-          <p className="status">
-            As semanas antes desta data continuam com a regra anterior, que segue valendo até a primeira troca da nova.
-            A versão anterior fica guardada no histórico.
-          </p>
-          {errors.validFrom && <p role="alert">{errors.validFrom}</p>}
-        </>
+        <p className={`status ${styles.hint}`}>
+          As semanas antes desta data continuam com a regra anterior, que segue valendo até a primeira troca da nova. A
+          versão anterior fica guardada no histórico.
+        </p>
       )}
 
-      <button type="submit" disabled={busy}>
-        {busy ? "Salvando…" : isChange ? "Salvar nova versão" : "Salvar regra"}
-      </button>
       {submitError && <p role="alert">{submitError}</p>}
+      <div className={styles.actions}>
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+          {busy ? "Salvando…" : isChange ? "Salvar nova versão" : "Salvar regra"}
+        </button>
+      </div>
     </form>
   );
 }

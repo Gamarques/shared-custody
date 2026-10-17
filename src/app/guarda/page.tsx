@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/env";
 import {
   describeRule,
@@ -9,6 +8,9 @@ import {
   type CustodyRuleRow,
 } from "@/lib/custody/rule-form";
 import { createClient } from "@/lib/supabase/server";
+import { Icon } from "../_components/Icon";
+import { Card, EmptyState, PageHeader } from "../_components/ui";
+import styles from "./page.module.css";
 import { RuleForm } from "./RuleForm";
 
 // Per-user data: never prerender, even when built without Supabase env vars.
@@ -21,7 +23,7 @@ export default async function CustodyRulePage() {
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Regra de guarda</h1>
+        <PageHeader title="Regra de guarda" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -59,52 +61,54 @@ export default async function CustodyRulePage() {
   const initial = initialRuleForm(current, members.map((m) => m.id), today);
 
   return (
-    <main>
-      <h1>Regra de guarda</h1>
-      <p>
-        A guarda alterna toda semana. Na hora da troca, a criança passa para o outro responsável (fuso {timezone}).
-      </p>
+    <main className="page-wide">
+      <PageHeader
+        title="Regra de guarda"
+        subtitle={`A guarda alterna toda semana. Na hora da troca, a criança passa para o outro responsável (fuso ${timezone}).`}
+      />
 
-      {current ? (
-        <section>
-          <h2>Regra atual</h2>
-          <p data-testid="current-rule">{describeRule(current, memberNames)}.</p>
-        </section>
-      ) : (
-        <p>Nenhuma regra definida ainda.</p>
-      )}
+      <div className={styles.layout}>
+        <Card className={styles.current} title="Regra atual" eyebrow={current ? "Em vigor" : undefined}>
+          {current ? (
+            <div className={styles.currentBody}>
+              <span className={styles.currentIcon}>
+                <Icon name="rule" size={22} />
+              </span>
+              <p className={styles.currentText} data-testid="current-rule">
+                {describeRule(current, memberNames)}.
+              </p>
+            </div>
+          ) : (
+            <EmptyState icon="rule" title="Nenhuma regra definida ainda." />
+          )}
+        </Card>
 
-      <section>
-        <h2>{current ? "Mudar a regra" : "Definir a regra"}</h2>
-        <RuleForm
-          key={current?.id ?? "new"}
-          familyId={familyId}
-          members={members.map((m) => ({ id: m.id, name: m.display_name }))}
-          initial={initial}
-          today={today}
-        />
-      </section>
+        <Card className={styles.formCard} title={current ? "Mudar a regra" : "Definir a regra"}>
+          <RuleForm
+            key={current?.id ?? "new"}
+            familyId={familyId}
+            members={members.map((m) => ({ id: m.id, name: m.display_name }))}
+            initial={initial}
+            today={today}
+          />
+        </Card>
 
-      {versions.length > 0 && (
-        <section>
-          <h2>Histórico de versões</h2>
-          <ol data-testid="rule-versions">
-            {versions.map((v) => (
-              <li key={v.id}>
-                {v.id === current?.id ? <strong>Atual: </strong> : null}
-                {describeRule(v, memberNames)}; vale a partir de {formatDate(v.valid_from)}
-                {v.valid_to ? ` até ${formatDate(v.valid_to)}` : ""}. Salva em{" "}
-                {new Date(v.created_at).toLocaleString("pt-PT", { timeZone: timezone, dateStyle: "short", timeStyle: "short" })}
-                {v.created_by && userNames[v.created_by] ? ` por ${userNames[v.created_by]}` : ""}.
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      <p>
-        <Link href="/">Voltar</Link>
-      </p>
+        {versions.length > 0 && (
+          <Card className={styles.historyCard} title="Histórico de versões">
+            <ol className={styles.history} data-testid="rule-versions">
+              {versions.map((v) => (
+                <li key={v.id}>
+                  {v.id === current?.id ? <strong>Atual: </strong> : null}
+                  {describeRule(v, memberNames)}; vale a partir de {formatDate(v.valid_from)}
+                  {v.valid_to ? ` até ${formatDate(v.valid_to)}` : ""}. Salva em{" "}
+                  {new Date(v.created_at).toLocaleString("pt-PT", { timeZone: timezone, dateStyle: "short", timeStyle: "short" })}
+                  {v.created_by && userNames[v.created_by] ? ` por ${userNames[v.created_by]}` : ""}.
+                </li>
+              ))}
+            </ol>
+          </Card>
+        )}
+      </div>
     </main>
   );
 }

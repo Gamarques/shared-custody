@@ -68,7 +68,7 @@ describe("expense history page (RF-12)", () => {
     expect(auditChain).toContainEqual(["eq", ["expense_id", "e1"]]);
     expect(auditChain).toContainEqual(["order", ["seq", { ascending: false }]]);
     expect(html.match(/data-testid="history-entry"/g)?.length).toBe(3);
-    const titles = [...html.matchAll(/<strong>([^<]+ a despesa)<\/strong>/g)].map((m) => m[1]);
+    const titles = [...html.matchAll(/<strong[^>]*>([^<]+ a despesa)<\/strong>/g)].map((m) => m[1]);
     expect(titles).toEqual(["Excluiu a despesa", "Alterou a despesa", "Criou a despesa"]);
     expect(html).toContain("Bruno, 12/10/2026 18:30");
     expect(html).toMatch(/Valor: 100,00.€ → 120,00.€/);

@@ -4,6 +4,9 @@ import { formatDate } from "@/lib/custody/rule-form";
 import { buildHistory, type AuditRow } from "@/lib/expenses/expense-history";
 import { formatCents } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/server";
+import { Badge, EmptyState, PageHeader } from "../../../_components/ui";
+import { RowIcon, type RowIconName } from "../../RowIcons";
+import styles from "../../despesas.module.css";
 
 // Per-user data: never prerender.
 export const dynamic = "force-dynamic";
@@ -11,16 +14,33 @@ export const dynamic = "force-dynamic";
 type MemberRow = { id: string; user_id: string; display_name: string };
 type ExpenseRow = { id: string; description: string; amount_cents: number; spent_on: string; deleted_at: string | null };
 
+function BackLink() {
+  return (
+    <Link href="/despesas" className="btn btn-secondary">
+      <RowIcon name="arrowLeft" size={16} />
+      Voltar às despesas
+    </Link>
+  );
+}
+
 function Message({ text }: { text: string }) {
   return (
     <main>
-      <h1>Histórico da despesa</h1>
-      <p>{text}</p>
-      <p>
-        <Link href="/despesas">Voltar às despesas</Link>
-      </p>
+      <PageHeader title="Histórico da despesa" actions={<BackLink />} />
+      <div className="card">
+        <p>{text}</p>
+      </div>
     </main>
   );
+}
+
+/** Timeline marker of an entry, from its title (the audit action is not part of the item). */
+function markerFor(title: string): { icon: RowIconName; tone: string } {
+  if (title.startsWith("Criou")) return { icon: "plus", tone: "" };
+  if (title.startsWith("Excluiu")) return { icon: "trash", tone: styles.nodeDelete };
+  if (title.startsWith("Confirmou")) return { icon: "check", tone: "" };
+  if (title.startsWith("Contestou")) return { icon: "alert", tone: styles.nodeDelete };
+  return { icon: "edit", tone: styles.nodeUpdate };
 }
 
 /**
@@ -71,41 +91,61 @@ export default async function ExpenseHistoryPage({ params }: { params: Promise<{
   });
 
   return (
-    <main>
-      <h1>Histórico da despesa</h1>
-      <p>
-        <strong>{expense.description}</strong> — {formatCents(expense.amount_cents, currency)} em{" "}
-        {formatDate(expense.spent_on)}
-        {expense.deleted_at && <> (excluída)</>}
-      </p>
-      <p>Cada criação, alteração e exclusão fica registrada aqui e não pode ser apagada.</p>
+    <main className={`page-wide ${styles.narrow}`}>
+      <PageHeader
+        title="Histórico da despesa"
+        subtitle="Cada criação, alteração e exclusão fica registrada aqui e não pode ser apagada."
+        actions={<BackLink />}
+      />
+
+      <section className={`card ${styles.expenseCard}`}>
+        <div className={styles.expenseText}>
+          <p className={styles.expenseTitle}>{expense.description}</p>
+          <p className={styles.expenseMeta}>
+            <span>{formatDate(expense.spent_on)}</span>
+            {expense.deleted_at && <Badge tone="danger">(excluída)</Badge>}
+          </p>
+        </div>
+        <span className={styles.expenseAmount}>{formatCents(expense.amount_cents, currency)}</span>
+      </section>
 
       {error ? (
         <p role="alert">Não foi possível carregar o histórico.</p>
       ) : items.length === 0 ? (
-        <p>Nenhum registro.</p>
+        <div className="card">
+          <EmptyState icon="clock" title="Nenhum registro." />
+        </div>
       ) : (
-        <ol data-testid="history">
-          {items.map((item) => (
-            <li key={item.key} data-testid="history-entry">
-              <strong>{item.title}</strong> — {item.who}, {item.when}
-              {item.changes.length > 0 && (
-                <ul>
-                  {item.changes.map((c) => (
-                    <li key={c.label}>
-                      {c.label}: {c.from === null ? c.to : `${c.from} → ${c.to}`}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ol>
+        <section className={`card ${styles.timelineCard}`}>
+          <ol data-testid="history" className={styles.timeline}>
+            {items.map((item) => {
+              const marker = markerFor(item.title);
+              return (
+                <li key={item.key} data-testid="history-entry" className={styles.entry}>
+                  <span className={`${styles.node} ${marker.tone}`}>
+                    <RowIcon name={marker.icon} size={16} />
+                  </span>
+                  <div className={styles.entryBody}>
+                    <strong className={styles.entryTitle}>{item.title}</strong>
+                    <span className={styles.who}>
+                      {item.who}, {item.when}
+                    </span>
+                    {item.changes.length > 0 && (
+                      <ul className={styles.changes}>
+                        {item.changes.map((c) => (
+                          <li key={c.label}>
+                            {c.label}: {c.from === null ? c.to : `${c.from} → ${c.to}`}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
       )}
-
-      <p>
-        <Link href="/despesas">Voltar às despesas</Link>
-      </p>
     </main>
   );
 }

@@ -26,6 +26,16 @@ def parse_tasks():
         if m:
             cols = [c.strip() for c in m.group(2).split("|")]
             tasks[m.group(1)] = dict(id=m.group(1), title=cols[0], req=cols[1], accept=cols[2], size=cols[3])
+    tasks["DEMO"] = dict(id="DEMO", title="Demo mode: run the whole app with fake in-memory data, no Supabase",
+        req="-", size="G", accept=(
+        "When env DEMO_MODE=1 (and NEXT_PUBLIC_DEMO_MODE=1 where client code needs it), `npm run dev` runs fully without any Supabase "
+        "project: the supabase client/server/proxy factories return an in-memory fake client (query builder for the select/insert/update/"
+        "delete/eq/order/filters/rpc/storage calls the app actually uses), auth is bypassed with a fixed logged-in user (Ana), and seed data "
+        "is loaded: family with Ana and Bruno (EUR, Europe/Lisbon), child, weekly custody rule, one override, expenses incl. the plan's "
+        "example (Material escolar 100 EUR Ana 50%, Dentista 80 EUR Bruno 30% => Ana owes Bruno 6.00), one disputed expense, one settlement, audit rows. "
+        "Writes mutate memory so forms work. Show a visible DEMO banner. Add `npm run demo` script. With DEMO_MODE unset behaviour is "
+        "unchanged and all existing tests still pass; add tests for the fake client. Document in README/docs. Start `npm run demo` once, "
+        "fetch the main pages with curl to confirm they render with seed data, then stop it."))
     return tasks
 
 

@@ -1,0 +1,7 @@
+.column {
+  max-width: 34rem;
+}
+
+.column > :global(.card) {
+  margin: 0;
+}

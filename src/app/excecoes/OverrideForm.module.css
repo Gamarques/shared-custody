@@ -1,0 +1,56 @@
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.form > :global(.field),
+.form :global(.field) {
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem;
+  gap: var(--space-2);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.preset {
+  min-height: 2rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--fg-2);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  box-shadow: none;
+}
+
+.preset:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.form [role="alert"] {
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 479px) {
+  .actions > button {
+    width: 100%;
+  }
+}

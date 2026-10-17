@@ -2,6 +2,7 @@ import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/env";
 import { INVITE_STATUS_MESSAGES, isValidInviteToken, type InviteStatus } from "@/lib/invites/invites";
 import { createClient } from "@/lib/supabase/server";
+import { AuthHeader } from "../../_auth/AuthHeader";
 import { AcceptInviteForm } from "./AcceptInviteForm";
 
 type InviteRow = {
@@ -48,10 +49,11 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   const inviter = invite.inviter_name ?? "O outro responsável";
   return (
     <main>
-      <h1>Convite</h1>
-      <p>
-        {inviter} convidou você para a família <strong>{invite.family_name}</strong>.
-      </p>
+      <AuthHeader icon="invite" title="Convite">
+        <p>
+          {inviter} convidou você para a família <strong>{invite.family_name}</strong>.
+        </p>
+      </AuthHeader>
       {invite.invited_email && invite.invited_email !== user.email?.toLowerCase() && (
         <p role="alert">
           Este convite foi enviado para {invite.invited_email}. Entre com esse e-mail para aceitar.
@@ -65,8 +67,9 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 function InviteShell({ children }: { children: React.ReactNode }) {
   return (
     <main>
-      <h1>Convite</h1>
-      <p>{children}</p>
+      <AuthHeader icon="info" title="Convite">
+        <p>{children}</p>
+      </AuthHeader>
     </main>
   );
 }

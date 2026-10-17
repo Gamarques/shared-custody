@@ -3,7 +3,10 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { todayIn } from "@/lib/custody/rule-form";
 import { expenseToForm } from "@/lib/expenses/expense-form";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "../../../_components/ui";
+import { RowIcon } from "../../RowIcons";
 import { ExpenseForm } from "../../nova/ExpenseForm";
+import styles from "../../despesas.module.css";
 
 // Per-user data and today's date in the family zone: never prerender.
 export const dynamic = "force-dynamic";
@@ -20,14 +23,23 @@ type ExpenseRow = {
   deleted_at: string | null;
 };
 
+function BackLink() {
+  return (
+    <Link href="/despesas" className="btn btn-ghost btn-lg">
+      <RowIcon name="arrowLeft" size={16} />
+      Voltar às despesas
+    </Link>
+  );
+}
+
 function Message({ text }: { text: string }) {
   return (
     <main>
-      <h1>Editar despesa</h1>
-      <p>{text}</p>
-      <p>
-        <Link href="/despesas">Voltar às despesas</Link>
-      </p>
+      <PageHeader title="Editar despesa" />
+      <div className="card">
+        <p>{text}</p>
+        <BackLink />
+      </div>
     </main>
   );
 }
@@ -71,26 +83,29 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
   }));
 
   return (
-    <main>
-      <h1>Editar despesa</h1>
+    <main className={`page-wide ${styles.narrow}`}>
+      <PageHeader title="Editar despesa" />
       {expense.status !== "pending" && (
-        <p data-testid="reset-warning">
-          Esta despesa já foi {expense.status === "confirmed" ? "confirmada" : "contestada"}. Ao salvar, ela volta a
-          pendente e o outro responsável decide de novo.
+        <p data-testid="reset-warning" className={styles.notice}>
+          <RowIcon name="alert" size={16} />
+          <span>
+            Esta despesa já foi {expense.status === "confirmed" ? "confirmada" : "contestada"}. Ao salvar, ela volta a
+            pendente e o outro responsável decide de novo.
+          </span>
         </p>
       )}
-      <ExpenseForm
-        familyId={mine.family_id}
-        currency={family.currency}
-        today={todayIn(family.timezone)}
-        members={members}
-        defaultShareBps={family.default_payer_share_bps}
-        initial={expenseToForm(expense)}
-        expenseId={expense.id}
-      />
-      <p>
-        <Link href="/despesas">Voltar às despesas</Link>
-      </p>
+      <div className={styles.formCard}>
+        <ExpenseForm
+          familyId={mine.family_id}
+          currency={family.currency}
+          today={todayIn(family.timezone)}
+          members={members}
+          defaultShareBps={family.default_payer_share_bps}
+          initial={expenseToForm(expense)}
+          expenseId={expense.id}
+          cancel={<BackLink />}
+        />
+      </div>
     </main>
   );
 }

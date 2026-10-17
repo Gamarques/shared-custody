@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { expenseSaveErrorMessage } from "@/lib/expenses/expense-form";
 import { createClient } from "@/lib/supabase/client";
+import { RowIcon } from "./RowIcons";
+import styles from "./despesas.module.css";
 
 /** Logical deletion (RF-17): sets deleted_at; the history stays in expense_audit. */
 export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
@@ -27,23 +29,32 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
     router.refresh();
   }
 
-  if (!confirming) {
-    return (
-      <button type="button" onClick={() => setConfirming(true)}>
-        Excluir
-      </button>
-    );
-  }
   return (
-    <span data-testid="delete-confirm">
-      Excluir esta despesa? O histórico é mantido.{" "}
-      <button type="button" disabled={busy} onClick={remove}>
-        Confirmar exclusão
-      </button>{" "}
-      <button type="button" disabled={busy} onClick={() => setConfirming(false)}>
-        Cancelar
+    <span className={styles.deleteWrap}>
+      <button
+        type="button"
+        className={`btn btn-ghost btn-icon btn-sm ${styles.dangerHover}`}
+        aria-label="Excluir"
+        title="Excluir"
+        aria-expanded={confirming}
+        onClick={() => setConfirming((open) => !open)}
+      >
+        <RowIcon name="trash" />
       </button>
-      {error && <span role="alert"> {error}</span>}
+      {confirming && (
+        <span data-testid="delete-confirm" className={styles.confirmDelete}>
+          <span>Excluir esta despesa? O histórico é mantido.</span>
+          <span className={styles.confirmButtons}>
+            <button type="button" className="btn btn-danger btn-sm" disabled={busy} onClick={remove}>
+              Confirmar exclusão
+            </button>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => setConfirming(false)}>
+              Cancelar
+            </button>
+          </span>
+          {error && <span role="alert">{error}</span>}
+        </span>
+      )}
     </span>
   );
 }

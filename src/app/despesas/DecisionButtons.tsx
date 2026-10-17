@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { validateDisputeComment } from "@/lib/expenses/expense-decision";
 import { createClient } from "@/lib/supabase/client";
+import styles from "./despesas.module.css";
 
 /** Confirm or dispute an expense (RF-11); shown only to the member who did not pay. */
 export function DecisionButtons({ expenseId }: { expenseId: string }) {
@@ -37,28 +38,30 @@ export function DecisionButtons({ expenseId }: { expenseId: string }) {
   }
 
   return (
-    <div data-testid="decision">
+    <div data-testid="decision" className={styles.decision}>
       {!disputing ? (
-        <>
-          <button type="button" disabled={busy} onClick={confirm}>
+        <div className={styles.decisionButtons}>
+          <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={confirm}>
             Confirmar
-          </button>{" "}
-          <button type="button" disabled={busy} onClick={() => setDisputing(true)}>
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => setDisputing(true)}>
             Contestar
           </button>
-        </>
+        </div>
       ) : (
         <>
           <label>
             Motivo da contestação
             <textarea value={comment} maxLength={500} onChange={(e) => setComment(e.target.value)} />
           </label>
-          <button type="button" disabled={busy} onClick={dispute}>
-            Enviar contestação
-          </button>{" "}
-          <button type="button" disabled={busy} onClick={() => setDisputing(false)}>
-            Cancelar
-          </button>
+          <div className={styles.decisionButtons}>
+            <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={dispute}>
+              Enviar contestação
+            </button>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => setDisputing(false)}>
+              Cancelar
+            </button>
+          </div>
         </>
       )}
       {error && <p role="alert">{error}</p>}

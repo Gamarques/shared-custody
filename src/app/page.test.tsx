@@ -8,7 +8,7 @@ function query(table: string) {
   const entry = { table, chain: [] as [string, unknown[]][] };
   calls.push(entry);
   const q: Record<string, unknown> = { maybeSingle: () => Promise.resolve(result) };
-  for (const m of ["select", "eq", "gt", "order"]) {
+  for (const m of ["select", "eq", "gt", "gte", "is", "order"]) {
     q[m] = (...args: unknown[]) => {
       entry.chain.push([m, args]);
       return q;
@@ -107,9 +107,33 @@ describe("home page: com quem está hoje (RF-05)", () => {
     expect(chain.eq).toEqual(["user_id", "u1"]);
     expect(chain.gt).toEqual(["families.custody_overrides.ends_at", "2026-10-14T09:00:00.000Z"]);
     const select = String(chain.select[0]);
-    for (const embedded of ["members(id, display_name, color)", "custody_rules(", "custody_overrides(", "children("]) {
+    for (const embedded of ["members(id, display_name, color)", "custody_rules(", "custody_overrides(", "children(", "expenses(", "settlements("]) {
       expect(select).toContain(embedded);
     }
+  });
+
+  it("shows this month's expenses and balance from the same query", async () => {
+    result = family({
+      currency: "EUR",
+      expenses: [
+        // Ana paid 100,00 at 50%: Bruno owes 50,00. Bruno paid 80,00 at 30%: Ana owes 56,00.
+        { id: "e1", paid_by: "m1", amount_cents: 10000, payer_share_bps: 5000, status: "confirmed", spent_on: "2026-10-02" },
+        { id: "e2", paid_by: "m2", amount_cents: 8000, payer_share_bps: 3000, status: "pending", spent_on: "2026-10-05" },
+        // Last month: outside the month, so not counted even when returned.
+        { id: "e3", paid_by: "m2", amount_cents: 5000, payer_share_bps: 5000, status: "confirmed", spent_on: "2026-09-28" },
+      ],
+      settlements: [],
+    });
+    const html = renderToStaticMarkup(await Home());
+    expect(html).toContain("Despesas de outubro");
+    expect(html).toContain("180,00");
+    expect(html).toContain("2 despesas");
+    expect(html).toContain("Saldo de outubro");
+    expect(html).toContain("6,00");
+    expect(html).toContain("Ana deve a Bruno");
+    const chain = calls[0].chain;
+    expect(chain).toContainEqual(["gte", ["families.expenses.spent_on", "2026-10-01"]]);
+    expect(chain).toContainEqual(["is", ["families.expenses.deleted_at", null]]);
   });
 
   it("shows an override with its reason", async () => {

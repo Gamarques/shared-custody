@@ -1,0 +1,205 @@
+/* Centered auth cards: header, fields and the color picker shared by login, onboarding, invite. */
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+
+.tile {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-lg);
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: var(--shadow-xs);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.head > p {
+  max-width: 34ch;
+  margin: var(--space-2) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.form :global(.field) {
+  margin: 0;
+}
+
+.form > :global([role="alert"]),
+.form > :global([role="status"]) {
+  margin: 0;
+}
+
+.form > button[type="submit"]:not(:only-child) {
+  margin-top: var(--space-1);
+}
+
+.note {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.note > p {
+  margin: 0;
+}
+
+.note a {
+  font-weight: 600;
+}
+
+.sent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 !important;
+  border-color: #bfe3cf !important;
+  background: var(--success-soft) !important;
+  color: var(--success);
+  font-size: var(--text-sm);
+}
+
+.sentIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--success);
+  color: #ffffff;
+}
+
+.colors {
+  margin: 0;
+}
+
+.colors > legend {
+  margin-bottom: var(--space-2);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.swatchLabel {
+  position: relative;
+  margin: 0;
+  cursor: pointer;
+}
+
+.swatchLabel > input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--line-strong);
+  color: #ffffff;
+  transition: box-shadow 0.15s var(--ease), transform 0.15s var(--ease);
+}
+
+.swatchCheck {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.45));
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease);
+}
+
+.swatchLabel > input:checked + .swatch {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--fg);
+}
+
+.swatchLabel > input:checked + .swatch .swatchCheck {
+  opacity: 1;
+  transform: none;
+}
+
+.swatchLabel > input:focus-visible + .swatch {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent), 0 0 0 7px rgba(47, 111, 94, 0.3);
+}
+
+.swatchLabel:hover .swatch {
+  transform: scale(1.06);
+}
+
+/* Invite link box */
+
+.linkBox {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.linkBox > input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+
+.linkBox > button {
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.meta {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.meta > p {
+  margin: 0;
+}
+
+.footnote {
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}

@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { metadata, viewport } from "@/app/layout";
+
+// next/font is compiled by Next's build; outside it the font loader is only a stub.
+vi.mock("next/font/google", () => ({ Geist: () => ({ className: "", variable: "", style: {} }) }));
 
 // T-24: static checks for problems that only show on phones and that a desktop browser hides.
 const css = readFileSync("src/app/globals.css", "utf8");

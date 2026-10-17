@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   CATEGORIES,
   describeSavedExpense,
@@ -19,6 +19,8 @@ import { formatBps } from "@/lib/expenses/money";
 import { checkReceiptFile, compressReceiptPhoto, receiptErrorMessage } from "@/lib/receipts/compress";
 import { RECEIPT_BUCKET, receiptPath } from "@/lib/receipts/receipts";
 import { createClient } from "@/lib/supabase/client";
+import { RowIcon } from "../RowIcons";
+import styles from "../despesas.module.css";
 
 type Props = {
   familyId: string;
@@ -31,10 +33,12 @@ type Props = {
   initial: ExpenseFormInput;
   /** Edit mode (RF-17): updates this expense instead of inserting; the receipt is kept. */
   expenseId?: string;
+  /** Secondary action (a back link) shown left of the submit button. */
+  cancel?: ReactNode;
 };
 
 /** Registers (RF-08) or edits (RF-17) an expense, with the payer's share for this expense (RF-09). */
-export function ExpenseForm({ familyId, currency, today, members, defaultShareBps, initial, expenseId }: Props) {
+export function ExpenseForm({ familyId, currency, today, members, defaultShareBps, initial, expenseId, cancel }: Props) {
   const router = useRouter();
   const [form, setForm] = useState<ExpenseFormInput>(initial);
   const [percentEdited, setPercentEdited] = useState(false);
@@ -129,109 +133,149 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
   const split = describeSplit(form, members, currency);
 
   return (
-    <form onSubmit={onSubmit}>
-      <label htmlFor="amount">Valor ({currency})</label>
-      <input
-        id="amount"
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        placeholder="0,00"
-        value={form.amount}
-        onChange={(e) => update({ amount: e.target.value })}
-      />
-      {errors.amount && <p role="alert">{errors.amount}</p>}
+    <form onSubmit={onSubmit} className={styles.form}>
+      <div className={styles.group}>
+        <div className={styles.field}>
+          <label htmlFor="amount">Valor ({currency})</label>
+          <div className={styles.affix}>
+            <input
+              id="amount"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0,00"
+              value={form.amount}
+              onChange={(e) => update({ amount: e.target.value })}
+            />
+            <span className={styles.affixText} aria-hidden="true">
+              {currency}
+            </span>
+          </div>
+          {errors.amount && <p role="alert">{errors.amount}</p>}
+        </div>
 
-      <label htmlFor="spentOn">Data</label>
-      <input id="spentOn" type="date" max={today} value={form.spentOn} onChange={(e) => update({ spentOn: e.target.value })} />
-      {errors.spentOn && <p role="alert">{errors.spentOn}</p>}
+        <div className={styles.field}>
+          <label htmlFor="spentOn">Data</label>
+          <input id="spentOn" type="date" max={today} value={form.spentOn} onChange={(e) => update({ spentOn: e.target.value })} />
+          {errors.spentOn && <p role="alert">{errors.spentOn}</p>}
+        </div>
 
-      <label htmlFor="description">Descrição</label>
-      <input
-        id="description"
-        type="text"
-        maxLength={DESCRIPTION_MAX_LENGTH}
-        placeholder="Ex.: Material escolar, Dentista"
-        value={form.description}
-        onChange={(e) => update({ description: e.target.value })}
-      />
-      {errors.description && <p role="alert">{errors.description}</p>}
+        <div className={`${styles.field} ${styles.span2}`}>
+          <label htmlFor="description">Descrição</label>
+          <input
+            id="description"
+            type="text"
+            maxLength={DESCRIPTION_MAX_LENGTH}
+            placeholder="Ex.: Material escolar, Dentista"
+            value={form.description}
+            onChange={(e) => update({ description: e.target.value })}
+          />
+          {errors.description && <p role="alert">{errors.description}</p>}
+        </div>
 
-      <label htmlFor="category">Categoria</label>
-      <select id="category" value={form.category} onChange={(e) => update({ category: e.target.value })}>
-        {CATEGORIES.map((c) => (
-          <option key={c.value} value={c.value}>
-            {c.label}
-          </option>
-        ))}
-      </select>
-      {errors.category && <p role="alert">{errors.category}</p>}
+        <div className={`${styles.field} ${styles.span2}`}>
+          <label htmlFor="category">Categoria</label>
+          <select id="category" value={form.category} onChange={(e) => update({ category: e.target.value })}>
+            {CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          {errors.category && <p role="alert">{errors.category}</p>}
+        </div>
+      </div>
 
-      <label htmlFor="paidBy">Quem pagou</label>
-      <select id="paidBy" value={form.paidBy} onChange={(e) => update({ paidBy: e.target.value })}>
-        {members.map((m) => (
-          <option key={m.id} value={m.id}>
-            {m.name}
-          </option>
-        ))}
-      </select>
-      {errors.paidBy && <p role="alert">{errors.paidBy}</p>}
+      <div className={styles.group}>
+        <div className={styles.field}>
+          <label htmlFor="paidBy">Quem pagou</label>
+          <select id="paidBy" value={form.paidBy} onChange={(e) => update({ paidBy: e.target.value })}>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
+          {errors.paidBy && <p role="alert">{errors.paidBy}</p>}
+        </div>
 
-      <label htmlFor="payerPercent">Parte de quem pagou (%)</label>
-      <input
-        id="payerPercent"
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        value={form.payerPercent}
-        onChange={(e) => {
-          update({ payerPercent: e.target.value });
-          setPercentEdited(true);
-        }}
-      />
-      {form.payerPercent !== defaultPercent && (
-        <button
-          type="button"
-          className="link-button"
-          onClick={() => {
-            update({ payerPercent: defaultPercent });
-            setPercentEdited(false);
-          }}
-        >
-          Usar o padrão da família ({defaultPercent}%)
-        </button>
-      )}
-      {errors.payerPercent && <p role="alert">{errors.payerPercent}</p>}
-      {split && (
-        <p data-testid="split">
-          {split}
-        </p>
-      )}
+        <div className={styles.field}>
+          <label htmlFor="payerPercent">Parte de quem pagou (%)</label>
+          <div className={styles.affix}>
+            <input
+              id="payerPercent"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={form.payerPercent}
+              onChange={(e) => {
+                update({ payerPercent: e.target.value });
+                setPercentEdited(true);
+              }}
+            />
+            <span className={styles.affixText} aria-hidden="true">
+              %
+            </span>
+          </div>
+          {form.payerPercent !== defaultPercent && (
+            <button
+              type="button"
+              className={styles.linkButton}
+              onClick={() => {
+                update({ payerPercent: defaultPercent });
+                setPercentEdited(false);
+              }}
+            >
+              Usar o padrão da família ({defaultPercent}%)
+            </button>
+          )}
+          {errors.payerPercent && <p role="alert">{errors.payerPercent}</p>}
+        </div>
+
+        {split && (
+          <p data-testid="split" className={`${styles.split} ${styles.span2}`}>
+            <RowIcon name="check" size={16} />
+            <span>{split}</span>
+          </p>
+        )}
+      </div>
 
       {!expenseId && (
-        <>
-          <label htmlFor="receipt">Comprovante (foto, opcional)</label>
-          <input
-            id="receipt"
-            ref={receiptInput}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              setReceipt(e.target.files?.[0] ?? null);
-              setReceiptError("");
-              setSaved("");
-            }}
-          />
-          <p>A foto é reduzida para cerca de 300 KB antes do envio e só os dois responsáveis a veem.</p>
-          {receiptError && <p role="alert">{receiptError}</p>}
-        </>
+        <div className={styles.group}>
+          <div className={`${styles.field} ${styles.span2}`}>
+            <label htmlFor="receipt">Comprovante (foto, opcional)</label>
+            <div className={styles.file}>
+              <input
+                id="receipt"
+                ref={receiptInput}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  setReceipt(e.target.files?.[0] ?? null);
+                  setReceiptError("");
+                  setSaved("");
+                }}
+              />
+            </div>
+            <p className={styles.hint}>A foto é reduzida para cerca de 300 KB antes do envio e só os dois responsáveis a veem.</p>
+            {receiptError && <p role="alert">{receiptError}</p>}
+          </div>
+        </div>
       )}
 
-      <button type="submit" disabled={busy}>
-        {busy ? "Salvando…" : expenseId ? "Salvar alterações" : "Registrar despesa"}
-      </button>
-      {submitError && <p role="alert">{submitError}</p>}
-      {saved && <p role="status">{saved}</p>}
+      {(submitError || saved) && (
+        <div className={styles.footerNotes}>
+          {submitError && <p role="alert">{submitError}</p>}
+          {saved && <p role="status">{saved}</p>}
+        </div>
+      )}
+
+      <div className={styles.footerBar}>
+        {cancel}
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+          {busy ? "Salvando…" : expenseId ? "Salvar alterações" : "Registrar despesa"}
+        </button>
+      </div>
     </form>
   );
 }

@@ -1,0 +1,148 @@
+/* Two columns from 1024px: the new-exception form on the left, the lists on the right. */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.layout > :global(.card) {
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      "form list"
+      "form past";
+    grid-template-rows: auto 1fr;
+    gap: var(--space-5);
+  }
+
+  .formCard {
+    grid-area: form;
+  }
+
+  .listCard {
+    grid-area: list;
+  }
+
+  .past {
+    grid-area: past;
+  }
+}
+
+.list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list > li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.swatch {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-top: 0.2rem;
+  border-radius: var(--radius-xs);
+  box-shadow: inset 0 0 0 1px rgba(24, 40, 34, 0.25);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-2);
+}
+
+.text strong {
+  color: var(--fg);
+}
+
+.list > li > :global(.btn) {
+  flex: none;
+  align-self: center;
+}
+
+@media (max-width: 479px) {
+  .list > li {
+    flex-wrap: wrap;
+  }
+
+  .list > li > :global(.btn) {
+    margin-left: calc(0.875rem + var(--space-3));
+  }
+}
+
+/* Past exceptions: collapsed by default */
+
+.past {
+  padding: 0;
+}
+
+.past > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0 var(--space-5);
+  color: var(--fg-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.past > summary::-webkit-details-marker {
+  display: none;
+}
+
+.past > summary::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 1.75px solid var(--subtle);
+  border-bottom: 1.75px solid var(--subtle);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s var(--ease);
+}
+
+.past[open] > summary::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.past > summary:hover {
+  background: var(--surface-muted);
+}
+
+.past[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.past > .list {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+/* Long subtitle: let the text take the row and keep the action on its right. */
+
+.page :global(.page-header-text) {
+  flex: 1 1 30rem;
+}
+
+.page :global(.page-header) {
+  align-items: flex-start;
+}

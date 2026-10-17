@@ -26,7 +26,7 @@ export function DeleteOverrideButton({ id, reason }: { id: string; reason: strin
 
   return (
     <>
-      <button type="button" className="link-button" onClick={onClick} disabled={busy}>
+      <button type="button" className="btn btn-danger btn-sm" onClick={onClick} disabled={busy}>
         {busy ? "Removendo…" : "Remover"}
       </button>
       {error && <span role="alert"> {error}</span>}

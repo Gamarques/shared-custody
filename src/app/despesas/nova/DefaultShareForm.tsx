@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { defaultShareSaveErrorMessage, validateDefaultShare } from "@/lib/expenses/expense-form";
 import { formatBps, parsePercentToBps } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/client";
+import styles from "../despesas.module.css";
 
 type Props = { familyId: string; defaultShareBps: number };
 
@@ -41,18 +42,27 @@ export function DefaultShareForm({ familyId, defaultShareBps }: Props) {
 
   return (
     <form onSubmit={onSubmit}>
-      <label htmlFor="defaultPercent">Quem pagou fica com (%)</label>
-      <input
-        id="defaultPercent"
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        value={percent}
-        onChange={(e) => setPercent(e.target.value)}
-      />
-      <button type="submit" disabled={busy || parsePercentToBps(percent) === defaultShareBps}>
-        {busy ? "Salvando…" : "Salvar padrão"}
-      </button>
+      <div className={styles.defaultRow}>
+        <div className={styles.field}>
+          <label htmlFor="defaultPercent">Quem pagou fica com (%)</label>
+          <div className={styles.affix}>
+            <input
+              id="defaultPercent"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={percent}
+              onChange={(e) => setPercent(e.target.value)}
+            />
+            <span className={styles.affixText} aria-hidden="true">
+              %
+            </span>
+          </div>
+        </div>
+        <button type="submit" className="btn btn-secondary" disabled={busy || parsePercentToBps(percent) === defaultShareBps}>
+          {busy ? "Salvando…" : "Salvar padrão"}
+        </button>
+      </div>
       {error && <p role="alert">{error}</p>}
     </form>
   );

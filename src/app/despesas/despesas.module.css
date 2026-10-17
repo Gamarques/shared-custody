@@ -1,0 +1,971 @@
+/* Expenses screens (list, new, edit, history). Builds on the global tokens and component API in
+   globals.css; this module only adds what is specific to these pages. */
+
+/* ---------- Stat row ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.stats > :first-child {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .stats > :first-child {
+    grid-column: auto;
+  }
+}
+
+/* ---------- Panel: filters + summary + table in one surface ---------- */
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.filters label {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.filters label > span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.filters .fieldMonth {
+  grid-column: 1 / -1;
+}
+
+.filterActions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filters button[type="submit"] {
+  margin: 0;
+}
+
+@media (min-width: 48rem) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .filters .fieldMonth {
+    grid-column: auto;
+  }
+
+  .filterActions {
+    grid-column: auto;
+    flex-wrap: nowrap;
+  }
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.summary strong {
+  color: var(--fg);
+  font-weight: 650;
+}
+
+@media (min-width: 48rem) {
+  .summary {
+    padding: var(--space-3) var(--space-5);
+  }
+}
+
+/* ---------- Table (desktop) that collapses into cards (phones) ---------- */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.table th {
+  padding: var(--space-2) var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: var(--space-5);
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: var(--space-4);
+}
+
+.table td {
+  padding: var(--space-3);
+  vertical-align: middle;
+}
+
+.row > td {
+  border-top: 1px solid var(--line);
+}
+
+.table tbody:first-of-type .row > td {
+  border-top: 0;
+}
+
+.table tbody:has(.extra) .row > td {
+  padding-bottom: var(--space-2);
+}
+
+.table tbody {
+  transition: background-color 0.15s var(--ease);
+}
+
+.table tbody:hover {
+  background: var(--surface-muted);
+}
+
+.table tbody:last-child td:first-child,
+.table tbody:last-child td:last-child {
+  border-bottom-left-radius: var(--radius-lg);
+}
+
+.table th.num,
+.table td.num,
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.title {
+  display: block;
+  color: var(--fg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  height: 1.25rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--hover);
+  color: var(--fg-2);
+  font-size: var(--text-xs);
+  font-weight: 550;
+}
+
+.date {
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.payer {
+  display: block;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.share {
+  margin-left: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.amount {
+  color: var(--fg);
+  font-size: var(--text-md);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.statusDot {
+  display: inline-flex;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.actions a,
+.actions button {
+  color: var(--muted);
+}
+
+.actions a:hover,
+.actions button:hover {
+  color: var(--fg);
+}
+
+.actions button.dangerHover:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* Second row of an expense: dispute reason and the confirm / dispute buttons. */
+.extra > td {
+  padding-top: 0;
+  padding-bottom: var(--space-3);
+}
+
+.extraBody {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-2) var(--space-4);
+}
+
+.dispute {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid #f6cfca;
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--text-sm);
+}
+
+.dispute svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.decision {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.decisionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.decision label {
+  margin: 0;
+}
+
+.decision textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.decision [role="alert"] {
+  margin: 0;
+}
+
+.confirmDelete {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: 450;
+  text-align: left;
+}
+
+.confirmDelete p {
+  margin: 0;
+}
+
+.confirmDelete [role="alert"] {
+  margin: 0;
+}
+
+.confirmButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.deleteWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.confirmDelete {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: var(--z-overlay);
+  width: min(18rem, 80vw);
+}
+
+.receipt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 550;
+  line-height: 1;
+}
+
+.receipt:hover {
+  background: none;
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.receiptError {
+  margin: 0;
+}
+
+/* Phones: each expense becomes a card. */
+@media (max-width: 47.99rem) {
+  .panel {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .filters,
+  .summary {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .summary {
+    margin-top: var(--space-3);
+    background: var(--surface-muted);
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table tbody {
+    margin-top: var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .table tbody:hover {
+    background: var(--surface);
+  }
+
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
+    padding: 0;
+    border: 0;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title amount"
+      "date payer status"
+      "actions actions actions";
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-4);
+    align-items: center;
+  }
+
+  .table tbody:has(.extra) .row > td {
+    padding-bottom: 0;
+  }
+
+  .row > td {
+    border-top: 0;
+  }
+
+  .cTitle {
+    grid-area: title;
+  }
+
+  .cDate {
+    grid-area: date;
+  }
+
+  .cPayer {
+    grid-area: payer;
+  }
+
+  .cStatus {
+    grid-area: status;
+    justify-self: end;
+  }
+
+  .cAmount {
+    grid-area: amount;
+    align-self: start;
+  }
+
+  .cActions {
+    grid-area: actions;
+    margin: var(--space-1) calc(-1 * var(--space-2)) calc(-1 * var(--space-2));
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .cActions .actions {
+    justify-content: flex-start;
+    gap: var(--space-1);
+  }
+
+  .cDate,
+  .cPayer {
+    color: var(--muted);
+    font-size: var(--text-xs);
+  }
+
+  .cPayer .payer {
+    overflow: hidden;
+    color: var(--fg-2);
+    text-overflow: ellipsis;
+  }
+
+  .cPayer .payer::before {
+    content: "·";
+    margin-right: var(--space-2);
+    color: var(--subtle);
+  }
+
+  .extra > td {
+    padding: 0 var(--space-4) var(--space-4);
+  }
+
+  .extraBody {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .confirmDelete {
+    position: static;
+    box-shadow: none;
+    width: 100%;
+  }
+
+  .deleteWrap {
+    display: contents;
+  }
+}
+
+/* Wide screens: keep the date and payer columns at a steady width. */
+@media (min-width: 48rem) {
+  .cDate {
+    width: 7.5rem;
+  }
+
+  .cPayer {
+    width: 9rem;
+  }
+
+  .cStatus {
+    width: 7.5rem;
+  }
+
+  .cAmount {
+    width: 7.5rem;
+  }
+
+  .cActions {
+    width: 8.5rem;
+  }
+
+  .cTitle {
+    max-width: 0;
+    width: 100%;
+  }
+
+  .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.empty {
+  padding: var(--space-5) 0;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* ---------- Forms (nova, editar) ---------- */
+
+.formLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  .formLayout {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    gap: var(--space-5);
+  }
+}
+
+.formCard {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.form {
+  display: block;
+}
+
+.group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 40rem) {
+  .group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-5);
+  }
+
+  .span2 {
+    grid-column: 1 / -1;
+  }
+}
+
+.field {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.field > label {
+  margin: 0;
+}
+
+.field [role="alert"] {
+  margin: 0;
+}
+
+.affix {
+  position: relative;
+}
+
+.affix > input:not([type="radio"]):not([type="checkbox"]):not([type="range"]) {
+  padding-right: 3.25rem;
+}
+
+.affixText {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.linkButton {
+  justify-self: start;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.linkButton:hover {
+  background: none;
+  color: var(--accent-strong);
+}
+
+.split {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+}
+
+.split svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.file {
+  padding: var(--space-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.file input[type="file"],
+.file input[type="file"]:focus-visible {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--text-sm);
+}
+
+.file input[type="file"]::file-selector-button {
+  margin-right: var(--space-3);
+  padding: 0 var(--space-3);
+  height: 2rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.footerBar {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-muted);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.footerBar button[type="submit"] {
+  margin-left: auto;
+  margin: 0;
+}
+
+.footerNotes {
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+.footerNotes:empty {
+  display: none;
+}
+
+.footerNotes > * {
+  margin: var(--space-4) 0 0;
+}
+
+.aside {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.asideCard {
+  margin: 0;
+}
+
+.asideCard .hint {
+  margin: var(--space-1) 0 var(--space-4);
+}
+
+.defaultRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.defaultRow .field {
+  margin: 0;
+}
+
+.defaultRow button {
+  margin: 0;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid #f4d3ad;
+  border-radius: var(--radius-md);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: var(--text-sm);
+}
+
+.notice svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.message {
+  max-width: 32rem;
+}
+
+/* ---------- History timeline ---------- */
+
+.expenseCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.expenseText {
+  min-width: 0;
+}
+
+.expenseTitle {
+  margin: 0;
+  color: var(--fg);
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
+}
+
+.expenseMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.expenseAmount {
+  flex: none;
+  color: var(--fg);
+  font-size: var(--text-xl);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.timelineCard {
+  margin: 0;
+}
+
+.timeline {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 0 var(--space-3);
+  padding-bottom: var(--space-5);
+}
+
+.entry:last-child {
+  padding-bottom: 0;
+}
+
+.entry::before {
+  content: "";
+  position: absolute;
+  top: 2rem;
+  bottom: 0;
+  left: 1rem;
+  width: 1px;
+  background: var(--line);
+}
+
+.entry:last-child::before {
+  display: none;
+}
+
+.node {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nodeUpdate {
+  border-color: var(--line-strong);
+  background: var(--surface-muted);
+  color: var(--fg-2);
+}
+
+.nodeDelete {
+  border-color: #f6cfca;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.entryBody {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.entryTitle {
+  display: block;
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.who {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.changes {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  list-style: none;
+  color: var(--fg-2);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.loadError {
+  margin: var(--space-4);
+}
+
+/* Form footer: Voltar on the left edge, submit on the right; stacked full-width on phones. */
+.footerBar > a:first-child {
+  margin-left: calc(-1 * var(--space-3));
+}
+
+@media (max-width: 39.99rem) {
+  .footerBar {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .footerBar > a:first-child {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .footerBar button[type="submit"] {
+    width: 100%;
+  }
+}
+
+.file input[type="file"] {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}

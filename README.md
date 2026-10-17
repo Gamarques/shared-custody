@@ -21,6 +21,7 @@ npm run dev                  # http://localhost:3000
 | `npm run build` / `npm start` | Production build and server |
 | `npm test` | Unit tests (vitest) |
 | `npm run typecheck` | TypeScript check |
+| `npm run qa:visual` | Layout QA in real Chrome on every screen at 390/768/1280 px (see `docs/qa-visual.md`) |
 | `node tools/perf-home.mjs` | Lab measurement of the home on emulated 4G (see `docs/qa-e2e.md`) |
 
 ## Demo mode (no Supabase)

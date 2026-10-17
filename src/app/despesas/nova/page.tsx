@@ -4,8 +4,11 @@ import { initialExpenseForm } from "@/lib/expenses/expense-form";
 import { formatBps } from "@/lib/expenses/money";
 import { todayIn } from "@/lib/custody/rule-form";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "../../_components/ui";
+import { RowIcon } from "../RowIcons";
 import { DefaultShareForm } from "./DefaultShareForm";
 import { ExpenseForm } from "./ExpenseForm";
+import styles from "../despesas.module.css";
 
 // Per-user data and today's date in the family zone: never prerender.
 export const dynamic = "force-dynamic";
@@ -18,7 +21,7 @@ export default async function NewExpensePage() {
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Nova despesa</h1>
+        <PageHeader title="Nova despesa" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -35,7 +38,7 @@ export default async function NewExpensePage() {
   if (!mine?.families) {
     return (
       <main>
-        <h1>Nova despesa</h1>
+        <PageHeader title="Nova despesa" />
         <p>Não foi possível carregar a família.</p>
       </main>
     );
@@ -52,33 +55,45 @@ export default async function NewExpensePage() {
   const today = todayIn(family.timezone);
 
   return (
-    <main>
-      <h1>Nova despesa</h1>
-      <p>
-        Valores em {family.currency}. O percentual é a parte que fica com quem pagou; o outro responsável fica com o
-        restante. Padrão da família: {formatBps(defaultBps)}% para quem pagou.
-      </p>
-
-      <ExpenseForm
-        familyId={mine.family_id}
-        currency={family.currency}
-        today={today}
-        members={members}
-        defaultShareBps={defaultBps}
-        initial={initialExpenseForm(today, defaultBps, mine.id)}
+    <main className="page-wide">
+      <PageHeader
+        title="Nova despesa"
+        subtitle={
+          <>
+            Valores em {family.currency}. O percentual é a parte que fica com quem pagou; o outro responsável fica com o
+            restante. Padrão da família: {formatBps(defaultBps)}% para quem pagou.
+          </>
+        }
       />
 
-      <section>
-        <h2>Padrão da família</h2>
-        <p>
-          Percentual que vem preenchido em cada nova despesa. Mudar o padrão não altera as despesas já registradas.
-        </p>
-        <DefaultShareForm key={defaultBps} familyId={mine.family_id} defaultShareBps={defaultBps} />
-      </section>
+      <div className={styles.formLayout}>
+        <div className={styles.formCard}>
+          <ExpenseForm
+            familyId={mine.family_id}
+            currency={family.currency}
+            today={today}
+            members={members}
+            defaultShareBps={defaultBps}
+            initial={initialExpenseForm(today, defaultBps, mine.id)}
+            cancel={
+              <Link href="/" className="btn btn-ghost btn-lg">
+                <RowIcon name="arrowLeft" size={16} />
+                Voltar
+              </Link>
+            }
+          />
+        </div>
 
-      <p>
-        <Link href="/">Voltar</Link>
-      </p>
+        <aside className={styles.aside}>
+          <section className={`card ${styles.asideCard}`}>
+            <h2 className="card-title">Padrão da família</h2>
+            <p className={styles.hint}>
+              Percentual que vem preenchido em cada nova despesa. Mudar o padrão não altera as despesas já registradas.
+            </p>
+            <DefaultShareForm key={defaultBps} familyId={mine.family_id} defaultShareBps={defaultBps} />
+          </section>
+        </aside>
+      </div>
     </main>
   );
 }

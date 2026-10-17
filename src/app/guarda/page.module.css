@@ -1,0 +1,118 @@
+/* Two columns from 1024px: the form on the left, the current rule and its history on the right. */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.layout > :global(.card) {
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      "form current"
+      "form history";
+    grid-template-rows: auto 1fr;
+    gap: var(--space-5);
+  }
+
+  .formCard {
+    grid-area: form;
+  }
+
+  .current {
+    grid-area: current;
+  }
+
+  .historyCard {
+    grid-area: history;
+  }
+}
+
+.current {
+  border-color: var(--accent-line);
+  background: linear-gradient(180deg, var(--accent-soft), var(--surface) 140%);
+}
+
+.currentBody {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.currentIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--accent-strong);
+  border-radius: var(--radius-lg);
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.currentText {
+  margin: 0;
+  color: var(--fg);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+/* Version timeline */
+
+.history {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history::before {
+  content: "";
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.3125rem;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.history > li {
+  position: relative;
+  padding-left: var(--space-5);
+  color: var(--fg-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.history > li::before {
+  content: "";
+  position: absolute;
+  top: 0.35rem;
+  left: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.history > li:first-child::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.history strong {
+  color: var(--accent-strong);
+}

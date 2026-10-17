@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { isSupabaseConfigured } from "@/lib/env";
-import { currentMonth, formatMonth } from "@/lib/custody/calendar";
+import { currentMonth, formatMonth, MONTHS, parseMonth } from "@/lib/custody/calendar";
 import { formatDate } from "@/lib/custody/rule-form";
 import { categoryLabel, CATEGORIES } from "@/lib/expenses/expense-form";
 import { ALL_MONTHS, monthDateRange, parseExpenseFilters, totalCents } from "@/lib/expenses/expense-list";
 import { canDecide, STATUS_LABELS } from "@/lib/expenses/expense-decision";
 import { formatBps, formatCents } from "@/lib/expenses/money";
 import { createClient } from "@/lib/supabase/server";
+import { Badge, EmptyState, PageHeader, StatCard, type BadgeTone } from "../_components/ui";
 import { DecisionButtons } from "./DecisionButtons";
 import { DeleteExpenseButton } from "./DeleteExpenseButton";
 import { ReceiptLink } from "./ReceiptLink";
+import { RowIcon } from "./RowIcons";
+import styles from "./despesas.module.css";
+
+const BADGE: Record<string, BadgeTone> = {
+  pending: "warning",
+  confirmed: "success",
+  disputed: "danger",
+};
 
 // Per-user data that depends on the clock: never prerender.
 export const dynamic = "force-dynamic";
@@ -34,7 +43,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Despesas</h1>
+        <PageHeader title="Despesas" />
         <p>Supabase ainda não configurado (ver .env.example).</p>
       </main>
     );
@@ -52,7 +61,7 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   if (!mine?.families) {
     return (
       <main>
-        <h1>Despesas</h1>
+        <PageHeader title="Despesas" />
         <p>Não foi possível carregar a família.</p>
       </main>
     );
@@ -87,91 +96,216 @@ export default async function ExpensesPage({ searchParams }: { searchParams: Pro
   const { data, error } = await query.order("spent_on", { ascending: false }).order("created_at", { ascending: false });
   const rows = (data ?? []) as ExpenseRow[];
 
+  const ym = parseMonth(filters.month);
+  const period = ym ? `${MONTHS[ym.month - 1]} de ${ym.year}` : "Todos os meses";
+  const pending = rows.filter((e) => e.status === "pending");
+  const disputed = rows.filter((e) => e.status === "disputed");
+  const count = (n: number) => `${n} ${n === 1 ? "despesa" : "despesas"}`;
+
   return (
-    <main>
-      <h1>Despesas</h1>
+    <main className="page-wide">
+      <PageHeader
+        title="Despesas"
+        subtitle={period}
+        actions={
+          <>
+            {filters.month && (
+              <a href={`/despesas/exportar?mes=${filters.month}`} download className="btn btn-secondary">
+                <RowIcon name="download" size={16} />
+                Exportar mês em CSV
+              </a>
+            )}
+            <Link href="/despesas/nova" className="btn btn-primary">
+              <RowIcon name="plus" size={16} />
+              Nova despesa
+            </Link>
+          </>
+        }
+      />
 
-      <form method="get" action="/despesas" data-testid="filters">
-        <label>
-          Mês
-          <input type="month" name="mes" defaultValue={filters.month ?? ""} />
-        </label>
-        <label>
-          Categoria
-          <select name="categoria" defaultValue={filters.category ?? ""}>
-            <option value="">Todas</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Quem pagou
-          <select name="pagou" defaultValue={filters.paidBy ?? ""}>
-            <option value="">Todos</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.display_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit">Filtrar</button>
-        <Link href={`/despesas?mes=${ALL_MONTHS}`}>Todos os meses</Link>
-      </form>
+      {!error && (
+        <section className={styles.stats} aria-label={period}>
+          <StatCard
+            label={ym ? "Total do mês" : "Total"}
+            value={formatCents(totalCents(rows), currency)}
+            hint={count(rows.length)}
+            icon="wallet"
+          />
+          <StatCard
+            label="Pendentes"
+            value={pending.length}
+            hint={pending.length ? formatCents(totalCents(pending), currency) : "Nada a decidir"}
+            tone={pending.length ? "down" : undefined}
+            icon="clock"
+          />
+          <StatCard
+            label="Contestadas"
+            value={disputed.length}
+            hint={disputed.length ? formatCents(totalCents(disputed), currency) : "Nenhuma contestação"}
+            tone={disputed.length ? "down" : undefined}
+            icon="info"
+          />
+        </section>
+      )}
 
-      {error ? (
-        <p role="alert">Não foi possível carregar as despesas.</p>
-      ) : (
-        <>
-          <p data-testid="total">
-            Total: <strong>{formatCents(totalCents(rows), currency)}</strong> em {rows.length}{" "}
-            {rows.length === 1 ? "despesa" : "despesas"}
-          </p>
-          {rows.length === 0 ? (
-            <p>Nenhuma despesa para este filtro.</p>
-          ) : (
-            <ul data-testid="expenses">
-              {rows.map((e) => (
-                <li key={e.id} data-testid="expense">
-                  <strong>{e.description}</strong> — {formatCents(e.amount_cents, currency)}
-                  <br />
-                  {formatDate(e.spent_on)} · {categoryLabel(e.category)} · pago por {names[e.paid_by] ?? "?"} (
-                  {formatBps(e.payer_share_bps)}%) · {STATUS_LABELS[e.status] ?? e.status}
-                  {e.receipt_path && (
-                    <>
-                      {" "}
-                      <ReceiptLink path={e.receipt_path} />
-                    </>
-                  )}
-                  {e.status === "disputed" && e.dispute_comment && (
-                    <p data-testid="dispute-comment">Motivo: {e.dispute_comment}</p>
-                  )}
-                  {canDecide(e, mine.id ?? null) && <DecisionButtons expenseId={e.id} />}
-                  <Link href={`/despesas/${e.id}/editar`}>Editar</Link> <DeleteExpenseButton expenseId={e.id} />{" "}
-                  <Link href={`/despesas/${e.id}/historico`}>Histórico</Link>
-                </li>
+      <div className={styles.panel}>
+        <form method="get" action="/despesas" data-testid="filters" className={styles.filters}>
+          <label className={styles.fieldMonth}>
+            <span>Mês</span>
+            <input type="month" name="mes" defaultValue={filters.month ?? ""} />
+          </label>
+          <label>
+            <span>Categoria</span>
+            <select name="categoria" defaultValue={filters.category ?? ""}>
+              <option value="">Todas</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
               ))}
-            </ul>
-          )}
-        </>
-      )}
+            </select>
+          </label>
+          <label>
+            <span>Quem pagou</span>
+            <select name="pagou" defaultValue={filters.paidBy ?? ""}>
+              <option value="">Todos</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.display_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className={styles.filterActions}>
+            <button type="submit" className="btn btn-primary">
+              <RowIcon name="filter" size={16} />
+              Filtrar
+            </button>
+            <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-ghost">
+              Todos os meses
+            </Link>
+          </div>
+        </form>
 
-      <p>
-        <Link href="/despesas/nova">Nova despesa</Link>
-      </p>
-      {filters.month && (
-        <p>
-          <a href={`/despesas/exportar?mes=${filters.month}`} download>
-            Exportar mês em CSV
-          </a>
-        </p>
-      )}
-      <p>
-        <Link href="/">Voltar</Link>
-      </p>
+        {error ? (
+          <p role="alert" className={styles.loadError}>
+            Não foi possível carregar as despesas.
+          </p>
+        ) : (
+          <>
+            <p data-testid="total" className={styles.summary}>
+              <span>
+                Total: <strong>{formatCents(totalCents(rows), currency)}</strong>
+              </span>
+              <span>
+                em {rows.length} {rows.length === 1 ? "despesa" : "despesas"}
+              </span>
+            </p>
+            {rows.length === 0 ? (
+              <div className={styles.empty}>
+                <EmptyState
+                  icon="receipt"
+                  title="Nenhuma despesa para este filtro."
+                  action={
+                    <div className={styles.emptyActions}>
+                      <Link href="/despesas/nova" className="btn btn-primary">
+                        <RowIcon name="plus" size={16} />
+                        Nova despesa
+                      </Link>
+                      <Link href={`/despesas?mes=${ALL_MONTHS}`} className="btn btn-ghost">
+                        Todos os meses
+                      </Link>
+                    </div>
+                  }
+                />
+              </div>
+            ) : (
+              <table data-testid="expenses" className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Descrição</th>
+                    <th scope="col">Data</th>
+                    <th scope="col">Quem pagou</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col" className={styles.num}>
+                      Valor
+                    </th>
+                    <th scope="col">
+                      <span className="visually-hidden">Ações</span>
+                    </th>
+                  </tr>
+                </thead>
+                {rows.map((e) => {
+                  const decide = canDecide(e, mine.id ?? null);
+                  const reason = e.status === "disputed" ? e.dispute_comment : null;
+                  return (
+                    <tbody key={e.id} data-testid="expense">
+                      <tr className={styles.row}>
+                        <td className={styles.cTitle}>
+                          <span className={styles.title}>{e.description}</span>
+                          <span className={styles.sub}>
+                            <span className={styles.categoryPill}>{categoryLabel(e.category)}</span>
+                            {e.receipt_path && <ReceiptLink path={e.receipt_path} />}
+                          </span>
+                        </td>
+                        <td className={`${styles.cDate} ${styles.date}`}>{formatDate(e.spent_on)}</td>
+                        <td className={styles.cPayer}>
+                          <span className={styles.payer}>
+                            {names[e.paid_by] ?? "?"}
+                            <span className={styles.share}>({formatBps(e.payer_share_bps)}%)</span>
+                          </span>
+                        </td>
+                        <td className={styles.cStatus}>
+                          <Badge tone={BADGE[e.status] ?? "neutral"}>{STATUS_LABELS[e.status] ?? e.status}</Badge>
+                        </td>
+                        <td className={`${styles.cAmount} ${styles.num} ${styles.amount}`}>
+                          {formatCents(e.amount_cents, currency)}
+                        </td>
+                        <td className={styles.cActions}>
+                          <div className={styles.actions}>
+                            <Link
+                              href={`/despesas/${e.id}/historico`}
+                              className="btn btn-ghost btn-icon btn-sm"
+                              aria-label="Histórico"
+                              title="Histórico"
+                            >
+                              <RowIcon name="history" />
+                            </Link>
+                            <Link
+                              href={`/despesas/${e.id}/editar`}
+                              className="btn btn-ghost btn-icon btn-sm"
+                              aria-label="Editar"
+                              title="Editar"
+                            >
+                              <RowIcon name="edit" />
+                            </Link>
+                            <DeleteExpenseButton expenseId={e.id} />
+                          </div>
+                        </td>
+                      </tr>
+                      {(reason || decide) && (
+                        <tr className={styles.extra}>
+                          <td colSpan={6}>
+                            <div className={styles.extraBody}>
+                              {reason && (
+                                <p data-testid="dispute-comment" className={styles.dispute}>
+                                  <RowIcon name="alert" size={16} />
+                                  <span>Motivo: {reason}</span>
+                                </p>
+                              )}
+                              {decide && <DecisionButtons expenseId={e.id} />}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  );
+                })}
+              </table>
+            )}
+          </>
+        )}
+      </div>
     </main>
   );
 }
