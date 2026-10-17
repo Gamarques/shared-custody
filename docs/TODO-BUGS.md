@@ -6,14 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-005: Security Advisor aponta funções sem search_path fixo em shared_custody
-- Found: 2026-10-17 pelo Security Advisor após o `db push` no schema `shared_custody`
-- Evidence: `function_search_path_mutable` em `custody_overrides_defaults`, `expenses_insert_defaults`, `receipt_family_id`, `expenses_guard_decision`, `expense_audit_insert_guard` (entre outras); também `auth_rls_initplan` na policy `member updates self` (members) e 13 FKs sem índice (INFO)
-- Expected: funções com `set search_path = shared_custody` (ou `''`); policy usando `(select auth.uid())`; índices nas FKs usadas em joins/deletes cascata.
-- Acceptance: nova migration; Security Advisor sem WARN em shared_custody; `npm test` (PGlite) e `npm run build` passam.
-- Severity: low
-- Status: fixing - migration `20261017000100_advisor_hardening.sql` + test `src/test/db-hygiene.sql.test.ts` prontos e verdes localmente (Jev 2.59: falta aplicar no Supabase remoto com `npx supabase db push` e rodar o Security Advisor de novo)
-
 ### TODO-006: Ícone errado em "Copiar link" e link truncado sem indicação em /convidar
 - Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
 - Evidence: `.next-perf/visual-qa/states/convidar-link-generated-390.png` (visto por mim): "Copiar link" usa o ícone de setas trocadas (o mesmo de "Regra de guarda"); em 390 o link fica cortado no input sem sinal de que continua
@@ -103,3 +95,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: lista de capturas em `.next-perf/visual-qa/` (ou novo modo demo sem família para /onboarding) e relato de cada uma.
 - Severity: low
 - Status: done (Jev 3.72, 2026-10-17) - `DEMO_VARIANT=no-family|solo|empty|error`, `npm run qa:states` (52 capturas em .next-perf/visual-qa/states/); defeitos novos: TODO-006..012
+
+### TODO-005: Security Advisor aponta funções sem search_path fixo em shared_custody
+- Found: 2026-10-17 pelo Security Advisor após o `db push` no schema `shared_custody`
+- Evidence: `function_search_path_mutable` em `custody_overrides_defaults`, `expenses_insert_defaults`, `receipt_family_id`, `expenses_guard_decision`, `expense_audit_insert_guard` (entre outras); também `auth_rls_initplan` na policy `member updates self` (members) e 13 FKs sem índice (INFO)
+- Expected: funções com `set search_path = shared_custody` (ou `''`); policy usando `(select auth.uid())`; índices nas FKs usadas em joins/deletes cascata.
+- Acceptance: nova migration; Security Advisor sem WARN em shared_custody; `npm test` (PGlite) e `npm run build` passam.
+- Severity: low
+- Status: done (Jev 3.98, 2026-10-17) - migration `20261017000100_advisor_hardening.sql` aplicada no remoto; Advisor sem WARN em shared_custody; teste `src/test/db-hygiene.sql.test.ts`
