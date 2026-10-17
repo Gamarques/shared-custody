@@ -36,7 +36,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if ((membership?.length ?? 0) > 0) {
     return (
       <InviteShell>
-        Você já faz parte de uma família. <Link href="/">Ir para o início</Link>
+        Você já faz parte de uma família.{" "}
+        <Link href="/" className="btn btn-secondary">
+          Ir para o início
+        </Link>
       </InviteShell>
     );
   }

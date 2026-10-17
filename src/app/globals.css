@@ -623,6 +623,11 @@ button[type="submit"]:not(:only-child) {
 .topbar-brand {
   display: flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  margin-left: calc(-1 * var(--space-2));
   border-radius: var(--radius-md);
 }
 
@@ -661,6 +666,9 @@ button[type="submit"]:not(:only-child) {
 }
 
 .breadcrumb a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
   color: var(--muted);
   text-decoration: none;
 }
@@ -1448,6 +1456,20 @@ button[type="submit"]:not(:only-child) {
 
 .btn-block {
   width: 100%;
+}
+
+/* Touch devices: every button reaches the 44px tap size (sm and icon variants too). */
+@media (max-width: 1023px) {
+  .btn,
+  .btn-sm,
+  .btn-lg {
+    min-height: var(--tap);
+  }
+
+  .btn-icon,
+  .btn-icon.btn-sm {
+    width: var(--tap);
+  }
 }
 
 .btn:disabled,

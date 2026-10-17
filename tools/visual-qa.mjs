@@ -18,7 +18,7 @@
 //                 content can scroll clear of it (nothing hidden behind the bar)
 //   h1            exactly one <h1> on the page
 //   console       no console errors, no uncaught exceptions, no failed same-origin requests
-//   touch         (phone only, warning) visible buttons/links/inputs smaller than 40px in height
+//   touch         (phone only, warning) visible buttons/links/inputs smaller than 44px in height
 //   empty         page rendered something (not a blank body or the Next error overlay)
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -184,7 +184,7 @@ const PAGE_CHECKS = `(() => {
   // Touch targets.
   out.smallTargets = [...document.querySelectorAll("a[href], button, input:not([type=hidden]), select, textarea, summary")]
     .filter(visible)
-    .filter((el) => el.getBoundingClientRect().height < 40 && !el.closest("[hidden]") && !el.matches(".skip-link"))
+    .filter((el) => el.getBoundingClientRect().height < 44 &&!el.closest("[hidden]") && !el.matches(".skip-link"))
     .slice(0, 8)
     .map((el) => label(el) + " " + Math.round(el.getBoundingClientRect().height) + "px");
   out.links = [...document.querySelectorAll("a[href]")].map((a) => a.getAttribute("href"));

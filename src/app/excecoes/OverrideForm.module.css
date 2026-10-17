@@ -21,8 +21,8 @@
 }
 
 .preset {
-  min-height: 2rem;
-  padding: 0 var(--space-3);
+  min-height: var(--tap);
+  padding: 0 var(--space-4);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-pill);
   background: var(--surface);

@@ -15,9 +15,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </AuthHeader>
       {isDemoMode() && (
         <div className={styles.note}>
-          <p className="status">
-            Modo demo: não há login, a sessão da Ana já está aberta. <Link href="/">Ir para o início</Link>
-          </p>
+          <p className="status">Modo demo: não há login, a sessão da Ana já está aberta.</p>
+          <Link href="/" className="btn btn-secondary">
+            Ir para o início
+          </Link>
         </div>
       )}
       {error && <p role="alert">O link é inválido ou expirou. Peça um novo.</p>}

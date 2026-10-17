@@ -6,14 +6,6 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Open
 
-### TODO-001: Botões e links abaixo de 44px de altura no celular
-- Found: 2026-10-16 by `npm run qa:visual` (aviso touch), 390px
-- Evidence: `a.topbar-brand` 28px (todas as telas); `a.btn`/`button.btn` 32px em /despesas (Confirmar, Contestar, ações da linha), /saldo (Ver mês, Ver intervalo, Histórico, Despesas, Voltar), /excecoes (Remover, presets Troca de dias/Férias/Feriado), home ("Calendário"); links "Despesas" 23px em /despesas/nova, editar e histórico; "Ir para o início" 18px em /login
-- Expected: todo botão/link/campo visível >= 44px de altura (ou área de toque equivalente) em 390px sem quebrar o layout em 1280px.
-- Acceptance: `npm run qa:visual` sem nenhum aviso `touch`; `npm test` e `npm run build` passam; capturas conferidas em 390 e 1280.
-- Severity: medium
-- Status: open
-
 ### TODO-002: CSS antigo possivelmente sem uso em globals.css
 - Found: 2026-10-16 by agente da rodada de redesign (relato)
 - Evidence: regras `.handover`, `.reason`, `.swatch`, `.legend`, `.presets`, `.link-button`, `.month-nav` podem não ser mais usadas
@@ -48,4 +40,10 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 
 ## Done
 
-(nenhum ainda)
+### TODO-001: Botões e links abaixo de 44px de altura no celular
+- Found: 2026-10-16 by `npm run qa:visual` (aviso touch), 390px
+- Evidence: `a.topbar-brand` 28px (todas as telas); `a.btn`/`button.btn` 32px em /despesas (Confirmar, Contestar, ações da linha), /saldo (Ver mês, Ver intervalo, Histórico, Despesas, Voltar), /excecoes (Remover, presets Troca de dias/Férias/Feriado), home ("Calendário"); links "Despesas" 23px em /despesas/nova, editar e histórico; "Ir para o início" 18px em /login
+- Expected: todo botão/link/campo visível >= 44px de altura (ou área de toque equivalente) em 390px sem quebrar o layout em 1280px.
+- Acceptance: `npm run qa:visual` sem nenhum aviso `touch`; `npm test` e `npm run build` passam; capturas conferidas em 390 e 1280.
+- Severity: medium
+- Status: done (Jev 3.42, 2026-10-17)

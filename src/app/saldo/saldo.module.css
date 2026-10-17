@@ -368,7 +368,7 @@
 .field select {
   width: 100%;
   min-width: 0;
-  min-height: 2.5rem;
+  min-height: var(--tap);
   padding: 0 var(--space-3);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-md);
@@ -419,6 +419,7 @@
   font-size: var(--text-sm);
 }
 
-.filterActions > * {
+.filterActions > *,
+.filterActions > button[type="submit"]:not(:only-child) {
   margin: 0;
 }
