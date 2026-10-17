@@ -12,7 +12,7 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Expected: funções com `set search_path = shared_custody` (ou `''`); policy usando `(select auth.uid())`; índices nas FKs usadas em joins/deletes cascata.
 - Acceptance: nova migration; Security Advisor sem WARN em shared_custody; `npm test` (PGlite) e `npm run build` passam.
 - Severity: low
-- Status: open
+- Status: fixing - migration `20261017000100_advisor_hardening.sql` + test `src/test/db-hygiene.sql.test.ts` prontos e verdes localmente (Jev 2.59: falta aplicar no Supabase remoto com `npx supabase db push` e rodar o Security Advisor de novo)
 
 ### TODO-006: Ícone errado em "Copiar link" e link truncado sem indicação em /convidar
 - Found: 2026-10-17 by `npm run qa:states` (agente da TODO-004) e revisão de capturas
