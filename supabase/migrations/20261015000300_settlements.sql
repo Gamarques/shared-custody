@@ -6,16 +6,16 @@
 -- opposite one.
 
 -- Cap in line with expenses (1 000 000,00): rejects absurd values at the database.
-alter table public.settlements
+alter table shared_custody.settlements
   add constraint settlements_amount_max check (amount_cents <= 100000000);
 
 -- The "family members only" policy covered every command; split it so only select and insert
 -- remain. With no update/delete policy (and the privileges revoked) both are denied.
-drop policy "family members only" on public.settlements;
+drop policy "family members only" on shared_custody.settlements;
 
-create policy "members read settlements" on public.settlements
-  for select using (public.is_family_member(family_id));
-create policy "members insert settlements" on public.settlements
-  for insert with check (public.is_family_member(family_id));
+create policy "members read settlements" on shared_custody.settlements
+  for select using (shared_custody.is_family_member(family_id));
+create policy "members insert settlements" on shared_custody.settlements
+  for insert with check (shared_custody.is_family_member(family_id));
 
-revoke update, delete on public.settlements from authenticated;
+revoke update, delete on shared_custody.settlements from authenticated;

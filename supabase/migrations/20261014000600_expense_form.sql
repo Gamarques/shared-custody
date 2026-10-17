@@ -7,7 +7,7 @@
 
 -- A new expense always starts pending and alive, with server timestamps, whatever the client
 -- sends: confirming is the other member's decision (T-16) and deleting is logical (T-18).
-create function public.expenses_insert_defaults() returns trigger
+create function shared_custody.expenses_insert_defaults() returns trigger
 language plpgsql as $$
 begin
   new.status := 'pending';
@@ -18,9 +18,9 @@ begin
 end;
 $$;
 
-create trigger expenses_insert_defaults before insert on public.expenses
-  for each row execute function public.expenses_insert_defaults();
+create trigger expenses_insert_defaults before insert on shared_custody.expenses
+  for each row execute function shared_custody.expenses_insert_defaults();
 
 -- Same limit as MAX_AMOUNT_CENTS in src/lib/expenses/money.ts: 1 000 000,00 per expense.
-alter table public.expenses
+alter table shared_custody.expenses
   add constraint expenses_amount_max check (amount_cents <= 100000000);

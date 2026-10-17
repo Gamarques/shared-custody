@@ -27,15 +27,15 @@ describe("families/members migration (static checks; no live DB)", () => {
   const sql = readFileSync("supabase/migrations/20261014000100_families_members.sql", "utf8");
 
   it("enables RLS on both tables", () => {
-    expect(sql).toMatch(/alter table public\.families enable row level security/);
-    expect(sql).toMatch(/alter table public\.members enable row level security/);
+    expect(sql).toMatch(/alter table shared_custody\.families enable row level security/);
+    expect(sql).toMatch(/alter table shared_custody\.members enable row level security/);
   });
   it("has no insert, delete or all policies (writes go through create_family)", () => {
     expect(sql).not.toMatch(/create policy[^;]*for (insert|delete|all)/i);
   });
   it("restricts create_family to authenticated users", () => {
-    expect(sql).toMatch(/revoke all on function public\.create_family[^;]*from public, anon/);
-    expect(sql).toMatch(/grant execute on function public\.create_family[^;]*to authenticated/);
+    expect(sql).toMatch(/revoke all on function shared_custody\.create_family[^;]*from public, anon/);
+    expect(sql).toMatch(/grant execute on function shared_custody\.create_family[^;]*to authenticated/);
   });
   it("limits families to 2 members and one family per user", () => {
     expect(sql).toMatch(/>= 2/);

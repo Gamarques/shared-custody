@@ -3,6 +3,17 @@
 Steps that need real external accounts or devices and cannot be done from the repository.
 Each entry says which task it belongs to and how to verify it.
 
+## Schema dedicado `shared_custody` (projeto Supabase compartilhado)
+
+Status: **aplicado no projeto `lmqamwidjbwquefpjxlr`** (13 migrations via `npx supabase db push`).
+O projeto tem tabelas de outro app em `public`; este app usa o schema `shared_custody`. Em todos os
+passos acima, onde se lê `public`/tabelas, leia `shared_custody`.
+
+- Os clientes Supabase usam `db: { schema: "shared_custody" }` (`src/lib/supabase/schema.ts`).
+- O schema precisa estar em `pgrst.db_schemas` (Settings > API > Exposed schemas); já está.
+- Chamadas REST diretas precisam de `Accept-Profile`/`Content-Profile: shared_custody`.
+- `supabase link` / `db push` rodam a partir da raiz do repositório (não de dentro de `supabase/`).
+
 ## T-01 — Supabase project and Vercel deploy
 
 Status: **not done yet**. Everything local is in place (Next.js app, Supabase clients,

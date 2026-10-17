@@ -5,7 +5,7 @@ import { createTestDb, sqlState, type TestDb } from "@/test/pg";
 // Runs the real migrations on an in-memory Postgres (PGlite) with a Supabase auth stub.
 // Family 1 = Ana + Bruno, family 2 = Carla + Davi, Eva has no family.
 
-/** Every table in the public schema and the column that holds its family id. */
+/** Every table in the shared_custody schema and the column that holds its family id. */
 const TABLES: Record<string, string> = {
   families: "id",
   members: "family_id",
@@ -132,20 +132,20 @@ beforeAll(async () => {
 }, 60_000);
 
 describe("schema coverage", () => {
-  it("every public table has RLS enabled and is covered by these tests", async () => {
+  it("every shared_custody table has RLS enabled and is covered by these tests", async () => {
     const { rows } = await t.db.query<{ relname: string; relrowsecurity: boolean }>(
       `select c.relname, c.relrowsecurity from pg_class c
        join pg_namespace n on n.oid = c.relnamespace
-       where n.nspname = 'public' and c.relkind in ('r', 'p') order by c.relname`,
+       where n.nspname = 'shared_custody' and c.relkind in ('r', 'p') order by c.relname`,
     );
     expect(rows.map((r) => r.relname)).toEqual(Object.keys(TABLES).sort());
     expect(rows.filter((r) => !r.relrowsecurity)).toEqual([]);
   });
 
-  it("no public view or materialized view exposes data around RLS", async () => {
+  it("no shared_custody view or materialized view exposes data around RLS", async () => {
     const { rows } = await t.db.query(
       `select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
-       where n.nspname = 'public' and c.relkind in ('v', 'm')`,
+       where n.nspname = 'shared_custody' and c.relkind in ('v', 'm')`,
     );
     expect(rows).toEqual([]);
   });

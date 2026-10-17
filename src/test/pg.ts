@@ -13,6 +13,7 @@ const MIGRATIONS_DIR = "supabase/migrations";
 const SUPABASE_STUB = `
 create role anon nologin;
 create role authenticated nologin;
+create role service_role nologin;
 create schema auth;
 create table auth.users (id uuid primary key, email text);
 create function auth.uid() returns uuid language sql stable as $$
@@ -36,8 +37,6 @@ $$;
 grant usage on schema storage to anon, authenticated;
 grant execute on function storage.foldername(text) to anon, authenticated;
 grant all on storage.objects, storage.buckets to anon, authenticated;
-alter default privileges in schema public grant all on tables to anon, authenticated;
-alter default privileges in schema public grant all on sequences to anon, authenticated;
 `;
 
 export type TestDb = {
@@ -54,6 +53,8 @@ export async function createTestDb(): Promise<TestDb> {
   await db.exec(SUPABASE_STUB);
   const files = readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith(".sql")).sort();
   for (const file of files) await db.exec(readFileSync(join(MIGRATIONS_DIR, file), "utf8"));
+  // The app's tables live in `shared_custody` (migration 20261014000000); tests query them unqualified.
+  await db.exec("set search_path = shared_custody, public");
 
   return {
     db,

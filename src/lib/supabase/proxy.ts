@@ -4,6 +4,7 @@ import { isPublicPath } from "@/lib/auth/paths";
 import { isDemoMode } from "@/lib/demo/mode";
 import { createDemoServerClient } from "@/lib/demo/server";
 import { getPublicEnv, isSupabaseConfigured } from "@/lib/env";
+import { DB_SCHEMA } from "./schema";
 import { getSessionUser } from "./session-user";
 
 /**
@@ -18,6 +19,7 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     ? // Demo mode: no session cookie; the fake client is always signed in as Ana.
       (createDemoServerClient() as unknown as ReturnType<typeof createServerClient>)
     : createServerClient(getPublicEnv().supabaseUrl, getPublicEnv().supabaseAnonKey, {
+        db: { schema: DB_SCHEMA },
         cookies: {
           getAll() {
             return request.cookies.getAll();

@@ -6,10 +6,10 @@
 --
 -- The function reads no table and returns only the database time, so it is safe for the anon
 -- role and needs no RLS: no family data can leak through it.
-create function public.keepalive_ping() returns timestamptz
-language sql stable set search_path = public as $$
+create function shared_custody.keepalive_ping() returns timestamptz
+language sql stable set search_path = shared_custody as $$
   select now()
 $$;
 
-revoke execute on function public.keepalive_ping() from public;
-grant execute on function public.keepalive_ping() to anon, authenticated;
+revoke execute on function shared_custody.keepalive_ping() from public;
+grant execute on function shared_custody.keepalive_ping() to anon, authenticated;

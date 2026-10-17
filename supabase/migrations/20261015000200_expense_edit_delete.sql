@@ -12,7 +12,7 @@
 --     writable only through confirm_expense / dispute_expense (T-16).
 -- It replaces expenses_guard_decision (T-16), the BEFORE UPDATE guard on expenses.
 
-create or replace function public.expenses_guard_decision() returns trigger
+create or replace function shared_custody.expenses_guard_decision() returns trigger
 language plpgsql as $$
 declare
   decision_flag boolean := coalesce(current_setting('app.expense_decision', true), '') = 'on';

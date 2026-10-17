@@ -10,7 +10,7 @@ describe("keepalive_ping (T-23, RNF-06)", () => {
   it("is callable by anon and authenticated and returns the database time", async () => {
     const user = await t.createUser("a@example.com");
     for (const who of [null, user]) {
-      const { rows } = await t.as(who, () => t.db.query<{ at: Date }>("select public.keepalive_ping() as at"));
+      const { rows } = await t.as(who, () => t.db.query<{ at: Date }>("select shared_custody.keepalive_ping() as at"));
       expect(rows[0].at).toBeInstanceOf(Date);
     }
   });

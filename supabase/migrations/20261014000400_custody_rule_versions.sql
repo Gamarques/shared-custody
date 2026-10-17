@@ -8,19 +8,19 @@
 -- version does not write it, because that would change a preserved row.
 
 -- Members read and insert versions; nobody updates or deletes them through the API.
-drop policy "family members only" on public.custody_rules;
+drop policy "family members only" on shared_custody.custody_rules;
 
-create policy "members read custody rules" on public.custody_rules
-  for select using (public.is_family_member(family_id));
-create policy "members insert custody rules" on public.custody_rules
-  for insert with check (public.is_family_member(family_id));
+create policy "members read custody rules" on shared_custody.custody_rules
+  for select using (shared_custody.is_family_member(family_id));
+create policy "members insert custody rules" on shared_custody.custody_rules
+  for insert with check (shared_custody.is_family_member(family_id));
 
-revoke update, delete on public.custody_rules from authenticated;
+revoke update, delete on shared_custody.custody_rules from authenticated;
 
 -- Defense in depth for roles that bypass RLS and privileges (SQL editor, service role): the
 -- content of a version is immutable. Deletes are still possible there so that deleting a family
 -- or a member cascades; only created_by may change (on delete set null of auth.users).
-create function public.custody_rules_immutable() returns trigger
+create function shared_custody.custody_rules_immutable() returns trigger
 language plpgsql as $$
 begin
   if (new.id, new.family_id, new.starts_on, new.first_member_id, new.handover_weekday,
@@ -35,22 +35,22 @@ begin
 end;
 $$;
 
-create trigger custody_rules_immutable before update on public.custody_rules
-  for each row execute function public.custody_rules_immutable();
+create trigger custody_rules_immutable before update on shared_custody.custody_rules
+  for each row execute function shared_custody.custody_rules_immutable();
 
 -- valid_from, when omitted: the first version of a family applies from its first handover
 -- (starts_on); a later version applies from today in the family's time zone (RNF-04), so the
 -- weeks already lived keep the previous rule. created_at is always the server clock, so the
 -- save order cannot be forged by the client.
-create function public.custody_rules_defaults() returns trigger
-language plpgsql set search_path = public as $$
+create function shared_custody.custody_rules_defaults() returns trigger
+language plpgsql set search_path = shared_custody as $$
 declare
   tz text;
 begin
   new.created_at := now();
   if new.valid_from is null then
-    if exists (select 1 from public.custody_rules where family_id = new.family_id) then
-      select f.timezone into tz from public.families f where f.id = new.family_id;
+    if exists (select 1 from shared_custody.custody_rules where family_id = new.family_id) then
+      select f.timezone into tz from shared_custody.families f where f.id = new.family_id;
       new.valid_from := (now() at time zone coalesce(tz, 'Europe/Lisbon'))::date;
     else
       new.valid_from := new.starts_on;
@@ -60,5 +60,5 @@ begin
 end;
 $$;
 
-create trigger custody_rules_defaults before insert on public.custody_rules
-  for each row execute function public.custody_rules_defaults();
+create trigger custody_rules_defaults before insert on shared_custody.custody_rules
+  for each row execute function shared_custody.custody_rules_defaults();

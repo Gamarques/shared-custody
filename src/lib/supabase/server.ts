@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { isDemoMode } from "@/lib/demo/mode";
 import { createDemoServerClient } from "@/lib/demo/server";
 import { getPublicEnv } from "@/lib/env";
+import { DB_SCHEMA } from "./schema";
 
 /**
  * Supabase client for Server Components, Server Actions and Route Handlers.
@@ -15,6 +16,7 @@ export async function createClient(): Promise<ReturnType<typeof createServerClie
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
+    db: { schema: DB_SCHEMA },
     cookies: {
       getAll() {
         return cookieStore.getAll();

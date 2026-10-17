@@ -13,19 +13,19 @@
 --     the cascade to its audit rows is refused.
 
 -- Stable order inside one transaction (changed_at is the transaction time, equal for all of them).
-alter table public.expense_audit add column seq bigint generated always as identity;
+alter table shared_custody.expense_audit add column seq bigint generated always as identity;
 
 -- changed_by keeps the auth user id as a historical fact. Without this foreign key, deleting an
 -- auth user does not need to rewrite (set null) audit rows, which would be refused below.
-alter table public.expense_audit drop constraint expense_audit_changed_by_fkey;
+alter table shared_custody.expense_audit drop constraint expense_audit_changed_by_fkey;
 
-drop index public.expense_audit_expense_id_idx;
-create index expense_audit_expense_id_idx on public.expense_audit(expense_id, seq);
+drop index shared_custody.expense_audit_expense_id_idx;
+create index expense_audit_expense_id_idx on shared_custody.expense_audit(expense_id, seq);
 
 -- Writer ------------------------------------------------------------------------------------------
 
-create function public.expenses_audit() returns trigger
-language plpgsql security definer set search_path = public as $$
+create function shared_custody.expenses_audit() returns trigger
+language plpgsql security definer set search_path = shared_custody as $$
 declare
   act text;
 begin
@@ -39,7 +39,7 @@ begin
     act := 'update';
   end if;
 
-  insert into public.expense_audit (expense_id, family_id, changed_by, action, old_data, new_data)
+  insert into shared_custody.expense_audit (expense_id, family_id, changed_by, action, old_data, new_data)
   values (
     new.id, new.family_id, auth.uid(), act,
     case when tg_op = 'UPDATE' then to_jsonb(old) end,
@@ -49,14 +49,14 @@ begin
 end;
 $$;
 
-create trigger expenses_audit after insert or update on public.expenses
-  for each row execute function public.expenses_audit();
+create trigger expenses_audit after insert or update on shared_custody.expenses
+  for each row execute function shared_custody.expenses_audit();
 
 -- Guards ------------------------------------------------------------------------------------------
 
 -- Rows only come from expenses_audit: at trigger depth 1 the INSERT was issued directly (by a
 -- client, a function or the SQL editor), at depth 2 it comes from the trigger above.
-create function public.expense_audit_insert_guard() returns trigger
+create function shared_custody.expense_audit_insert_guard() returns trigger
 language plpgsql as $$
 begin
   if pg_trigger_depth() < 2 then
@@ -68,25 +68,25 @@ begin
 end;
 $$;
 
-create trigger expense_audit_insert_guard before insert on public.expense_audit
-  for each row execute function public.expense_audit_insert_guard();
+create trigger expense_audit_insert_guard before insert on shared_custody.expense_audit
+  for each row execute function shared_custody.expense_audit_insert_guard();
 
-create function public.expense_audit_immutable() returns trigger
-language plpgsql set search_path = public as $$
+create function shared_custody.expense_audit_immutable() returns trigger
+language plpgsql set search_path = shared_custody as $$
 begin
   -- Cascade from deleting the family: the family row is already gone at this point.
-  if tg_op = 'DELETE' and not exists (select 1 from public.families f where f.id = old.family_id) then
+  if tg_op = 'DELETE' and not exists (select 1 from shared_custody.families f where f.id = old.family_id) then
     return old;
   end if;
   raise exception 'expense audit rows are immutable' using errcode = 'AU001';
 end;
 $$;
 
-create trigger expense_audit_immutable before update or delete on public.expense_audit
-  for each row execute function public.expense_audit_immutable();
+create trigger expense_audit_immutable before update or delete on shared_custody.expense_audit
+  for each row execute function shared_custody.expense_audit_immutable();
 
-create trigger expense_audit_no_truncate before truncate on public.expense_audit
-  for each statement execute function public.expense_audit_immutable();
+create trigger expense_audit_no_truncate before truncate on shared_custody.expense_audit
+  for each statement execute function shared_custody.expense_audit_immutable();
 
 -- Privileges (already set in T-05; repeated here because this migration is the audit's contract).
-revoke insert, update, delete, truncate on public.expense_audit from anon, authenticated;
+revoke insert, update, delete, truncate on shared_custody.expense_audit from anon, authenticated;
