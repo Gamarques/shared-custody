@@ -24,7 +24,48 @@ function isoDate(day: number): string {
   return new Date(day * DAY_MS).toISOString().slice(0, 10);
 }
 
-export function createDemoStore(now: Date = new Date()): DemoStore {
+/**
+ * Alternative data sets for visual QA (DEMO_VARIANT, see scripts/demo.mjs); "default" is the demo.
+ *   no-family  Ana belongs to no family (/onboarding); Bruno owns one with a pending invite at DEMO_INVITE_TOKEN
+ *   solo       Ana owns a family with no second member and no invite (/convidar offers a new link)
+ *   empty      Ana and Bruno share a family with no children, rule, expenses, exceptions or settlements
+ *   error      the default data, but reading `expenses` fails (load-error states)
+ */
+export type DemoVariant = "default" | "no-family" | "solo" | "empty" | "error";
+
+/** Token of the pending invite in the "no-family" variant (64 hex chars, like a real one). */
+export const DEMO_INVITE_TOKEN = "d3adbeef".repeat(8);
+
+export function demoVariantFromEnv(value: string | undefined = process.env.DEMO_VARIANT): DemoVariant {
+  return value === "no-family" || value === "solo" || value === "empty" || value === "error" ? value : "default";
+}
+
+export function createDemoStore(now: Date = new Date(), variant: DemoVariant = "default"): DemoStore {
+  if (variant === "no-family" || variant === "solo" || variant === "empty") return createMinimalStore(now, variant);
+  const store = createFullStore(now);
+  if (variant === "error") store.failingTables.add("expenses");
+  return store;
+}
+
+function createMinimalStore(now: Date, variant: "no-family" | "solo" | "empty"): DemoStore {
+  const store = new DemoStore({ now: () => now });
+  store.users.push({ ...DEMO_ANA }, { ...DEMO_BRUNO });
+  if (variant === "no-family") {
+    store.createFamily("Família Bruno", "Bruno", "#c2410c", DEMO_BRUNO.id);
+    const [invite] = runRpc(store, "create_invite", { invite_email: null }, DEMO_BRUNO.id) as { token: string }[];
+    store.tables.invites.find((i) => i.token === invite.token)!.token = DEMO_INVITE_TOKEN;
+  } else if (variant === "solo") {
+    store.createFamily("Família Silva Costa", "Ana", "#2f6f5e", DEMO_ANA.id);
+  } else {
+    store.createFamily("Família Silva Costa", "Ana", "#2f6f5e", DEMO_ANA.id);
+    const [invite] = runRpc(store, "create_invite", { invite_email: DEMO_BRUNO.email }, DEMO_ANA.id) as { token: string }[];
+    runRpc(store, "accept_invite", { invite_token: invite.token, member_display_name: "Bruno", member_color: "#c2410c" }, DEMO_BRUNO.id);
+  }
+  store.now = () => new Date();
+  return store;
+}
+
+function createFullStore(now: Date): DemoStore {
   const realNow = now.getTime();
   let clock = realNow;
   const store = new DemoStore({ now: () => new Date(clock) });

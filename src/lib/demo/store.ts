@@ -206,6 +206,8 @@ export class DemoStore {
   readonly tables: Tables = Object.fromEntries(TABLES.map((t) => [t, []]));
   readonly users: DemoUserRow[] = [];
   readonly objects = new Map<string, StoredObject>();
+  /** Tables whose reads fail (DEMO_VARIANT=error), to see the load-error states. */
+  readonly failingTables = new Set<string>();
   private auditSeq = 0;
   now: () => Date;
   private readonly newId: () => string;
@@ -253,6 +255,7 @@ export class DemoStore {
     if (!TABLES.includes(name)) fail("42P01", `relation "public.${request.table}" does not exist`, 404);
     if (!userId) fail("42501", `permission denied for table ${name}`, 401);
     if (!ALLOWED[name].has(request.action)) fail("42501", `permission denied for table ${name}`, 403);
+    if (request.action === "select" && this.failingTables.has(name)) fail("XX000", `simulated failure reading ${name}`, 500);
 
     const nodes = parseSelect(request.columns ?? "*");
     const topFilters = request.filters.filter((f) => !f.column.includes("."));

@@ -9,6 +9,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "qa:visual": "node tools/visual-qa.mjs",
+    "qa:states": "node tools/qa-states.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

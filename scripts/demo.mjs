@@ -1,5 +1,6 @@
 // `npm run demo`: the dev server in demo mode (fake in-memory data, no Supabase project).
 // Extra arguments go to `next dev`, e.g. `npm run demo -- -p 3100`.
+// DEMO_VARIANT=no-family|solo|empty|error picks an alternative data set for visual QA (see src/lib/demo/seed.ts).
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 

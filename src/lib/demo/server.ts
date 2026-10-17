@@ -1,5 +1,5 @@
 import { createDemoClient } from "./fake-client";
-import { createDemoStore } from "./seed";
+import { createDemoStore, demoVariantFromEnv } from "./seed";
 import { DEMO_USER } from "./users";
 import type { DemoStore } from "./store";
 
@@ -11,7 +11,7 @@ const globalForDemo = globalThis as typeof globalThis & { __guardaDemoStore?: De
  * server brings the seed data back.
  */
 export function getDemoStore(): DemoStore {
-  globalForDemo.__guardaDemoStore ??= createDemoStore();
+  globalForDemo.__guardaDemoStore ??= createDemoStore(new Date(), demoVariantFromEnv());
   return globalForDemo.__guardaDemoStore;
 }
 
