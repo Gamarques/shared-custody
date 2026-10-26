@@ -28,7 +28,7 @@ describe("invite helpers", () => {
     expect(inviteErrorMessage("IV005")).toMatch(/dois responsáveis/);
     expect(inviteErrorMessage("23514")).toBe(inviteErrorMessage("IV005"));
     expect(inviteErrorMessage("IV003")).toMatch(/expirou/);
-    expect(inviteErrorMessage(undefined)).toMatch(/Tente novamente/);
-    expect(inviteErrorMessage("XX000")).toMatch(/Tente novamente/);
+    expect(inviteErrorMessage(undefined)).toMatch(/Tenta novamente/);
+    expect(inviteErrorMessage("XX000")).toMatch(/Tenta novamente/);
   });
 });

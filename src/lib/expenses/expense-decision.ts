@@ -12,7 +12,7 @@ export const STATUS_LABELS: Readonly<Record<string, string>> = {
 /** Trimmed comment, or an error message in pt-BR when a dispute comment is blank or too long. */
 export function validateDisputeComment(raw: string): { ok: true; comment: string } | { ok: false; error: string } {
   const comment = raw.trim();
-  if (!comment) return { ok: false, error: "Explique o motivo da contestação." };
+  if (!comment) return { ok: false, error: "Explica o motivo da contestação." };
   if (comment.length > MAX_DISPUTE_COMMENT) {
     return { ok: false, error: `O comentário deve ter no máximo ${MAX_DISPUTE_COMMENT} caracteres.` };
   }

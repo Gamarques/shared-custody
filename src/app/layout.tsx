@@ -13,9 +13,9 @@ import { isSupabaseConfigured } from "@/lib/env";
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Guarda Compartilhada",
+  title: "Guarda Partilhada",
   description: "Guarda semanal alternada e despesas divididas entre os dois responsáveis.",
-  applicationName: "Guarda Compartilhada",
+  applicationName: "Guarda Partilhada",
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Guarda", statusBarStyle: "default" },
 };
@@ -40,7 +40,7 @@ async function hasSession(): Promise<boolean> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const signedIn = await hasSession();
   return (
-    <html lang="pt" className={sans.variable}>
+    <html lang="pt-PT" className={sans.variable}>
       <body>
         <ServiceWorkerRegister />
         <AppShell

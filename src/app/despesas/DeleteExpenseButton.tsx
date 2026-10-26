@@ -44,8 +44,8 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
       <button
         type="button"
         className={`btn btn-ghost btn-icon btn-sm ${styles.dangerHover}`}
-        aria-label="Excluir"
-        title="Excluir"
+        aria-label="Eliminar"
+        title="Eliminar"
         aria-expanded={confirming}
         onClick={() => setConfirming((open) => !open)}
       >
@@ -63,7 +63,7 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
           }}
         >
           <h2 id={`delete-title-${expenseId}`} className={styles.confirmTitle}>
-            Excluir esta despesa?
+            Eliminar esta despesa?
           </h2>
           <p className={styles.confirmText}>O histórico é mantido.</p>
           {error && <p role="alert">{error}</p>}
@@ -72,7 +72,7 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
               Cancelar
             </button>
             <button type="button" className="btn btn-danger" disabled={busy} onClick={remove}>
-              Confirmar exclusão
+              Confirmar eliminação
             </button>
           </div>
         </dialog>

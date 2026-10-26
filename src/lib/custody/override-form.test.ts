@@ -69,16 +69,16 @@ describe("validateOverrideForm", () => {
 
   it("requires a family member, a period and a reason", () => {
     expect(validateOverrideForm(form({ memberId: "carla" }), members, TZ)).toEqual({
-      memberId: "Escolha com quem a criança fica.",
+      memberId: "Escolhe com quem a criança fica.",
     });
     expect(validateOverrideForm(form({ startDate: "" }), members, TZ)).toEqual({
-      startDate: "Informe a data e a hora de início.",
+      startDate: "Indica a data e a hora de início.",
     });
     expect(validateOverrideForm(form({ endTime: "" }), members, TZ)).toEqual({
-      endDate: "Informe a data e a hora de fim.",
+      endDate: "Indica a data e a hora de fim.",
     });
     expect(validateOverrideForm(form({ reason: "   " }), members, TZ)).toEqual({
-      reason: "Informe o motivo (por exemplo, férias ou feriado).",
+      reason: "Indica o motivo (por exemplo, férias ou feriado).",
     });
     expect(validateOverrideForm(form({ reason: "x".repeat(201) }), members, TZ).reason).toBe(
       "O motivo tem no máximo 200 caracteres.",
@@ -168,7 +168,7 @@ describe("display helpers", () => {
     expect(overrideSaveErrorMessage("23514")).toMatch(/fim deve ser depois do início/);
     expect(overrideSaveErrorMessage("23503")).toBe("O responsável escolhido não faz parte da família.");
     expect(overrideSaveErrorMessage("42501")).toMatch(/permissão/);
-    expect(overrideSaveErrorMessage(undefined)).toBe("Não foi possível salvar a exceção. Tente novamente.");
-    expect(overrideSaveErrorMessage("XX000", "remover")).toBe("Não foi possível remover a exceção. Tente novamente.");
+    expect(overrideSaveErrorMessage(undefined)).toBe("Não foi possível guardar a exceção. Tenta novamente.");
+    expect(overrideSaveErrorMessage("XX000", "remover")).toBe("Não foi possível remover a exceção. Tenta novamente.");
   });
 });

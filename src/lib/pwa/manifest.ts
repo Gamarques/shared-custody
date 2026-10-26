@@ -4,10 +4,10 @@ export const THEME_COLOR = "#1d4e89";
 
 export function buildManifest(): MetadataRoute.Manifest {
   return {
-    name: "Guarda Compartilhada",
+    name: "Guarda Partilhada",
     short_name: "Guarda",
     description: "Guarda semanal alternada e despesas divididas entre os dois responsáveis.",
-    lang: "pt",
+    lang: "pt-PT",
     start_url: "/",
     scope: "/",
     display: "standalone",

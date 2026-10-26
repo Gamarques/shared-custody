@@ -70,22 +70,22 @@ export function validateExpenseForm(
 ): ExpenseFormErrors {
   const errors: ExpenseFormErrors = {};
   const cents = parseAmountToCents(input.amount);
-  if (cents === null) errors.amount = "Informe o valor, por exemplo 12,50.";
+  if (cents === null) errors.amount = "Indica o valor, por exemplo 12,50.";
   else if (cents === 0) errors.amount = "O valor deve ser maior que zero.";
-  else if (cents > MAX_AMOUNT_CENTS) errors.amount = "Valor alto demais para uma despesa.";
+  else if (cents > MAX_AMOUNT_CENTS) errors.amount = "Valor demasiado alto para uma despesa.";
 
-  if (!isValidDate(input.spentOn)) errors.spentOn = "Informe a data da despesa.";
+  if (!isValidDate(input.spentOn)) errors.spentOn = "Indica a data da despesa.";
   else if (input.spentOn > today) errors.spentOn = "A data não pode ser no futuro.";
 
   const description = input.description.trim();
-  if (description.length === 0) errors.description = "Descreva a despesa.";
+  if (description.length === 0) errors.description = "Descreve a despesa.";
   else if (description.length > DESCRIPTION_MAX_LENGTH)
     errors.description = `A descrição tem no máximo ${DESCRIPTION_MAX_LENGTH} caracteres.`;
 
-  if (!CATEGORIES.some((c) => c.value === input.category)) errors.category = "Escolha uma categoria.";
-  if (!memberIds.includes(input.paidBy)) errors.paidBy = "Escolha quem pagou.";
+  if (!CATEGORIES.some((c) => c.value === input.category)) errors.category = "Escolhe uma categoria.";
+  if (!memberIds.includes(input.paidBy)) errors.paidBy = "Escolhe quem pagou.";
   if (parsePercentToBps(input.payerPercent) === null)
-    errors.payerPercent = "Informe um percentual entre 0 e 100, com até 2 casas decimais.";
+    errors.payerPercent = "Indica uma percentagem entre 0 e 100, com até 2 casas decimais.";
   return errors;
 }
 
@@ -166,30 +166,30 @@ export function expenseSaveErrorMessage(code: string | undefined): string {
   switch (code) {
     case "23514":
     case "22003":
-      return "Dados inválidos: confira o valor, a descrição, a categoria e o percentual.";
+      return "Dados inválidos: verifica o valor, a descrição, a categoria e a percentagem.";
     case "23503":
       return "Quem pagou não faz parte da família.";
     case "42501":
-      return "Você não tem permissão para registrar despesas nesta família.";
+      return "Não tens permissão para registar despesas nesta família.";
     case "55000":
-      return "Esta despesa foi excluída e não pode mais ser alterada.";
+      return "Esta despesa foi eliminada e já não pode ser alterada.";
     default:
-      return "Não foi possível salvar a despesa. Tente novamente.";
+      return "Não foi possível guardar a despesa. Tenta novamente.";
   }
 }
 
 /** Family default share (RF-09): the percent typed for "quem pagou arca com", in basis points. */
 export function validateDefaultShare(percent: string): string | null {
-  return parsePercentToBps(percent) === null ? "Informe um percentual entre 0 e 100, com até 2 casas decimais." : null;
+  return parsePercentToBps(percent) === null ? "Indica uma percentagem entre 0 e 100, com até 2 casas decimais." : null;
 }
 
 export function defaultShareSaveErrorMessage(code: string | undefined): string {
   switch (code) {
     case "23514":
-      return "O percentual deve estar entre 0 e 100.";
+      return "A percentagem deve estar entre 0 e 100.";
     case "42501":
-      return "Você não tem permissão para alterar esta família.";
+      return "Não tens permissão para alterar esta família.";
     default:
-      return "Não foi possível salvar o padrão. Tente novamente.";
+      return "Não foi possível guardar a predefinição. Tenta novamente.";
   }
 }

@@ -100,11 +100,11 @@ export function initialRuleForm(current: CustodyRule | null, memberIds: readonly
 
 export function validateRuleForm(input: RuleFormInput, memberIds: readonly string[]): RuleFormErrors {
   const errors: RuleFormErrors = {};
-  if (!memberIds.includes(input.firstMemberId)) errors.firstMemberId = "Escolha quem começa.";
+  if (!memberIds.includes(input.firstMemberId)) errors.firstMemberId = "Escolhe quem começa.";
   const weekdayOk = Number.isInteger(input.handoverWeekday) && input.handoverWeekday >= 0 && input.handoverWeekday <= 6;
-  if (!weekdayOk) errors.handoverWeekday = "Escolha o dia da troca.";
+  if (!weekdayOk) errors.handoverWeekday = "Escolhe o dia da troca.";
   if (!isDate(input.startsOn)) {
-    errors.startsOn = "Informe a data da primeira troca.";
+    errors.startsOn = "Indica a data da primeira troca.";
   } else if (weekdayOk && weekdayOf(input.startsOn) !== input.handoverWeekday) {
     errors.startsOn = `A primeira troca deve cair no dia da troca (${WEEKDAYS[input.handoverWeekday].toLowerCase()}).`;
   }
@@ -112,9 +112,9 @@ export function validateRuleForm(input: RuleFormInput, memberIds: readonly strin
     if (!/^\d{2}:\d{2}$/.test(input.handoverTime)) throw new Error();
     parseTime(input.handoverTime);
   } catch {
-    errors.handoverTime = "Informe a hora da troca (HH:MM).";
+    errors.handoverTime = "Indica a hora da troca (HH:MM).";
   }
-  if (input.validFrom !== null && !isDate(input.validFrom)) errors.validFrom = "Informe a partir de quando vale a nova regra.";
+  if (input.validFrom !== null && !isDate(input.validFrom)) errors.validFrom = "Indica a partir de quando vale a nova regra.";
   return errors;
 }
 
@@ -141,9 +141,9 @@ export function ruleSaveErrorMessage(code: string | undefined): string {
     case "23503":
       return "O responsável escolhido não faz parte da família.";
     case "42501":
-      return "Você não tem permissão para alterar a regra desta família.";
+      return "Não tens permissão para alterar a regra desta família.";
     default:
-      return "Não foi possível salvar a regra. Tente novamente.";
+      return "Não foi possível guardar a regra. Tenta novamente.";
   }
 }
 

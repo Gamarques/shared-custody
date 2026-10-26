@@ -130,6 +130,6 @@ describe("display helpers", () => {
   it("maps database errors to messages", () => {
     expect(ruleSaveErrorMessage("23514")).toContain("dia da troca");
     expect(ruleSaveErrorMessage("42501")).toContain("permissão");
-    expect(ruleSaveErrorMessage(undefined)).toContain("Tente novamente");
+    expect(ruleSaveErrorMessage(undefined)).toContain("Tenta novamente");
   });
 });

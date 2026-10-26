@@ -16,14 +16,14 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 export function validateMemberProfile(input: MemberProfileInput): OnboardingErrors {
   const errors: OnboardingErrors = {};
   const name = input.displayName.trim();
-  if (name.length < 1 || name.length > 40) errors.displayName = "Informe seu nome de exibição (até 40 caracteres).";
-  if (!HEX_COLOR.test(input.color)) errors.color = "Escolha uma cor.";
+  if (name.length < 1 || name.length > 40) errors.displayName = "Indica o teu nome a mostrar (até 40 caracteres).";
+  if (!HEX_COLOR.test(input.color)) errors.color = "Escolhe uma cor.";
   return errors;
 }
 
 export function validateOnboarding(input: OnboardingInput): OnboardingErrors {
   const errors = validateMemberProfile(input);
   const family = input.familyName.trim();
-  if (family.length < 1 || family.length > 80) errors.familyName = "Informe o nome da família (até 80 caracteres).";
+  if (family.length < 1 || family.length > 80) errors.familyName = "Indica o nome da família (até 80 caracteres).";
   return errors;
 }

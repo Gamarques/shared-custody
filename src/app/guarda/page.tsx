@@ -64,7 +64,7 @@ export default async function CustodyRulePage() {
     <main className="page-wide">
       <PageHeader
         title="Regra de guarda"
-        subtitle={`A guarda alterna toda semana. Na hora da troca, a criança passa para o outro responsável (fuso ${timezone}).`}
+        subtitle={`A guarda alterna todas as semanas. Na hora da troca, a criança passa para o outro responsável (fuso ${timezone}).`}
       />
 
       <div className={styles.layout}>
@@ -100,7 +100,7 @@ export default async function CustodyRulePage() {
                 <li key={v.id}>
                   {v.id === current?.id ? <strong>Atual: </strong> : null}
                   {describeRule(v, memberNames)}; vale a partir de {formatDate(v.valid_from)}
-                  {v.valid_to ? ` até ${formatDate(v.valid_to)}` : ""}. Salva em{" "}
+                  {v.valid_to ? ` até ${formatDate(v.valid_to)}` : ""}. Guardada em{" "}
                   {new Date(v.created_at).toLocaleString("pt-PT", { timeZone: timezone, dateStyle: "short", timeStyle: "short" })}
                   {v.created_by && userNames[v.created_by] ? ` por ${userNames[v.created_by]}` : ""}.
                 </li>

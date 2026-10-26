@@ -65,7 +65,7 @@ describe("/guarda", () => {
     results.custody_rules = [{ data: [] }];
     const html = await render();
     expect(html).toContain("Nenhuma regra definida ainda.");
-    expect(html).toContain("Salvar regra");
+    expect(html).toContain("Guardar regra");
     // No "valid from" field for the first version: it applies from the first handover.
     expect(html).not.toContain('id="validFrom"');
     expect(html).toContain(">Ana</option>");
@@ -84,7 +84,7 @@ describe("/guarda", () => {
     expect(history).toContain("por Bruno");
     expect(history).toContain("por Ana");
     // A change is saved as a new version, with a "valid from" date.
-    expect(html).toContain("Salvar nova versão");
+    expect(html).toContain("Guardar nova versão");
     expect(html).toContain('id="validFrom"');
   });
 

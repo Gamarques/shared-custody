@@ -54,9 +54,9 @@ describe("fieldChanges", () => {
   it("describes receipts as attached, replaced or removed, never by path", () => {
     const a = { ...base, receipt_path: "f1/a.jpg" };
     const b = { ...base, receipt_path: "f1/b.jpg" };
-    expect(fieldChanges(base, a, ctx)).toEqual([{ label: "Comprovante", from: "sem comprovante", to: "anexado" }]);
-    expect(fieldChanges(a, b, ctx)).toEqual([{ label: "Comprovante", from: "anexado", to: "substituído" }]);
-    expect(fieldChanges(b, base, ctx)).toEqual([{ label: "Comprovante", from: "anexado", to: "sem comprovante" }]);
+    expect(fieldChanges(base, a, ctx)).toEqual([{ label: "Comprovativo", from: "sem comprovativo", to: "anexado" }]);
+    expect(fieldChanges(a, b, ctx)).toEqual([{ label: "Comprovativo", from: "anexado", to: "substituído" }]);
+    expect(fieldChanges(b, base, ctx)).toEqual([{ label: "Comprovativo", from: "anexado", to: "sem comprovativo" }]);
   });
 
   it("shows a dispute with its comment", () => {
@@ -84,7 +84,7 @@ describe("entryTitle", () => {
   it("names creation, edit, deletion, restoration and decisions", () => {
     expect(row("insert", null, base)).toBe("Criou a despesa");
     expect(row("update", base, { ...base, description: "x" })).toBe("Alterou a despesa");
-    expect(row("delete", base, { ...base, deleted_at: "2026-10-12T00:00:00Z" })).toBe("Excluiu a despesa");
+    expect(row("delete", base, { ...base, deleted_at: "2026-10-12T00:00:00Z" })).toBe("Eliminou a despesa");
     expect(row("update", { ...base, deleted_at: "2026-10-12T00:00:00Z" }, base)).toBe("Restaurou a despesa");
     expect(row("update", base, { ...base, status: "confirmed" })).toBe("Confirmou a despesa");
     expect(row("update", base, { ...base, status: "disputed", dispute_comment: "x" })).toBe("Contestou a despesa");
@@ -122,7 +122,7 @@ describe("buildHistory", () => {
       [{ seq: 3, action: "delete", changed_by: "u1", changed_at: "2026-10-12T10:00:00Z", old_data: base, new_data: { ...base, deleted_at: "2026-10-12T10:00:00Z" } }],
       ctx,
     );
-    expect(item.title).toBe("Excluiu a despesa");
+    expect(item.title).toBe("Eliminou a despesa");
     expect(item.changes).toEqual([]);
   });
 });

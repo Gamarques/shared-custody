@@ -211,7 +211,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                 </li>
               ))}
               <li>
-                <span className={styles.legendHandover}>⇄</span> hora da troca de guarda (a cor do dia se divide)
+                <span className={styles.legendHandover}>⇄</span> hora da troca de guarda (a cor do dia divide-se)
               </li>
               <li>
                 <span className={`${styles.swatch} ${styles.exceptionSwatch}`} /> exceção à regra, com o motivo

@@ -92,7 +92,7 @@ describe("balance page (RF-13)", () => {
     const html = await render();
     expect(html).toContain("Ana deve 6,00 € a Bruno.");
     expect(html).toContain("Em disputa");
-    expect(html).toContain("Fora do saldo: 1 despesa. Se aceitas, Ana deveria 22,75 € a Bruno por elas.");
+    expect(html).toContain("Fora do saldo: 1 despesa. Se aceites, Ana deveria 22,75 € a Bruno por elas.");
     expect(html).toMatch(/Óculos.*45,50 €, pago por Bruno; parte de Ana: 22,75 €\..*Motivo: Não combinamos/);
     expect(html).toContain('href="/despesas/e3/historico"');
   });

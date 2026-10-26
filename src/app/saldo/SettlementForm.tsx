@@ -79,9 +79,9 @@ export function SettlementForm({
       </label>
       {errors.note && <p role="alert" className={styles.error}>{errors.note}</p>}
       <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-        Registrar acerto
+        Registar acerto
       </button>
-      {failed && <p role="alert" className={styles.error}>Não foi possível registrar o acerto.</p>}
+      {failed && <p role="alert" className={styles.error}>Não foi possível registar o acerto.</p>}
     </form>
   );
 }

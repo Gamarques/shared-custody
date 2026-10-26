@@ -1,4 +1,4 @@
-# MVP – App de Guarda Compartilhada
+# MVP – App de Guarda Partilhada
 
 Oct 14, 2026 · @Gabriel Marques
 

@@ -58,7 +58,7 @@ Alternative with the CLI: `npx vercel link`, `npx vercel env add NEXT_PUBLIC_SUP
 ### 4. Verify the acceptance criterion ("URL pública abre a home")
 
 ```bash
-curl -i https://<project>.vercel.app/            # HTTP 200, contains "Guarda Compartilhada"
+curl -i https://<project>.vercel.app/            # HTTP 200, contains "Guarda Partilhada"
 curl -s https://<project>.vercel.app/api/health  # {"ok":true,"supabaseConfigured":true}
 ```
 
@@ -164,7 +164,7 @@ production builds. Icons are placeholders (ring glyph); replace with final art w
 3. iOS/Safari: Share > "Adicionar à Tela de Início"; check icon and standalone launch.
 4. Chrome DevTools > Application: Manifest shows no errors, Service Worker is "activated",
    Lighthouse PWA/installable check passes.
-5. Airplane mode: opening a previously visited page works; unseen page shows "Sem conexão".
+5. Airplane mode: opening a previously visited page works; unseen page shows "Sem ligação".
    (Offline calendar data is T-12.)
 
 ## T-08 — Custody rule configuration (RF-04)
@@ -184,7 +184,7 @@ order instead. Covered by `src/lib/custody/custody-rules.sql.test.ts` and `holde
 2. Verify with two members of one family (A, B):
    - A opens `/guarda`, sees "Nenhuma regra definida ainda.", saves Sunday 18:00 with a first
      handover date; the page shows it as "Regra atual" and one entry in the history;
-   - B opens `/guarda`, changes to Friday 19:00 and clicks "Salvar nova versão"; the history now
+   - B opens `/guarda`, changes to Friday 19:00 and clicks "Guardar nova versão"; the history now
      has two entries, the old one unchanged;
    - in the SQL editor: two rows in `custody_rules`, the first with its original values;
    - through the API with A's session, `supabase.from('custody_rules').update({...})` and
@@ -310,8 +310,8 @@ How it works:
     data); icons and scripts stay;
   - never stores redirects, `/api/` or `/auth/` responses.
 - `/calendario` shows "Atualizado em dd/mm/aaaa hh:mm" (family zone) under the grid, so an
-  offline copy says how old it is, and a notice "Sem conexão: este é o calendário salvo neste
-  aparelho..." while the device is offline.
+  offline copy says how old it is, and a notice "Sem ligação: este é o calendário guardado neste
+  dispositivo..." while the device is offline.
 - Covered by `src/lib/pwa/sw.test.ts`, `src/lib/pwa/offline.test.ts` and the calendar page test.
 
 Verification (Android/Chrome and iOS/Safari, app installed from the T-06 steps, logged in, with
@@ -320,9 +320,9 @@ a rule saved):
 1. Online, open the app, go to "Calendário" (current month), then "Próximo ›" once.
 2. Close the app. Turn on airplane mode.
 3. Open the app again, go to "Calendário": the current month opens with the colors and
-   handovers, the "Sem conexão" notice and the "Atualizado em" time of step 1.
+   handovers, the "Sem ligação" notice and the "Atualizado em" time of step 1.
 4. "Próximo ›" opens the next month (seen in step 1). Another "Próximo ›" (never seen) shows the
-   "Sem conexão" fallback page.
+   "Sem ligação" fallback page.
 5. Turn airplane mode off and reload: the notice disappears and "Atualizado em" shows now.
 6. "Sair", then in airplane mode open `/calendario`: the fallback page shows, not the old data.
    In Chrome DevTools > Application > Cache Storage, `pages-v2` is gone after signing out.
@@ -344,7 +344,7 @@ description, category (the fixed list of the `expenses.category` check), who pai
 by default) and the payer's share in percent, prefilled with `families.default_payer_share_bps`
 and editable per expense. A line under the form shows the split ("Ana paga 30,00 € (60%) e
 Bruno, 20,00 € (40%)"), rounded as business rule 1 says, so the two parts add up to the amount.
-The "Padrão da família" section on the same page edits the default; existing expenses keep the
+The "Predefinição da família" section on the same page edits the default; existing expenses keep the
 share they were saved with.
 
 Migration `20261014000600_expense_form.sql`: a new expense always starts `pending`, with
@@ -357,12 +357,12 @@ own family (the default share). Covered by `src/lib/expenses/expenses.sql.test.t
 1. Apply the migration: `npx supabase db push`.
 2. Verify with two members of one family (A, B):
    - A opens `/despesas/nova`: "Parte de quem pagou (%)" shows `50`; type `100,00`, a
-     description and a category; the split line shows 50,00 € for each; "Registrar despesa"
-     shows "Despesa registrada: ...";
+     description and a category; the split line shows 50,00 € for each; "Registar despesa"
+     shows "Despesa registada: ...";
    - in the SQL editor: the row has `amount_cents = 10000`, `payer_share_bps = 5000`,
      `status = 'pending'`, `created_by` = A;
    - change the percent to `30` for another expense: the row has `payer_share_bps = 3000`;
-   - B sets "Padrão da família" to `60` and saves; reloading the page as A shows `60`
+   - B sets "Predefinição da família" to `60` and saves; reloading the page as A shows `60`
      prefilled; the earlier rows still have 5000 and 3000;
    - with a user of another family, `supabase.from('expenses').insert({... family_id: <A's> })`
      fails with `42501`, and `supabase.from('families').update({default_payer_share_bps: 0})
@@ -434,9 +434,9 @@ Migration `20261015000100_expense_audit.sql`:
   rows (the user id stays as a historical fact).
 
 Screen: `/despesas/<id>/historico` (link "Histórico" on each item of `/despesas`) lists the
-changes newest first: "Criou / Alterou / Confirmou / Contestou / Excluiu / Restaurou a despesa",
+changes newest first: "Criou / Alterou / Confirmou / Contestou / Eliminou / Restaurou a despesa",
 who, when (family time zone) and each changed field as "antes → depois". Receipts show as
-"anexado / substituído / sem comprovante", never by path. A deleted expense keeps its history
+"anexado / substituído / sem comprovativo", never by path. A deleted expense keeps its history
 at the same URL.
 
 Covered by `src/lib/expenses/expense-audit.sql.test.ts`, `expense-history.test.ts`,
@@ -470,7 +470,7 @@ amount, payer, date, description, category, share or receipt of a confirmed or d
 returns it to `pending` and clears the decision (plan rule 5). Deletion is an `UPDATE` of
 `deleted_at`: the row stays and the audit (T-17) records it as `delete`.
 
-Screens: `/despesas/<id>/editar` (link "Editar") and button "Excluir" with confirmation on
+Screens: `/despesas/<id>/editar` (link "Editar") and button "Eliminar" with confirmation on
 `/despesas`. The receipt photo is kept on edit; replacing it is not part of this task.
 
 Covered by `src/lib/expenses/expense-edit-delete.sql.test.ts`.
@@ -479,9 +479,9 @@ Covered by `src/lib/expenses/expense-edit-delete.sql.test.ts`.
 2. Verify with two members (A, B) on the live project:
    - A creates an expense, B confirms, A edits the amount: status shows "Pendente" and B sees
      Confirmar/Contestar again;
-   - A clicks "Excluir" and confirms: it leaves `/despesas`, and `/despesas/<id>/historico`
-     still shows the creation and the "Excluiu a despesa" entries;
-   - opening `/despesas/<id>/editar` of a deleted expense shows "não encontrada ou já excluída".
+   - A clicks "Eliminar" and confirms: it leaves `/despesas`, and `/despesas/<id>/historico`
+     still shows the creation and the "Eliminou a despesa" entries;
+   - opening `/despesas/<id>/editar` of a deleted expense shows "não encontrada ou já eliminada".
 
 ## T-20 — Balance screen with the "em disputa" line (RF-13)
 

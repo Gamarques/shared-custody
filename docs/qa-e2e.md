@@ -99,7 +99,7 @@ region next to the Supabase region (see `MANUAL-STEPS.md`, T-24).
 | Problem | Where | Systems | Fix |
 | --- | --- | --- | --- |
 | Form fields had the browser default text size (~13 px): iOS Safari zooms the page into every field on focus and does not zoom back | `src/app/globals.css` | iOS | Form controls use `max(16px, 1rem)`; `text-size-adjust: 100%` for rotation. Checked by `src/lib/pwa/mobile.test.ts` |
-| "Ver comprovante" called `window.open` after waiting for the signed URL; Safari on iOS treats that as an unrequested pop-up and blocks it | `src/app/despesas/ReceiptLink.tsx`, `openReceipt` in `src/lib/receipts/receipts.ts` | iOS (and slow networks on Android) | The tab opens inside the tap and is pointed at the signed URL afterwards; falls back to the current tab. Checked by `receipts.test.ts` |
+| "Ver comprovativo" called `window.open` after waiting for the signed URL; Safari on iOS treats that as an unrequested pop-up and blocks it | `src/app/despesas/ReceiptLink.tsx`, `openReceipt` in `src/lib/receipts/receipts.ts` | iOS (and slow networks on Android) | The tab opens inside the tap and is pointed at the signed URL afterwards; falls back to the current tab. Checked by `receipts.test.ts` |
 | Four requests to Supabase per home render | proxy, session bar, home | both | See 1.2 |
 
 Checked and found fine: `type="date"` fields with `max` (iOS ignores `max` in its picker, but the
@@ -132,7 +132,7 @@ if time allows. Record OK / FAIL with a short note and a screenshot for every FA
 | 12 | `/calendario`: current and next month | Weeks colored, handover marked "⇄ 18:00" on Sundays | | |
 | 13 | B: `/excecoes`, add "Férias" covering today | Home shows the exception member and "Exceção: Férias" on both phones | | |
 | 14 | A: `/despesas/nova`, take a photo with the camera as the receipt (on iPhone a HEIC photo), amount "45,50", 50% | Saved; in Supabase Storage the object is ≤ ~300 KB | | |
-| 15 | B: `/despesas`, "Ver comprovante" | **The receipt opens in a new tab (no blocked pop-up on iOS)** | | |
+| 15 | B: `/despesas`, "Ver comprovativo" | **The receipt opens in a new tab (no blocked pop-up on iOS)** | | |
 | 16 | B: confirm one expense, dispute another with a comment | Status updated for both; empty comment refused | | |
 | 17 | A: edit the confirmed expense | Back to "Pendente" | | |
 | 18 | A: delete an expense | Gone from the list; history still shows it | | |
@@ -140,7 +140,7 @@ if time allows. Record OK / FAIL with a short note and a screenshot for every FA
 | 20 | `/saldo` | Who owes whom; "Em disputa" line separate | | |
 | 21 | Register a settlement for the shown amount | "Ninguém deve nada neste período." | | |
 | 22 | `/despesas` > "Exportar mês em CSV" | File downloads / share sheet opens; opens in a spreadsheet app with accents | | |
-| 23 | Offline: open the calendar online, close the app, airplane mode, reopen, open "Calendário" | Month opens with "Sem conexão" notice and "Atualizado em" (T-12 steps) | | |
+| 23 | Offline: open the calendar online, close the app, airplane mode, reopen, open "Calendário" | Month opens with "Sem ligação" notice and "Atualizado em" (T-12 steps) | | |
 | 24 | "Sair", then airplane mode, open `/calendario` | Fallback page, not the old data | | |
 | 25 | Rotate to landscape on the home and calendar | Layout readable, text not enlarged | | |
 | 26 | Home speed on 4G (Wi-Fi off), see below | Under 2 s | | |

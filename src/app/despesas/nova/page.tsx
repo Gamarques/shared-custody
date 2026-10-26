@@ -60,8 +60,8 @@ export default async function NewExpensePage() {
         title="Nova despesa"
         subtitle={
           <>
-            Valores em {family.currency}. O percentual é a parte que fica com quem pagou; o outro responsável fica com o
-            restante. Padrão da família: {formatBps(defaultBps)}% para quem pagou.
+            Valores em {family.currency}. A percentagem é a parte que fica com quem pagou; o outro responsável fica com o
+            restante. Predefinição da família: {formatBps(defaultBps)}% para quem pagou.
           </>
         }
       />
@@ -86,9 +86,9 @@ export default async function NewExpensePage() {
 
         <aside className={styles.aside}>
           <section className={`card ${styles.asideCard}`}>
-            <h2 className="card-title">Padrão da família</h2>
+            <h2 className="card-title">Predefinição da família</h2>
             <p className={styles.hint}>
-              Percentual que vem preenchido em cada nova despesa. Mudar o padrão não altera as despesas já registradas.
+              Percentagem que vem preenchida em cada nova despesa. Mudar a predefinição não altera as despesas já registadas.
             </p>
             <DefaultShareForm key={defaultBps} familyId={mine.family_id} defaultShareBps={defaultBps} />
           </section>

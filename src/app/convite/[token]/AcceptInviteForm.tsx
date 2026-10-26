@@ -42,7 +42,7 @@ export function AcceptInviteForm({ token, takenColors }: { token: string; takenC
   return (
     <form className={styles.form} onSubmit={onSubmit}>
       <div className="field">
-        <label htmlFor="displayName">Seu nome de exibição</label>
+        <label htmlFor="displayName">O teu nome a mostrar</label>
         <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} />
         {errors.displayName && <p role="alert">{errors.displayName}</p>}
       </div>
@@ -53,7 +53,7 @@ export function AcceptInviteForm({ token, takenColors }: { token: string; takenC
       </div>
 
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
-        {busy ? "Entrando…" : "Entrar na família"}
+        {busy ? "A entrar…" : "Entrar na família"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}
     </form>

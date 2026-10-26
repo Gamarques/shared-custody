@@ -158,7 +158,7 @@ describe("labels and messages", () => {
     expect(expenseSaveErrorMessage("23503")).toBe("Quem pagou não faz parte da família.");
     expect(expenseSaveErrorMessage("42501")).toContain("permissão");
     expect(expenseSaveErrorMessage("23514")).toContain("Dados inválidos");
-    expect(expenseSaveErrorMessage(undefined)).toContain("Tente novamente");
+    expect(expenseSaveErrorMessage(undefined)).toContain("Tenta novamente");
   });
 
   it("validates the family default share", () => {

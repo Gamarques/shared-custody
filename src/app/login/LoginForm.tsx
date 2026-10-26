@@ -15,7 +15,7 @@ export function LoginForm({ next }: { next: string }) {
     e.preventDefault();
     if (!isValidEmail(email)) {
       setState("error");
-      setMessage("Informe um e-mail válido.");
+      setMessage("Indica um e-mail válido.");
       return;
     }
     setState("sending");
@@ -26,7 +26,7 @@ export function LoginForm({ next }: { next: string }) {
     });
     if (error) {
       setState("error");
-      setMessage("Não foi possível enviar o link. Tente novamente.");
+      setMessage("Não foi possível enviar a ligação. Tenta novamente.");
     } else {
       setState("sent");
     }
@@ -38,7 +38,7 @@ export function LoginForm({ next }: { next: string }) {
         <span className={styles.sentIcon}>
           <Icon name="check" size={16} />
         </span>
-        <span>Link enviado para {email}. Abra o e-mail neste aparelho e toque no link para entrar.</span>
+        <span>Ligação enviada para {email}. Abre o e-mail neste dispositivo e toca na ligação para entrar.</span>
       </p>
     );
   }
@@ -58,7 +58,7 @@ export function LoginForm({ next }: { next: string }) {
       </div>
       {state === "error" && <p role="alert">{message}</p>}
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending"}>
-        {state === "sending" ? "Enviando…" : "Enviar link de acesso"}
+        {state === "sending" ? "A enviar…" : "Enviar ligação de acesso"}
       </button>
     </form>
   );

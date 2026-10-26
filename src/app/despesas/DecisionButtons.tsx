@@ -20,7 +20,7 @@ export function DecisionButtons({ expenseId }: { expenseId: string }) {
     const { error: failed } = await call();
     setBusy(false);
     if (failed) {
-      setError("Não foi possível registrar a decisão.");
+      setError("Não foi possível registar a decisão.");
       return;
     }
     router.refresh();

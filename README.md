@@ -1,4 +1,4 @@
-# Guarda Compartilhada
+# Guarda Partilhada
 
 PWA for two guardians to share weekly alternating custody of a child and split expenses.
 The plan is in [`docs/plano-mvp.md`](docs/plano-mvp.md); steps that need external accounts are in

@@ -27,7 +27,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!user) {
     return (
       <InviteShell>
-        <Link href={`/login?next=${encodeURIComponent(`/convite/${token}`)}`}>Entre para aceitar o convite</Link>
+        <Link href={`/login?next=${encodeURIComponent(`/convite/${token}`)}`}>Entra para aceitar o convite</Link>
       </InviteShell>
     );
   }
@@ -36,7 +36,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if ((membership?.length ?? 0) > 0) {
     return (
       <InviteShell>
-        Você já faz parte de uma família.{" "}
+        Já fazes parte de uma família.{" "}
         <Link href="/" className="btn btn-secondary">
           Ir para o início
         </Link>
@@ -46,7 +46,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   const { data } = await supabase.rpc("get_invite", { invite_token: token });
   const invite = (data as InviteRow[] | null)?.[0];
-  if (!invite) return <InviteShell>Convite não encontrado. Peça um novo link.</InviteShell>;
+  if (!invite) return <InviteShell>Convite não encontrado. Pede uma nova ligação.</InviteShell>;
   if (invite.status !== "valid") return <InviteShell>{INVITE_STATUS_MESSAGES[invite.status]}</InviteShell>;
 
   const inviter = invite.inviter_name ?? "O outro responsável";
@@ -54,12 +54,12 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
     <main>
       <AuthHeader icon="invite" title="Convite">
         <p>
-          {inviter} convidou você para a família <strong>{invite.family_name}</strong>.
+          {inviter} convidou-te para a família <strong>{invite.family_name}</strong>.
         </p>
       </AuthHeader>
       {invite.invited_email && invite.invited_email !== user.email?.toLowerCase() && (
         <p role="alert">
-          Este convite foi enviado para {invite.invited_email}. Entre com esse e-mail para aceitar.
+          Este convite foi enviado para {invite.invited_email}. Entra com esse e-mail para aceitar.
         </p>
       )}
       <AcceptInviteForm token={token} takenColors={invite.taken_colors} />

@@ -70,7 +70,7 @@ describe("home page", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
     const html = renderToStaticMarkup(await Home());
-    expect(html).toContain("<h1>Guarda Compartilhada</h1>");
+    expect(html).toContain("<h1>Guarda Partilhada</h1>");
     expect(html).toContain("Supabase ainda não configurado");
   });
 });

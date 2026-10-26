@@ -77,8 +77,8 @@ describe("new expense page (RF-08, RF-09)", () => {
     // RF-09: the default is filled in and editable (a plain text input, not read-only).
     expect(html).toMatch(/<input id="payerPercent" type="text"[^>]*value="50"\/>/);
     expect(html).not.toMatch(/id="payerPercent"[^>]*(readOnly|disabled)/);
-    expect(html).not.toContain("Usar o padrão da família");
-    expect(html).toContain("Registrar despesa");
+    expect(html).not.toContain("Usar a predefinição da família");
+    expect(html).toContain("Registar despesa");
 
     // Only the caller's family members are listed (RLS does the rest).
     const memberCalls = calls.filter((c) => c.table === "members");
@@ -91,9 +91,9 @@ describe("new expense page (RF-08, RF-09)", () => {
     const html = await render();
     expect(html).toMatch(/id="payerPercent"[^>]*value="33,33"/);
     expect(html).toMatch(/id="defaultPercent"[^>]*value="33,33"/);
-    expect(html).toContain("Padrão da família: 33,33% para quem pagou.");
+    expect(html).toContain("Predefinição da família: 33,33% para quem pagou.");
     expect(html).toContain("Valor (BRL)");
-    expect(html).toContain("Mudar o padrão não altera as despesas já registradas.");
+    expect(html).toContain("Mudar a predefinição não altera as despesas já registadas.");
   });
 
   it("handles a missing family", async () => {

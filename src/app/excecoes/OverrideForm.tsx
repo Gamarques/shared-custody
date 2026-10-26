@@ -122,7 +122,7 @@ export function OverrideForm({ familyId, timezone, members, initial }: Props) {
       {submitError && <p role="alert">{submitError}</p>}
       <div className={styles.actions}>
         <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
-          {busy ? "Salvando…" : "Adicionar exceção"}
+          {busy ? "A guardar…" : "Adicionar exceção"}
         </button>
       </div>
     </form>

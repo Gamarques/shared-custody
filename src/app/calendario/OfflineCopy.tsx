@@ -36,7 +36,7 @@ export function OfflineCopy({ canonicalPath }: { canonicalPath: string }) {
   if (!offline) return null;
   return (
     <p className="offline-notice" role="status" data-testid="offline-notice">
-      Sem conexão: este é o calendário salvo neste aparelho e pode estar desatualizado.
+      Sem ligação: este é o calendário guardado neste dispositivo e pode estar desatualizado.
     </p>
   );
 }

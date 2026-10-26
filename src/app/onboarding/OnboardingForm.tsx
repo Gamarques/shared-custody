@@ -30,7 +30,7 @@ export function OnboardingForm() {
     });
     if (error) {
       setBusy(false);
-      setSubmitError("Não foi possível criar a família. Tente novamente.");
+      setSubmitError("Não foi possível criar a família. Tenta novamente.");
       return;
     }
     router.replace("/");
@@ -46,7 +46,7 @@ export function OnboardingForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="displayName">Seu nome de exibição</label>
+        <label htmlFor="displayName">O teu nome a mostrar</label>
         <input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} />
         {errors.displayName && <p role="alert">{errors.displayName}</p>}
       </div>
@@ -57,7 +57,7 @@ export function OnboardingForm() {
       </div>
 
       <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
-        {busy ? "Criando…" : "Criar família"}
+        {busy ? "A criar…" : "Criar família"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}
     </form>

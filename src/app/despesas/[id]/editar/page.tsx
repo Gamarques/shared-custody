@@ -70,7 +70,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
     .eq("family_id", mine.family_id)
     .maybeSingle();
   const expense = expenseData as ExpenseRow | null;
-  if (!expense || expense.deleted_at) return <Message text="Despesa não encontrada ou já excluída." />;
+  if (!expense || expense.deleted_at) return <Message text="Despesa não encontrada ou já eliminada." />;
 
   const { data: memberData } = await supabase
     .from("members")
@@ -89,7 +89,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
         <p data-testid="reset-warning" className={styles.notice}>
           <RowIcon name="alert" size={16} />
           <span>
-            Esta despesa já foi {expense.status === "confirmed" ? "confirmada" : "contestada"}. Ao salvar, ela volta a
+            Esta despesa já foi {expense.status === "confirmed" ? "confirmada" : "contestada"}. Ao guardar, volta a
             pendente e o outro responsável decide de novo.
           </span>
         </p>

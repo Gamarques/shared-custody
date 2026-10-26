@@ -11,17 +11,17 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <main>
       <AuthHeader icon="mail" title="Entrar">
-        <p>Enviaremos um link de acesso para o seu e-mail. Sem senha.</p>
+        <p>Vamos enviar uma ligação de acesso para o teu e-mail. Sem palavra-passe.</p>
       </AuthHeader>
       {isDemoMode() && (
         <div className={styles.note}>
-          <p className="status">Modo demo: não há login, a sessão da Ana já está aberta.</p>
+          <p className="status">Modo demo: sem autenticação, a sessão da Ana já está aberta.</p>
           <Link href="/" className="btn btn-secondary">
             Ir para o início
           </Link>
         </div>
       )}
-      {error && <p role="alert">O link é inválido ou expirou. Peça um novo.</p>}
+      {error && <p role="alert">A ligação é inválida ou expirou. Pede uma nova.</p>}
       {isSupabaseConfigured() ? (
         <LoginForm next={safeNextPath(next)} />
       ) : (

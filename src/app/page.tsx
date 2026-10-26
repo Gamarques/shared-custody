@@ -128,7 +128,7 @@ function HeroCard({ view }: { view: TodayView }) {
           <div>
             <p className="empty-state-title">A regra de guarda ainda não foi definida.</p>
             <p className="empty-state-text">
-              Escolha quem começa e o dia e a hora da troca semanal.
+              Escolhe quem começa e o dia e a hora da troca semanal.
             </p>
           </div>
           <div className="empty-state-action">
@@ -217,17 +217,17 @@ function StatRow({ view, stats, meId, currency, timezone }: {
   const names = Object.fromEntries(stats.members.map((m) => [m.id, m.display_name]));
   const { balance } = stats;
   let balanceValue = "—";
-  let balanceHint = stats.members.length < 2 ? "Aguardando o outro responsável" : "Não foi possível calcular o saldo.";
+  let balanceHint = stats.members.length < 2 ? "À espera do outro responsável" : "Não foi possível calcular o saldo.";
   let tone: "up" | "down" | undefined;
   if (balance) {
     balanceValue = formatCents(balance.amountCents, currency);
     if (!balance.debtor || !balance.creditor || balance.amountCents === 0) {
       balanceHint = "Ninguém deve nada neste período.";
     } else if (balance.debtor === meId) {
-      balanceHint = `Você deve a ${names[balance.creditor] ?? "o outro responsável"}`;
+      balanceHint = `Deves a ${names[balance.creditor] ?? "o outro responsável"}`;
       tone = "down";
     } else if (balance.creditor === meId) {
-      balanceHint = `${names[balance.debtor] ?? "O outro responsável"} deve a você`;
+      balanceHint = `${names[balance.debtor] ?? "O outro responsável"} deve-te`;
       tone = "up";
     } else {
       balanceHint = `${names[balance.debtor]} deve a ${names[balance.creditor]}`;
@@ -307,8 +307,8 @@ function WeekStrip({ days, members }: { days: CalendarDay[]; members: HomeMember
 function QuickActions({ alone, wide }: { alone: boolean; wide: boolean }) {
   const actions = [
     { href: "/despesas/nova", label: "Nova despesa", icon: "plus" as const },
-    { href: "/excecoes", label: "Registrar exceção", icon: "exception" as const },
-    { href: "/saldo", label: "Registrar acerto", icon: "wallet" as const },
+    { href: "/excecoes", label: "Registar exceção", icon: "exception" as const },
+    { href: "/saldo", label: "Registar acerto", icon: "wallet" as const },
     alone
       ? { href: "/convidar", label: "Convidar o outro responsável", icon: "invite" as const }
       : { href: "/guarda", label: "Regra de guarda", icon: "rule" as const },
@@ -342,7 +342,7 @@ export default async function Home() {
   if (!isSupabaseConfigured()) {
     return (
       <main>
-        <h1>Guarda Compartilhada</h1>
+        <h1>Guarda Partilhada</h1>
         <p>Com quem a criança está hoje, a próxima troca e as despesas divididas entre os dois responsáveis.</p>
         <p className="status" data-testid="supabase-status">
           Supabase ainda não configurado (ver .env.example).

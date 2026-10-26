@@ -69,10 +69,10 @@ describe("expense history page (RF-12)", () => {
     expect(auditChain).toContainEqual(["order", ["seq", { ascending: false }]]);
     expect(html.match(/data-testid="history-entry"/g)?.length).toBe(3);
     const titles = [...html.matchAll(/<strong[^>]*>([^<]+ a despesa)<\/strong>/g)].map((m) => m[1]);
-    expect(titles).toEqual(["Excluiu a despesa", "Alterou a despesa", "Criou a despesa"]);
+    expect(titles).toEqual(["Eliminou a despesa", "Alterou a despesa", "Criou a despesa"]);
     expect(html).toContain("Bruno, 12/10/2026 18:30");
     expect(html).toMatch(/Valor: 100,00.€ → 120,00.€/);
-    expect(html).toContain("(excluída)");
+    expect(html).toContain("(eliminada)");
   });
 
   it("reads the expense only inside the caller's family", async () => {

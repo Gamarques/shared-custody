@@ -252,7 +252,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
       {invalidRange && (
         <p role="status" data-testid="invalid-range" className={styles.notice}>
           <Icon name="info" size={18} />
-          Intervalo inválido: mostrando o mês atual.
+          Intervalo inválido: a mostrar o mês atual.
         </p>
       )}
 
@@ -409,7 +409,7 @@ export default async function BalancePage({ searchParams }: { searchParams: Prom
 
         <aside className={styles.aside}>
           {balance && (
-            <Card eyebrow="Novo" title="Registrar acerto">
+            <Card eyebrow="Novo" title="Registar acerto">
               <SettlementForm familyId={mine.family_id} members={members} initial={settlementInitial} today={today} />
             </Card>
           )}

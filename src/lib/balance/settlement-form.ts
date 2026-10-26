@@ -29,15 +29,15 @@ export function validateSettlementForm(
 ): SettlementFormErrors {
   const errors: SettlementFormErrors = {};
   const cents = parseAmountToCents(input.amount);
-  if (cents === null) errors.amount = "Informe o valor, por exemplo 6,00.";
+  if (cents === null) errors.amount = "Indica o valor, por exemplo 6,00.";
   else if (cents === 0) errors.amount = "O valor deve ser maior que zero.";
-  else if (cents > MAX_AMOUNT_CENTS) errors.amount = "Valor alto demais para um acerto.";
+  else if (cents > MAX_AMOUNT_CENTS) errors.amount = "Valor demasiado alto para um acerto.";
 
   const date = parseIsoDate(input.settledOn);
-  if (!date) errors.settledOn = "Informe a data do acerto.";
+  if (!date) errors.settledOn = "Indica a data do acerto.";
   else if (date > today) errors.settledOn = "A data não pode ser no futuro.";
 
-  if (!memberIds.includes(input.fromMember)) errors.fromMember = "Escolha quem pagou.";
+  if (!memberIds.includes(input.fromMember)) errors.fromMember = "Escolhe quem pagou.";
   else if (memberIds.length !== 2) errors.toMember = "O acerto precisa dos dois responsáveis.";
 
   if (input.note.trim().length > NOTE_MAX_LENGTH) {

@@ -13,14 +13,14 @@ export function ReceiptLink({ path }: { path: string }) {
   async function open() {
     setError("");
     const opened = await openReceipt(window, () => getReceiptUrl(createClient().storage, path));
-    if (!opened) setError("Não foi possível abrir o comprovante.");
+    if (!opened) setError("Não foi possível abrir o comprovativo.");
   }
 
   return (
     <>
       <button type="button" className={styles.receipt} onClick={open}>
         <RowIcon name="paperclip" size={14} />
-        Ver comprovante
+        Ver comprovativo
       </button>
       {error && (
         <p role="alert" className={styles.receiptError}>

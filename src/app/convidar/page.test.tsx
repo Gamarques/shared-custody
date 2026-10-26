@@ -37,7 +37,7 @@ describe("/convidar", () => {
   it("offers to create a link when there is no pending invite", async () => {
     results.members = [me, { count: 1 }];
     results.invites = [{ data: [] }];
-    expect(await render()).toContain("Gerar link de convite");
+    expect(await render()).toContain("Criar ligação de convite");
   });
 
   it("shows the pending invite link", async () => {
@@ -55,6 +55,6 @@ describe("/convidar", () => {
     results.invites = [];
     const html = await render();
     expect(html).toContain("já tem os dois responsáveis");
-    expect(html).not.toContain("Gerar link de convite");
+    expect(html).not.toContain("Criar ligação de convite");
   });
 });

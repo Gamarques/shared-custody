@@ -63,10 +63,10 @@ export function checkReceiptFile(file: { type: string; size: number }): ReceiptF
 }
 
 export function receiptErrorMessage(e: unknown, check?: ReceiptFileCheck): string {
-  if (check === "not-image") return "O comprovante deve ser uma foto (imagem).";
-  if (check === "too-big") return "A foto é grande demais. Escolha outra.";
-  if (e instanceof ReceiptTooLargeError) return "Não foi possível reduzir a foto o bastante. Tente outra foto.";
-  return "Não foi possível ler a foto. Tente outra.";
+  if (check === "not-image") return "O comprovativo deve ser uma foto (imagem).";
+  if (check === "too-big") return "A foto é demasiado grande. Escolhe outra.";
+  if (e instanceof ReceiptTooLargeError) return "Não foi possível reduzir a foto o suficiente. Tenta outra foto.";
+  return "Não foi possível ler a foto. Tenta outra.";
 }
 
 /** Browser only: decodes the photo (EXIF rotation applied) and re-encodes it as a small JPEG. */

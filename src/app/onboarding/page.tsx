@@ -7,14 +7,14 @@ export default function OnboardingPage() {
   return (
     <main>
       <AuthHeader icon="home" title="Bem-vindo">
-        <p>Crie a família, escolha como você aparece e sua cor no calendário. O outro responsável é convidado depois.</p>
+        <p>Cria a família, escolhe como apareces e a tua cor no calendário. O outro responsável é convidado depois.</p>
       </AuthHeader>
       {isSupabaseConfigured() ? (
         <OnboardingForm />
       ) : (
         <p className={styles.note}>Supabase ainda não configurado (ver .env.example).</p>
       )}
-      <p className={styles.footnote}>Recebeu um convite? Abra o link do convite em vez de criar uma nova família.</p>
+      <p className={styles.footnote}>Recebeste um convite? Abre a ligação do convite em vez de criar uma nova família.</p>
     </main>
   );
 }

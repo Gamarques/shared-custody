@@ -45,7 +45,7 @@ describe("/convite/[token]", () => {
   it("shows the family and the accept form, hiding the inviter's color", async () => {
     const html = await render();
     expect(rpc).toHaveBeenCalledWith("get_invite", { invite_token: token });
-    expect(html).toContain("Ana convidou você para a família <strong>Família Silva</strong>");
+    expect(html).toContain("Ana convidou-te para a família <strong>Família Silva</strong>");
     expect(html).toContain("Entrar na família");
     expect(html).not.toContain('value="#2f6f5e"');
     expect(html).toContain('value="#c2410c"');
@@ -76,7 +76,7 @@ describe("/convite/[token]", () => {
   it("tells users who already have a family", async () => {
     members.mockResolvedValue({ data: [{ id: "m1" }] });
     const html = await render();
-    expect(html).toContain("Você já faz parte de uma família");
+    expect(html).toContain("Já fazes parte de uma família");
     expect(rpc).not.toHaveBeenCalled();
   });
 

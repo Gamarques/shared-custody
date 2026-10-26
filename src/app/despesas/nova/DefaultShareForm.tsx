@@ -60,7 +60,7 @@ export function DefaultShareForm({ familyId, defaultShareBps }: Props) {
           </div>
         </div>
         <button type="submit" className="btn btn-secondary" disabled={busy || parsePercentToBps(percent) === defaultShareBps}>
-          {busy ? "Salvando…" : "Salvar padrão"}
+          {busy ? "A guardar…" : "Guardar predefinição"}
         </button>
       </div>
       {error && <p role="alert">{error}</p>}

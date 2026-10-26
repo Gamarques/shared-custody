@@ -66,7 +66,7 @@ const FIELDS: readonly Field[] = [
   { key: "category", label: "Categoria", format: (v) => categoryLabel(String(v)) },
   { key: "paid_by", label: "Quem pagou", format: (v, c) => c.memberNames[String(v)] ?? "responsável removido" },
   { key: "payer_share_bps", label: "Parte de quem pagou", format: (v) => `${formatBps(Number(v))}%` },
-  { key: "receipt_path", label: "Comprovante", format: () => "anexado", empty: "sem comprovante" },
+  { key: "receipt_path", label: "Comprovativo", format: () => "anexado", empty: "sem comprovativo" },
   { key: "status", label: "Situação", format: (v) => STATUS_LABELS[String(v)] ?? String(v) },
   { key: "dispute_comment", label: "Motivo da contestação", format: (v) => String(v) },
 ];
@@ -102,7 +102,7 @@ export function fieldChanges(before: ExpenseSnapshot | null, after: ExpenseSnaps
 /** "Criou a despesa", "Confirmou a despesa", "Excluiu a despesa", ... */
 export function entryTitle(row: Pick<AuditRow, "action" | "old_data" | "new_data">): string {
   if (row.action === "insert") return "Criou a despesa";
-  if (row.action === "delete") return "Excluiu a despesa";
+  if (row.action === "delete") return "Eliminou a despesa";
   const before = row.old_data ?? {};
   const after = row.new_data;
   if (!isEmpty(before.deleted_at) && isEmpty(after.deleted_at)) return "Restaurou a despesa";

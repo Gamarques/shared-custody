@@ -34,7 +34,7 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
         {banner}
         <div className="auth-brand">
           <BrandMark size={36} />
-          <span>Guarda Compartilhada</span>
+          <span>Guarda Partilhada</span>
         </div>
         <div className="auth-card">{children}</div>
       </div>
@@ -53,9 +53,9 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
       <aside className="sidebar" aria-label="Navegação principal">
         <Link href="/" className="sidebar-brand">
           <BrandMark />
-          <span>Guarda Compartilhada</span>
+          <span>Guarda Partilhada</span>
         </Link>
-        <nav className="sidebar-nav" aria-label="Seções">
+        <nav className="sidebar-nav" aria-label="Secções">
           <ul>
             {NAV_ITEMS.map((item) => {
               const active = isActive(item.href, pathname);
@@ -78,7 +78,7 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
           <Link href="/" className="topbar-brand" aria-label="Início">
             <BrandMark size={28} />
           </Link>
-          <nav className="breadcrumb" aria-label="Você está em">
+          <nav className="breadcrumb" aria-label="Estás em">
             <ol>
               {crumbs.map((crumb, i) => (
                 <li key={crumb.label} aria-current={i === crumbs.length - 1 ? "page" : undefined}>
@@ -119,7 +119,7 @@ function TabBar({ pathname }: { pathname: string }) {
 
   return (
     <>
-      <nav className="tabbar" aria-label="Seções">
+      <nav className="tabbar" aria-label="Secções">
         {PRIMARY.map((item) => (
           <Link
             key={item.href}
@@ -151,7 +151,7 @@ function TabBar({ pathname }: { pathname: string }) {
         className="sheet"
         role="dialog"
         aria-modal="true"
-        aria-label="Mais seções"
+        aria-label="Mais secções"
         data-open={open ? "true" : undefined}
         tabIndex={-1}
         inert={!open}

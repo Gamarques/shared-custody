@@ -110,7 +110,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
         .upload(path, photo, { contentType: "image/jpeg", upsert: false });
       if (uploadError) {
         setBusy(false);
-        setReceiptError("Não foi possível enviar a foto. Tente novamente.");
+        setReceiptError("Não foi possível enviar a foto. Tenta novamente.");
         return;
       }
     }
@@ -123,7 +123,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
       setSubmitError(expenseSaveErrorMessage(error.code));
       return;
     }
-    setSaved(`Despesa registrada: ${describeSavedExpense(row, currency)}. Aguarda a confirmação do outro responsável.`);
+    setSaved(`Despesa registada: ${describeSavedExpense(row, currency)}. Aguarda a confirmação do outro responsável.`);
     setForm({ ...initial, spentOn: form.spentOn, paidBy: form.paidBy, payerPercent: defaultPercent });
     setPercentEdited(false);
     setReceipt(null);
@@ -226,7 +226,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
                 setPercentEdited(false);
               }}
             >
-              Usar o padrão da família ({defaultPercent}%)
+              Usar a predefinição da família ({defaultPercent}%)
             </button>
           )}
           {errors.payerPercent && <p role="alert">{errors.payerPercent}</p>}
@@ -243,7 +243,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
       {!expenseId && (
         <div className={styles.group}>
           <div className={`${styles.field} ${styles.span2}`}>
-            <label htmlFor="receipt">Comprovante (foto, opcional)</label>
+            <label htmlFor="receipt">Comprovativo (foto, opcional)</label>
             <div className={styles.file}>
               <input
                 id="receipt"
@@ -273,7 +273,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
       <div className={styles.footerBar}>
         {cancel}
         <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
-          {busy ? "Salvando…" : expenseId ? "Salvar alterações" : "Registrar despesa"}
+          {busy ? "A guardar…" : expenseId ? "Guardar alterações" : "Registar despesa"}
         </button>
       </div>
     </form>

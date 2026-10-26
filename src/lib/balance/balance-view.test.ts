@@ -110,7 +110,7 @@ describe("who owes whom", () => {
 
   it("the disputed line is conditional", () => {
     expect(plain(describeIfAccepted({ debtor: "m1", creditor: "m2", amountCents: 2275 }, names, "EUR"))).toBe(
-      "Se aceitas, Ana deveria 22,75 € a Bruno por elas.",
+      "Se aceites, Ana deveria 22,75 € a Bruno por elas.",
     );
     expect(describeIfAccepted({ debtor: null, creditor: null, amountCents: 0 }, names, "EUR")).toMatch(/ninguém deveria nada/);
   });

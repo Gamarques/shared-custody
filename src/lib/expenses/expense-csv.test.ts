@@ -21,7 +21,7 @@ describe("expense CSV (RF-15)", () => {
       names,
     );
     const lines = text.slice(1).split("\r\n");
-    expect(lines[0]).toBe("Data;Descrição;Categoria;Pago por;Valor;Quota do pagador (%);Parte do pagador;Parte do outro;Status");
+    expect(lines[0]).toBe("Data;Descrição;Categoria;Pago por;Valor;Quota do pagador (%);Parte do pagador;Parte do outro;Estado");
     expect(lines[1]).toBe("03/10/2026;Material escolar;Escola;Ana;100,00;50;50,00;50,00;Confirmada");
     expect(lines[2]).toBe("12/10/2026;Pão;Alimentação;Bruno;0,07;33,33;0,02;0,05;Pendente");
     expect(lines[3]).toBe("");

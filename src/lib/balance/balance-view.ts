@@ -108,8 +108,8 @@ export function describeDebt(
  * "Se aceitas, Ana deveria 22,75 € a Bruno por elas." They are never part of the balance.
  */
 export function describeIfAccepted(debt: Debt, names: Readonly<Record<string, string>>, currency: string): string {
-  if (!debt.debtor || !debt.creditor || debt.amountCents === 0) return "Se aceitas, se anulam: ninguém deveria nada por elas.";
-  return `Se aceitas, ${nameOf(names, debt.debtor)} deveria ${formatCents(debt.amountCents, currency)} a ${nameOf(names, debt.creditor)} por elas.`;
+  if (!debt.debtor || !debt.creditor || debt.amountCents === 0) return "Se aceites, anulam-se: ninguém deveria nada por elas.";
+  return `Se aceites, ${nameOf(names, debt.debtor)} deveria ${formatCents(debt.amountCents, currency)} a ${nameOf(names, debt.creditor)} por elas.`;
 }
 
 /** "1 despesa", "3 despesas". */

@@ -13,7 +13,7 @@ export function ColorPicker({
 }) {
   return (
     <fieldset className={styles.colors}>
-      <legend>Sua cor</legend>
+      <legend>A tua cor</legend>
       <div className={styles.swatches}>
         {colors.map((c) => (
           <label key={c} className={styles.swatchLabel}>

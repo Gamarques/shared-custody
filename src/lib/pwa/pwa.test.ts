@@ -43,7 +43,7 @@ describe("service worker", () => {
     expect(sw).toContain('"/auth/"');
   });
   it("offline page exists", () => {
-    expect(read("public/offline.html").toString()).toContain("Sem conexão");
+    expect(read("public/offline.html").toString()).toContain("Sem ligação");
   });
 });
 

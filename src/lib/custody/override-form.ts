@@ -73,19 +73,19 @@ export function validateOverrideForm(
   timeZone: string,
 ): OverrideFormErrors {
   const errors: OverrideFormErrors = {};
-  if (!memberIds.includes(input.memberId)) errors.memberId = "Escolha com quem a criança fica.";
+  if (!memberIds.includes(input.memberId)) errors.memberId = "Escolhe com quem a criança fica.";
   const start = localInstant(input.startDate, input.startTime, timeZone);
   const end = localInstant(input.endDate, input.endTime, timeZone);
-  if (start === null) errors.startDate = "Informe a data e a hora de início.";
+  if (start === null) errors.startDate = "Indica a data e a hora de início.";
   if (end === null) {
-    errors.endDate = "Informe a data e a hora de fim.";
+    errors.endDate = "Indica a data e a hora de fim.";
   } else if (start !== null && end <= start) {
     errors.endDate = "O fim deve ser depois do início.";
   } else if (start !== null && end - start > MAX_OVERRIDE_DAYS * MS_PER_DAY) {
-    errors.endDate = "Uma exceção dura no máximo um ano. Para mais, mude a regra de guarda.";
+    errors.endDate = "Uma exceção dura no máximo um ano. Para mais, muda a regra de guarda.";
   }
   const reason = input.reason.trim();
-  if (reason.length === 0) errors.reason = "Informe o motivo (por exemplo, férias ou feriado).";
+  if (reason.length === 0) errors.reason = "Indica o motivo (por exemplo, férias ou feriado).";
   else if (reason.length > REASON_MAX_LENGTH) errors.reason = `O motivo tem no máximo ${REASON_MAX_LENGTH} caracteres.`;
   return errors;
 }
@@ -105,16 +105,16 @@ export function toCustodyOverrideInsert(familyId: string, input: OverrideFormInp
 }
 
 /** Message for a failed insert or delete (Postgres SQLSTATE from supabase-js). */
-export function overrideSaveErrorMessage(code: string | undefined, action: "salvar" | "remover" = "salvar"): string {
+export function overrideSaveErrorMessage(code: string | undefined, action: "guardar" | "remover" = "guardar"): string {
   switch (code) {
     case "23514":
-      return "Período ou motivo inválido: o fim deve ser depois do início, em até um ano.";
+      return "Período ou motivo inválido: o fim deve ser depois do início, no máximo um ano depois.";
     case "23503":
       return "O responsável escolhido não faz parte da família.";
     case "42501":
-      return "Você não tem permissão para alterar as exceções desta família.";
+      return "Não tens permissão para alterar as exceções desta família.";
     default:
-      return `Não foi possível ${action} a exceção. Tente novamente.`;
+      return `Não foi possível ${action} a exceção. Tenta novamente.`;
   }
 }
 

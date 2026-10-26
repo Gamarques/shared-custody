@@ -37,7 +37,7 @@ function Message({ text }: { text: string }) {
 /** Timeline marker of an entry, from its title (the audit action is not part of the item). */
 function markerFor(title: string): { icon: RowIconName; tone: string } {
   if (title.startsWith("Criou")) return { icon: "plus", tone: "" };
-  if (title.startsWith("Excluiu")) return { icon: "trash", tone: styles.nodeDelete };
+  if (title.startsWith("Eliminou")) return { icon: "trash", tone: styles.nodeDelete };
   if (title.startsWith("Confirmou")) return { icon: "check", tone: "" };
   if (title.startsWith("Contestou")) return { icon: "alert", tone: styles.nodeDelete };
   return { icon: "edit", tone: styles.nodeUpdate };
@@ -94,7 +94,7 @@ export default async function ExpenseHistoryPage({ params }: { params: Promise<{
     <main className={`page-wide ${styles.narrow}`}>
       <PageHeader
         title="Histórico da despesa"
-        subtitle="Cada criação, alteração e exclusão fica registrada aqui e não pode ser apagada."
+        subtitle="Cada criação, alteração e eliminação fica registada aqui e não pode ser apagada."
         actions={<BackLink />}
       />
 
@@ -103,7 +103,7 @@ export default async function ExpenseHistoryPage({ params }: { params: Promise<{
           <p className={styles.expenseTitle}>{expense.description}</p>
           <p className={styles.expenseMeta}>
             <span>{formatDate(expense.spent_on)}</span>
-            {expense.deleted_at && <Badge tone="danger">(excluída)</Badge>}
+            {expense.deleted_at && <Badge tone="danger">(eliminada)</Badge>}
           </p>
         </div>
         <span className={styles.expenseAmount}>{formatCents(expense.amount_cents, currency)}</span>
@@ -113,7 +113,7 @@ export default async function ExpenseHistoryPage({ params }: { params: Promise<{
         <p role="alert">Não foi possível carregar o histórico.</p>
       ) : items.length === 0 ? (
         <div className="card">
-          <EmptyState icon="clock" title="Nenhum registro." />
+          <EmptyState icon="clock" title="Nenhum registo." />
         </div>
       ) : (
         <section className={`card ${styles.timelineCard}`}>

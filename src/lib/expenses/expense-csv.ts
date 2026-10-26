@@ -29,7 +29,7 @@ export const CSV_HEADER = [
   "Quota do pagador (%)",
   "Parte do pagador",
   "Parte do outro",
-  "Status",
+  "Estado",
 ] as const;
 
 /** Integer cents as "1234,50", with no float involved. */

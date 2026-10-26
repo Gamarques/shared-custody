@@ -31,7 +31,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
     e.preventDefault();
     setError("");
     if (email.trim() && !isValidEmail(email)) {
-      setError("Informe um e-mail válido ou deixe em branco.");
+      setError("Indica um e-mail válido ou deixa em branco.");
       return;
     }
     setBusy(true);
@@ -70,13 +70,13 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
       <Card title="Convite pendente">
         <div className={styles.meta}>
           <p>
-            Envie este link ao outro responsável. Ele vale até {new Date(pending.expiresAt).toLocaleDateString("pt")} e só
-            pode ser usado uma vez.
+            Envia esta ligação ao outro responsável. É válida até {new Date(pending.expiresAt).toLocaleDateString("pt-PT")} e só
+            pode ser usada uma vez.
           </p>
           {pending.email && <p>Só {pending.email} poderá aceitar.</p>}
         </div>
         <div className={styles.linkBox}>
-          <textarea readOnly rows={3} value={url} aria-label="Link do convite" onFocus={(e) => e.target.select()} />
+          <textarea readOnly rows={3} value={url} aria-label="Ligação do convite" onFocus={(e) => e.target.select()} />
           <button
             type="button"
             className="btn btn-primary"
@@ -86,7 +86,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
             }}
           >
             <Icon name={copied ? "check" : "copy"} size={16} />
-            {copied ? "Copiado" : "Copiar link"}
+            {copied ? "Copiado" : "Copiar ligação"}
           </button>
         </div>
         <div className={styles.actions} style={{ marginTop: "var(--space-4)" }}>
@@ -110,13 +110,13 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
         <div className="field">
           <label htmlFor="inviteEmail">E-mail do outro responsável (opcional)</label>
           <input id="inviteEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <p className="field-hint">Se informar o e-mail, só quem entrar com ele poderá aceitar o convite.</p>
+          <p className="field-hint">Se indicares o e-mail, só quem entrar com ele poderá aceitar o convite.</p>
         </div>
         {error && <p role="alert">{error}</p>}
         <div>
           <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
             <Icon name="invite" size={18} />
-            {busy ? "Gerando…" : "Gerar link de convite"}
+            {busy ? "A criar…" : "Criar ligação de convite"}
           </button>
         </div>
       </form>

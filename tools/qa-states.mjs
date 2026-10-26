@@ -169,7 +169,7 @@ async function main() {
         },
         async (w) => {
           await goto("/despesas");
-          const opened = await click('button[aria-label="Excluir"]');
+          const opened = await click('button[aria-label="Eliminar"]');
           const shown = await exists('[data-testid="delete-confirm"]');
           await shot("default", w, "despesas-delete-confirm", { note: opened && shown ? "inline confirmation open (not window.confirm)" : "delete confirmation did not open" });
         },
@@ -190,7 +190,7 @@ async function main() {
           await goto("/despesas");
           for (const [name, selector] of [
             ["hover-primary-button", ".btn-primary"],
-            ["hover-delete-icon", 'button[aria-label="Excluir"]'],
+            ["hover-delete-icon", 'button[aria-label="Eliminar"]'],
             ["hover-nav-link", "nav a:not([aria-current])"],
           ]) {
             const c = await centerOf(selector);
@@ -233,7 +233,7 @@ async function main() {
           await shot("solo", w, "convidar-form");
           await click('main button[type="submit"]');
           await sleep(400);
-          const generated = await exists("[aria-label='Link do convite']");
+          const generated = await exists("[aria-label='Ligação do convite']");
           await shot("solo", w, "convidar-link-generated", { note: generated ? "link field visible" : "link NOT generated" });
         },
       ],

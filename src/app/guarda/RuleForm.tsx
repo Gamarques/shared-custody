@@ -126,7 +126,7 @@ export function RuleForm({ familyId, members, initial, today }: Props) {
 
       {isChange && (
         <p className={`status ${styles.hint}`}>
-          As semanas antes desta data continuam com a regra anterior, que segue valendo até a primeira troca da nova. A
+          As semanas antes desta data continuam com a regra anterior, que se mantém em vigor até à primeira troca da nova. A
           versão anterior fica guardada no histórico.
         </p>
       )}
@@ -134,7 +134,7 @@ export function RuleForm({ familyId, members, initial, today }: Props) {
       {submitError && <p role="alert">{submitError}</p>}
       <div className={styles.actions}>
         <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
-          {busy ? "Salvando…" : isChange ? "Salvar nova versão" : "Salvar regra"}
+          {busy ? "A guardar…" : isChange ? "Guardar nova versão" : "Guardar regra"}
         </button>
       </div>
     </form>
