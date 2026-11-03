@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { textColorOn } from "@/lib/custody/today";
 import { Icon } from "./Icon";
 
-type Props = { name: string | null; email: string | null; color: string | null };
+type Props = {
+  name: string | null;
+  email: string | null;
+  color: string | null;
+  /** Extra menu entries above "Sair" (the "Admin" link for platform admins). */
+  extra?: ReactNode;
+};
 
 /** "Ana Silva" -> "AS", "ana@x.pt" -> "A". */
 export function initialsOf(text: string): string {
@@ -14,7 +20,7 @@ export function initialsOf(text: string): string {
 }
 
 /** Avatar button in the header; opens a small menu with who is signed in and "Sair". */
-export function UserMenu({ name, email, color }: Props) {
+export function UserMenu({ name, email, color, extra }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const label = name ?? email ?? "Conta";
@@ -62,6 +68,7 @@ export function UserMenu({ name, email, color }: Props) {
             {email && <span className="user-menu-email">{email}</span>}
           </span>
         </div>
+        {extra}
         <form action="/auth/signout" method="post" className="session-bar" data-testid="session-bar">
           <button type="submit" className="user-menu-item">
             <Icon name="logout" size={18} />

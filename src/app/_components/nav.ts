@@ -29,6 +29,7 @@ export type Crumb = { label: string; href?: string };
 
 /** Header trail for a path: the section, then the sub-page when there is one. */
 export function breadcrumbFor(pathname: string): Crumb[] {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return [{ label: "Administração" }];
   const section = NAV_ITEMS.find((item) => item.href !== "/" && isActive(item.href, pathname));
   if (!section) return [{ label: "Início" }];
   if (pathname === section.href) return [{ label: section.label }];

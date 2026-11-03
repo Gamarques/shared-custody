@@ -14,7 +14,7 @@
 import { dayNumber, localDayTimeToInstant, parseTime, toWallClock } from "@/lib/custody/timezone";
 import type { DemoRequest, Row } from "./fake-client";
 import { DemoStore } from "./store";
-import { DEMO_ANA, DEMO_BRUNO } from "./users";
+import { DEMO_ADMINS, DEMO_ANA, DEMO_BRUNO, DEMO_RITA } from "./users";
 
 export const DEMO_TIMEZONE = "Europe/Lisbon";
 
@@ -41,10 +41,31 @@ export function demoVariantFromEnv(value: string | undefined = process.env.DEMO_
 }
 
 export function createDemoStore(now: Date = new Date(), variant: DemoVariant = "default"): DemoStore {
-  if (variant === "no-family" || variant === "solo" || variant === "empty") return createMinimalStore(now, variant);
-  const store = createFullStore(now);
+  const store =
+    variant === "no-family" || variant === "solo" || variant === "empty" ? createMinimalStore(now, variant) : createFullStore(now);
   if (variant === "error") store.failingTables.add("expenses");
+  addPlatformData(store, now);
   return store;
+}
+
+/**
+ * What only /admin shows: Ana is a platform admin (app_admins), the auth users have sign-up and
+ * last sign-in times, and Rita signed up without ever creating or joining a family.
+ */
+function addPlatformData(store: DemoStore, now: Date) {
+  for (const id of DEMO_ADMINS) store.admins.add(id);
+  if (!store.users.some((u) => u.id === DEMO_RITA.id)) store.users.push({ ...DEMO_RITA });
+  const hoursAgo = (h: number) => new Date(now.getTime() - h * 3_600_000).toISOString();
+  const times: Record<string, [number, number | null]> = {
+    [DEMO_ANA.id]: [24 * 70, 1],
+    [DEMO_BRUNO.id]: [24 * 69, 30],
+    [DEMO_RITA.id]: [24 * 3, null],
+  };
+  for (const u of store.users) {
+    const [created, signedIn] = times[u.id] ?? [24, null];
+    u.created_at ??= hoursAgo(created);
+    if (u.last_sign_in_at === undefined) u.last_sign_in_at = signedIn === null ? null : hoursAgo(signedIn);
+  }
 }
 
 function createMinimalStore(now: Date, variant: "no-family" | "solo" | "empty"): DemoStore {

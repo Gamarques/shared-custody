@@ -10,7 +10,10 @@ O projeto tem tabelas de outro app em `public`; este app usa o schema `shared_cu
 passos acima, onde se lê `public`/tabelas, leia `shared_custody`.
 
 - Os clientes Supabase usam `db: { schema: "shared_custody" }` (`src/lib/supabase/schema.ts`).
-- O schema precisa estar em `pgrst.db_schemas` (Settings > API > Exposed schemas); já está.
+- O schema precisa estar exposto ao PostgREST. Em 2026-11-03 não estava (PGRST106 em produção,
+  TODO-014); aplicado com `alter role authenticator set pgrst.db_schemas = 'public, graphql_public,
+  shared_custody'; notify pgrst, 'reload config';`. Se alguém gravar Settings > API > Exposed schemas
+  no dashboard sem `shared_custody`, a app volta a falhar: confirmar com o cron (`ok:true`).
 - Chamadas REST diretas precisam de `Accept-Profile`/`Content-Profile: shared_custody`.
 - `supabase link` / `db push` rodam a partir da raiz do repositório (não de dentro de `supabase/`).
 
@@ -643,3 +646,56 @@ Steps:
    confirm "Dentista", record a settlement in `/saldo`, add and remove an exception in `/excecoes`,
    save a new rule in `/guarda`. Each change must appear on the pages without errors in the console.
 3. Restart the server: the seed data is back.
+
+## Admin — platform administrator account and `/admin`
+
+Status: **code and tests done; nothing applied to the live project.** Migration
+`supabase/migrations/20261103000100_app_admins.sql` adds `shared_custody.app_admins` (who is an
+admin; no client can read or write it), `shared_custody.admin_actions` (one row per admin
+mutation), `is_app_admin()` and the admin functions `admin_list_families()`,
+`admin_list_users()`, `admin_remove_member(family, user)` and `admin_delete_family(family)`. Each
+one raises `42501` unless the caller's own token belongs to an admin. No e-mail is seeded by the
+migration and the app uses no service role key.
+
+1. **Apply the migration** (`supabase db push`, or paste the file in the SQL editor). Check the
+   Security/Performance Advisor afterwards: it must stay clean for `shared_custody`.
+2. **Create the admin user** (there is no password sign-up in the app): Supabase dashboard >
+   Authentication > Users > **Add user** > **Create new user**. Enter the owner's e-mail and a
+   strong password and switch **Auto Confirm User** on. (If the owner already signed in with the
+   magic link, the user exists: use the user's "..." menu > **Send password recovery**, or set a
+   password there, instead of creating a second one.)
+3. **Make that user an admin**, once, in the SQL editor (replace the e-mail):
+
+   ```sql
+   insert into shared_custody.app_admins (user_id)
+   select id from auth.users where email = '<owner e-mail>';
+   ```
+
+   To remove an admin later: `delete from shared_custody.app_admins where user_id = '<uuid>';`.
+4. **Verify**:
+   - `select u.email from shared_custody.app_admins a join auth.users u on u.id = a.user_id;`
+     returns exactly the owner's e-mail.
+   - Open `/login?next=/admin`, tap **Entrar com palavra-passe** (or open
+     `/login?modo=palavra-passe&next=/admin`), sign in with the e-mail and password: `/admin`
+     opens with the tabs **Famílias** and **Utilizadores** listing every family and user. The
+     avatar menu shows an **Admin** entry.
+   - A wrong password shows "E-mail ou palavra-passe incorretos.".
+   - Signed in as a normal member, `/admin` answers 404 and the avatar menu has no **Admin** entry.
+   - After removing a member or deleting a test family, `select * from shared_custody.admin_actions
+     order by at desc;` shows the action with the admin's id.
+
+Notes:
+
+- **Remover da família** is refused (message in the dialog) when the member paid expenses or is
+  in a settlement: financial history is never rewritten row by row; delete the whole family
+  instead. Removing a member also removes the custody rule versions and exceptions that point at
+  them (existing `on delete cascade`) and the pending invites they created. Their auth user stays.
+- **Eliminar família** asks for the family name and deletes the family with everything under it,
+  including the expense audit trail (the existing audit guard already allows that cascade, so no
+  trigger was changed). The receipt photos are then removed through the Storage API with the
+  admin's session (new storage policies "receipts: admins read/remove"). If that fails, `/admin`
+  shows a warning with the family id: remove the folder `<family id>/` in Storage > `receipts` by
+  hand.
+- An admin does not need a family: the proxy lets `/admin` through without one. Every other page
+  still sends a user without a family to `/onboarding`.
+- In demo mode (`npm run demo`) Ana is the admin, so `/admin` works with the seed data.

@@ -6,12 +6,12 @@ import { AuthHeader } from "../_auth/AuthHeader";
 import styles from "../_auth/auth.module.css";
 import { LoginForm } from "./LoginForm";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
-  const { next, error } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; modo?: string }> }) {
+  const { next, error, modo } = await searchParams;
   return (
     <main>
       <AuthHeader icon="mail" title="Entrar">
-        <p>Vamos enviar uma ligação de acesso para o teu e-mail. Sem palavra-passe.</p>
+        <p>Vamos enviar uma ligação de acesso para o teu e-mail.</p>
       </AuthHeader>
       {isDemoMode() && (
         <div className={styles.note}>
@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       )}
       {error && <p role="alert">A ligação é inválida ou expirou. Pede uma nova.</p>}
       {isSupabaseConfigured() ? (
-        <LoginForm next={safeNextPath(next)} />
+        <LoginForm next={safeNextPath(next)} initialMode={modo === "palavra-passe" ? "password" : "link"} />
       ) : (
         <p className={styles.note}>Supabase ainda não configurado (ver .env.example).</p>
       )}

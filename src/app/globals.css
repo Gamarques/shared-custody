@@ -1050,6 +1050,18 @@ button[type="submit"]:not(:only-child) {
   color: var(--danger);
 }
 
+/* A navigation entry (e.g. "Admin"), not a destructive one: neutral hover. */
+.user-menu-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.user-menu-link:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+
 /* Auth layout: login, onboarding, invite (no sidebar or tab bar) */
 
 .auth-layout {

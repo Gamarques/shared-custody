@@ -59,6 +59,7 @@ or Supabase project is needed (the Supabase variables are ignored if present). S
 ## Layout
 
 - `src/app` — routes (`/` home, `/api/health` liveness check)
+- `/admin` — platform admin (all families and users; only for `shared_custody.app_admins`, set up as in "Admin" of `docs/MANUAL-STEPS.md`)
 - `src/lib/env.ts` — validation of the public Supabase variables
 - `src/lib/supabase` — browser and server Supabase clients (`@supabase/ssr`)
 - `src/lib/demo` — demo mode: fake Supabase client, in-memory store and seed data

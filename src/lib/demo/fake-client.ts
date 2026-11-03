@@ -6,7 +6,7 @@
  *
  * Only the parts of supabase-js the app uses are implemented: from().select/insert/update/
  * delete with eq/neq/gt/gte/lt/lte/is/in filters (including filters on embedded tables),
- * order, limit, single, maybeSingle; rpc(); storage upload/remove/createSignedUrl; and the
+ * order, limit, single, maybeSingle; rpc(); storage upload/remove/list/createSignedUrl; and the
  * auth calls, which always answer with the fixed demo user.
  */
 
@@ -35,6 +35,7 @@ export type RpcRequest = { kind: "rpc"; fn: string; args: Row };
 export type StorageRequest =
   | { kind: "storage"; op: "upload"; bucket: string; path: string; base64: string; contentType: string; upsert: boolean }
   | { kind: "storage"; op: "remove"; bucket: string; paths: string[] }
+  | { kind: "storage"; op: "list"; bucket: string; path: string; limit: number }
   | { kind: "storage"; op: "createSignedUrl"; bucket: string; path: string; expiresIn: number };
 
 export type DemoRequest = TableRequest | RpcRequest | StorageRequest;
@@ -169,6 +170,10 @@ export function createDemoClient(execute: Executor, user: DemoUser) {
             upsert: options?.upsert ?? false,
           }),
         remove: (paths: string[]) => execute({ kind: "storage", op: "remove", bucket, paths }),
+        list: async (path: string, options?: { limit?: number }) => {
+          const result = await execute({ kind: "storage", op: "list", bucket, path, limit: options?.limit ?? 100 });
+          return { data: result.data as { name: string; id: string | null }[] | null, error: result.error };
+        },
         createSignedUrl: async (path: string, expiresIn: number) => {
           const result = await execute({ kind: "storage", op: "createSignedUrl", bucket, path, expiresIn });
           return { data: result.data as { signedUrl: string } | null, error: result.error };
@@ -181,6 +186,7 @@ export function createDemoClient(execute: Executor, user: DemoUser) {
       getUser: async () => ({ data: { user: { id: user.id, email: user.email } }, error: null }),
       getSession: async () => ({ data: { session: null }, error: null }),
       signInWithOtp: async () => ({ data: { user: null, session: null }, error: null }),
+      signInWithPassword: async () => ({ data: { user: { id: user.id, email: user.email }, session: null }, error: null }),
       exchangeCodeForSession: async () => ({ data: { user: null, session: null }, error: null }),
       signOut: async () => ({ error: null }),
     },

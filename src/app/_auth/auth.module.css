@@ -54,6 +54,13 @@
   margin-top: var(--space-1);
 }
 
+/* "Entrar com palavra-passe" / "Receber ligação por e-mail" under the login form. */
+.modeToggle {
+  margin-top: var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .note {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);

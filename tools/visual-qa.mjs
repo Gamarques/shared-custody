@@ -56,6 +56,8 @@ const ROUTES = [
   "/convidar",
   "/login",
   "/convite/abcdefghijklmnopqrstuvwxyz123456",
+  "/admin",
+  "/admin?vista=utilizadores",
 ];
 
 

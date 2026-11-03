@@ -4,7 +4,7 @@
  * behaves like the real app: RLS limits every read and write to the caller's family, the
  * same tables are read-only or insert-only, the expense triggers (pending on insert, back to
  * pending when a decided expense is edited, logical delete, audit rows) and the RPCs
- * (create_family, invites, confirm/dispute) follow supabase/migrations.
+ * (create_family, invites, confirm/dispute, the platform admin functions) follow supabase/migrations.
  *
  * Not a SQL engine: only the checks the forms can trip are reproduced, with the same SQLSTATE
  * codes, so the forms show the same messages.
@@ -12,7 +12,7 @@
 import { RECEIPT_BUCKET } from "@/lib/receipts/receipts";
 import type { DemoError, DemoRequest, DemoResult, Filter, Order, Row, StorageRequest, TableRequest } from "./fake-client";
 
-export type DemoUserRow = { id: string; email: string };
+export type DemoUserRow = { id: string; email: string; created_at?: string; last_sign_in_at?: string | null };
 type StoredObject = { contentType: string; base64: string };
 
 type Tables = Record<string, Row[]>;
@@ -205,6 +205,10 @@ export type DemoStoreOptions = { now?: () => Date; newId?: () => string };
 export class DemoStore {
   readonly tables: Tables = Object.fromEntries(TABLES.map((t) => [t, []]));
   readonly users: DemoUserRow[] = [];
+  /** shared_custody.app_admins: user ids of the platform admins. */
+  readonly admins = new Set<string>();
+  /** shared_custody.admin_actions. */
+  readonly adminActions: Row[] = [];
   readonly objects = new Map<string, StoredObject>();
   /** Tables whose reads fail (DEMO_VARIANT=error), to see the load-error states. */
   readonly failingTables = new Set<string>();
@@ -518,6 +522,20 @@ export class DemoStore {
         if (comment === "" || comment.length > 500) fail("22023", "a dispute needs a comment of 1 to 500 characters");
         return this.decideExpense(String(args.eid ?? ""), "disputed", comment, userId);
       }
+      case "is_app_admin":
+        return this.admins.has(userId);
+      case "admin_list_families":
+        this.requireAdmin(userId);
+        return this.adminListFamilies();
+      case "admin_list_users":
+        this.requireAdmin(userId);
+        return this.adminListUsers();
+      case "admin_remove_member":
+        this.requireAdmin(userId);
+        return this.adminRemoveMember(String(args.p_family_id ?? ""), String(args.p_user_id ?? ""), userId);
+      case "admin_delete_family":
+        this.requireAdmin(userId);
+        return this.adminDeleteFamily(String(args.p_family_id ?? ""), userId);
     }
     return fail("PGRST202", `Could not find the function public.${fn} in the schema cache`, 404);
   }
@@ -649,11 +667,125 @@ export class DemoStore {
     return structuredClone(row);
   }
 
+  // --- platform admin (20261103000100_app_admins.sql) -------------------------------------------
+
+  private requireAdmin(userId: string) {
+    if (!this.admins.has(userId)) fail("42501", "admin only", 403);
+  }
+
+  private adminListFamilies(): Row[] {
+    const stampsOf = (table: string, familyId: unknown, column: string) =>
+      this.tables[table].filter((r) => r.family_id === familyId).map((r) => String(r[column]));
+    const families = sortRows(this.tables.families, [{ column: "created_at", ascending: false }]);
+    return families.map((f) => {
+      const expenses = this.tables.expenses.filter((e) => e.family_id === f.id && e.deleted_at === null);
+      const stamps = [
+        String(f.created_at),
+        ...stampsOf("members", f.id, "created_at"),
+        ...stampsOf("children", f.id, "created_at"),
+        ...stampsOf("custody_rules", f.id, "created_at"),
+        ...stampsOf("custody_overrides", f.id, "created_at"),
+        ...stampsOf("expense_audit", f.id, "changed_at"),
+        ...stampsOf("settlements", f.id, "created_at"),
+      ];
+      return {
+        id: f.id,
+        name: f.name,
+        currency: f.currency,
+        timezone: f.timezone,
+        created_at: f.created_at,
+        members: this.familyMembers(f.id).map((m) => ({
+          member_id: m.id,
+          user_id: m.user_id,
+          email: this.users.find((u) => u.id === m.user_id)?.email ?? null,
+          display_name: m.display_name,
+          color: m.color,
+          role: m.role,
+          joined_at: m.created_at,
+        })),
+        children_count: this.tables.children.filter((c) => c.family_id === f.id).length,
+        expenses_count: expenses.length,
+        open_expenses_count: expenses.filter((e) => e.status === "pending" || e.status === "disputed").length,
+        last_activity_at: stamps.reduce((a, b) => (Date.parse(b) > Date.parse(a) ? b : a)),
+      };
+    });
+  }
+
+  private adminListUsers(): Row[] {
+    const users = sortRows(this.users as Row[], [{ column: "created_at", ascending: false }]);
+    return users.map((u) => ({
+      id: u.id,
+      email: u.email,
+      created_at: u.created_at ?? null,
+      last_sign_in_at: u.last_sign_in_at ?? null,
+      is_admin: this.admins.has(String(u.id)),
+      families: this.tables.members
+        .filter((m) => m.user_id === u.id)
+        .map((m) => this.tables.families.find((f) => f.id === m.family_id))
+        .filter((f): f is Row => Boolean(f))
+        .map((f) => ({ id: f.id, name: f.name })),
+    }));
+  }
+
+  private logAdminAction(adminId: string, action: string, target: Row) {
+    this.adminActions.push({ id: this.newId(), admin_id: adminId, action, target, at: this.now().toISOString() });
+  }
+
+  private adminRemoveMember(familyId: string, userId: string, adminId: string): null {
+    const family = this.tables.families.find((f) => f.id === familyId);
+    if (!family) fail("P0002", "family not found", 404);
+    const member = this.tables.members.find((m) => m.family_id === familyId && m.user_id === userId);
+    if (!member) fail("P0002", "member not found", 404);
+    const referenced =
+      this.tables.expenses.some((e) => e.family_id === familyId && e.paid_by === member.id) ||
+      this.tables.settlements.some((s) => s.family_id === familyId && (s.from_member === member.id || s.to_member === member.id));
+    if (referenced) fail("AD001", "member has expenses or settlements", 409);
+    this.logAdminAction(adminId, "remove_member", {
+      family_id: familyId,
+      family_name: family.name,
+      user_id: userId,
+      email: this.users.find((u) => u.id === userId)?.email ?? null,
+      display_name: member.display_name,
+    });
+    this.tables.invites = this.tables.invites.filter(
+      (i) => !(i.family_id === familyId && i.created_by === userId && i.accepted_at === null),
+    );
+    // ON DELETE CASCADE of the composite member foreign keys.
+    this.tables.custody_rules = this.tables.custody_rules.filter((r) => r.first_member_id !== member.id);
+    this.tables.custody_overrides = this.tables.custody_overrides.filter((o) => o.member_id !== member.id);
+    this.tables.members = this.tables.members.filter((m) => m !== member);
+    return null;
+  }
+
+  private adminDeleteFamily(familyId: string, adminId: string): null {
+    const family = this.tables.families.find((f) => f.id === familyId);
+    if (!family) fail("P0002", "family not found", 404);
+    this.logAdminAction(adminId, "delete_family", {
+      family_id: familyId,
+      family_name: family.name,
+      members: this.familyMembers(familyId).map((m) => ({
+        user_id: m.user_id,
+        email: this.users.find((u) => u.id === m.user_id)?.email ?? null,
+        display_name: m.display_name,
+      })),
+      expenses: this.tables.expenses.filter((e) => e.family_id === familyId).length,
+      settlements: this.tables.settlements.filter((x) => x.family_id === familyId).length,
+    });
+    for (const table of TABLES) {
+      const key = table === "families" ? "id" : "family_id";
+      this.tables[table] = this.tables[table].filter((r) => r[key] !== familyId);
+    }
+    // Receipt files stay until the app removes them through storage (as with real Storage).
+    return null;
+  }
+
   // --- storage --------------------------------------------------------------------------------
 
   private storage(request: StorageRequest, userId: string | null): DemoResult {
     if (request.bucket !== RECEIPT_BUCKET) fail("404", "Bucket not found", 404);
     const allowed = (path: string) => this.familiesOf(userId).has(path.split("/")[0]);
+    // "receipts: admins read" / "receipts: admins remove" (20261103000100).
+    const isAdmin = userId !== null && this.admins.has(userId);
     switch (request.op) {
       case "upload": {
         if (!allowed(request.path)) fail("403", "new row violates row-level security policy", 403);
@@ -664,8 +796,17 @@ export class DemoStore {
         return { data: { path: request.path, id: request.path, fullPath: `${request.bucket}/${request.path}` }, error: null, status: 200 };
       }
       case "remove": {
-        const removed = request.paths.filter((p) => allowed(p) && this.objects.delete(p));
+        const removed = request.paths.filter((p) => (allowed(p) || isAdmin) && this.objects.delete(p));
         return { data: removed.map((name) => ({ name, bucket_id: request.bucket })), error: null, status: 200 };
+      }
+      case "list": {
+        const prefix = `${request.path.replace(/\/+$/, "")}/`;
+        const names = [...this.objects.keys()]
+          .filter((p) => p.startsWith(prefix) && !p.slice(prefix.length).includes("/") && (allowed(p) || isAdmin))
+          .map((p) => p.slice(prefix.length))
+          .sort()
+          .slice(0, request.limit);
+        return { data: names.map((name) => ({ name, id: `${prefix}${name}` })), error: null, status: 200 };
       }
       case "createSignedUrl": {
         if (!allowed(request.path) || !this.objects.has(request.path)) fail("404", "Object not found", 404);

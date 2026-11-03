@@ -18,6 +18,12 @@ const TABLES: Record<string, string> = {
   expense_audit: "family_id",
 };
 
+/**
+ * Platform tables with no family: who is an admin and what admins did. Clients reach them only
+ * through the admin functions (src/test/admin.sql.test.ts covers them).
+ */
+const PLATFORM_TABLES = ["admin_actions", "app_admins"];
+
 type Family = { id: string; owner: string; other: string; ownerMember: string; otherMember: string; expense: string };
 
 let t: TestDb;
@@ -138,7 +144,7 @@ describe("schema coverage", () => {
        join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'shared_custody' and c.relkind in ('r', 'p') order by c.relname`,
     );
-    expect(rows.map((r) => r.relname)).toEqual(Object.keys(TABLES).sort());
+    expect(rows.map((r) => r.relname)).toEqual([...Object.keys(TABLES), ...PLATFORM_TABLES].sort());
     expect(rows.filter((r) => !r.relrowsecurity)).toEqual([]);
   });
 

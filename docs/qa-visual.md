@@ -24,7 +24,7 @@ WebSocket do Node (`tools/visual-qa.mjs`). Código de saída 1 se algum check fa
 | touch (aviso) | em 390px, botão/link/campo visível com menos de 40px de altura |
 
 Rotas: `/`, `/calendario`, `/guarda`, `/excecoes`, `/despesas`, `/despesas/nova`, `/saldo`,
-`/convidar`, `/login`, `/convite/<token>` e, descobertas na lista, `/despesas/<id>/editar` e
+`/convidar`, `/login`, `/convite/<token>`, `/admin` (famílias e `?vista=utilizadores`; no demo a Ana é admin) e, descobertas na lista, `/despesas/<id>/editar` e
 `/historico`. **Rota nova = acrescentar em `ROUTES` no script.** `/login`, `/convite` e `/onboarding`
 não têm shell, e o script já espera isso.
 

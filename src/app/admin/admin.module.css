@@ -1,0 +1,304 @@
+/* /admin: tabs, family cards (one column on phones, two from 1280px) and the users table,
+   which becomes stacked label/value rows below 768px. */
+
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+  padding: var(--space-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--fg-2);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  text-decoration: none;
+}
+
+.tab:hover {
+  background: var(--hover);
+}
+
+.tab[aria-current="page"] {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--fg);
+}
+
+.tabCount {
+  min-width: 1.5rem;
+  padding: 0 var(--space-1);
+  border-radius: 999px;
+  background: var(--line);
+  color: var(--fg-2);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.alert {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  background: var(--warning-soft);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Two columns only when each card still gets ~28rem; a single family takes the full width. */
+@media (min-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+  }
+}
+
+.family {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.familyHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.familyTitle {
+  min-width: 0;
+}
+
+.familyTitle h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.stats div {
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+}
+
+.stats dt {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.stats dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.subheading {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.members {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.member + .member {
+  border-top: 1px solid var(--line);
+}
+
+.swatch {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.memberText {
+  display: grid;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.role {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 450;
+}
+
+.email {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.familyFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+/* Users table */
+
+.userEmail {
+  overflow-wrap: anywhere;
+}
+
+.userEmailValue {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .usersWrap {
+    overflow: visible;
+  }
+
+  .users thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .users,
+  .users tbody,
+  .users tr,
+  .users td {
+    display: block;
+  }
+
+  .users tr {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .users tr:last-child {
+    border-bottom: 0;
+  }
+
+  .users td,
+  .users tr:last-child td {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    border: 0;
+  }
+
+  .users td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+
+  .users td.userEmail {
+    display: grid;
+  }
+
+  .userEmailValue {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+}
+
+/* Confirmation dialogs */
+
+.dialog {
+  width: min(28rem, calc(100vw - 2 * var(--space-4)));
+  margin: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.dialog::backdrop {
+  background: rgba(20, 24, 22, 0.45);
+}
+
+.dialogTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+}
+
+.dialogText {
+  margin: 0 0 var(--space-4);
+  color: var(--fg-2);
+}
+
+.dialog [role="alert"] {
+  margin: var(--space-3) 0;
+}
+
+.dialogButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}

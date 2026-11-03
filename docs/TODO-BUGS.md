@@ -103,3 +103,35 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: captura 390 conferida; sem aviso touch; `npm test` passa
 - Severity: low
 - Status: done (Jev 3.42, 2026-10-17) - corrigida (avaliada em conjunto com 009-012); capturas empty-* conferidas em 390 e 1280
+
+### TODO-013: Cron keepalive falha em produção: RPC chamada no schema public (PGRST202)
+- Found: 2026-11-03 no primeiro deploy Vercel (`vercel crons run /api/cron/keepalive`)
+- Evidence: log de produção `supabase_keepalive` com `ok:false, status:404, code PGRST202` "Could not find the function public.keepalive_ping". `src/lib/keepalive/keepalive.ts` faz `POST /rest/v1/rpc/keepalive_ping` sem o header `Content-Profile: shared_custody`, mas a migration cria `shared_custody.keepalive_ping()` (os clientes Supabase usam `db.schema = DB_SCHEMA`)
+- Expected: o ping chega a `shared_custody.keepalive_ping()` e o log mostra `ok:true` com a hora da BD
+- Acceptance: teste unitário cobre o header de schema; após redeploy, `vercel crons run /api/cron/keepalive` gera `supabase_keepalive` com `ok:true`; `npm test` passa
+- Severity: high (sem ping o projeto Supabase gratuito pausa ao fim de ~7 dias, RNF-06)
+- Status: done (Jev 3.68, 2026-11-03) - headers `Content-Profile`/`Accept-Profile` = `DB_SCHEMA` + teste; em produção o cron deu `ok:true` depois da TODO-014
+
+### TODO-014: Schema `shared_custody` não está exposto na API do Supabase (PGRST106)
+- Found: 2026-11-03 ao disparar o cron em produção depois do fix da TODO-013
+- Evidence: log `supabase_keepalive` com `status:406, code PGRST106` "Invalid schema: shared_custody", hint "Only the following schemas are exposed: public, graphql_public" (projeto `lmqamwidjbwquefpjxlr`). `docs/MANUAL-STEPS.md` dizia que o schema já estava em `pgrst.db_schemas`, mas `pg_roles.rolconfig` do `authenticator` não tinha essa chave. Afeta todas as chamadas da app, não só o cron (os clientes usam `db.schema = shared_custody`)
+- Expected: `shared_custody` exposto ao PostgREST (`alter role authenticator set pgrst.db_schemas = 'public, graphql_public, shared_custody'; notify pgrst, 'reload config';`)
+- Acceptance: `vercel crons run /api/cron/keepalive` gera `supabase_keepalive` com `ok:true`; uma chamada REST com `Content-Profile: shared_custody` deixa de devolver PGRST106; `docs/MANUAL-STEPS.md` corrigido
+- Severity: high (app em produção não acede à BD)
+- Status: done (Jev 3.85, 2026-11-03) - `pgrst.db_schemas` aplicado via MCP com OK do utilizador; REST e cron em produção com `ok:true`
+
+### TODO-015: `npm run qa:visual` e `npm run build` param uma vez sim, outra não (aviso de segurança do Next.js)
+- Found: 2026-11-03 ao rodar a QA visual da feature /admin
+- Evidence: `next dev` (servidor demo da QA) e `next build` saem com `SecurityFatalError: Your version of Next.js is affected by a known security vulnerability` e "Retry the same command to continue"; na corrida seguinte continuam. Na QA isso aparece como FAIL em todas as rotas ("This site can't be reached", touch `a "Checking the proxy and the fir"`). Next instalado: 16.4.0
+- Expected: atualizar o Next.js para uma versão sem o aviso (decisão do dono; não foi feito aqui) ou, até lá, a QA repetir o arranque do servidor quando ele sai logo após o `Ready`
+- Acceptance: duas corridas seguidas de `npm run qa:visual` e de `npm run build` passam sem repetir comandos; `npm test` passa
+- Severity: medium (resultados de QA/CI falsos)
+- Status: done (Jev 3.90, 2026-11-03) - Next.js 16.4.0 -> 16.4.5 (npm audit: 0 vulnerabilidades); build e qa:visual passam 2x seguidas sem aviso
+
+### TODO-016: QA visual reescreve `tsconfig.json`
+- Found: 2026-11-03 depois de `npm run qa:visual`
+- Evidence: o servidor demo da QA usa `distDir` `.next-perf/visual-qa-dev` e o Next acrescenta `.next-perf/visual-qa-dev/types/**/*.ts` e `.next-perf/visual-qa-dev/dev/types/**/*.ts` ao `include` do `tsconfig.json`, deixando a árvore suja a cada corrida
+- Expected: correr a QA não altera ficheiros versionados (por exemplo, incluir essas entradas uma vez no `tsconfig.json` ou usar um tsconfig próprio para a QA)
+- Acceptance: `git status` limpo depois de `npm run qa:visual`; `npm run typecheck` e `npm run build` passam
+- Severity: low
+- Status: open

@@ -7,7 +7,9 @@ All 9 tables of "Modelo de dados" (`docs/plano-mvp.md`) exist after T-05
 (`20261014000300_core_schema_rls.sql`). Every new table must enable RLS in the same migration
 that creates it, use composite foreign keys `(member_id, family_id) -> members(id, family_id)`
 for member references, and be added to `TABLES` in `src/test/rls-isolation.sql.test.ts`
-(the test fails if a public table is missing from that list or has RLS disabled).
+(the test fails if a public table is missing from that list or has RLS disabled). Platform tables
+without a family (`app_admins`, `admin_actions`) go in `PLATFORM_TABLES` there instead and are
+covered by `src/test/admin.sql.test.ts`.
 
 ## Tests
 

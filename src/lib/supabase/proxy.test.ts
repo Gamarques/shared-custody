@@ -106,6 +106,32 @@ describe("updateSession", () => {
     expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
   });
 
+  it("lets a signed-in user without a family open /admin (the page checks is_app_admin itself)", async () => {
+    configure();
+    signedIn("admin");
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest("http://localhost/admin?vista=utilizadores"));
+    expect(res.headers.get("location")).toBeNull();
+    expect(members).not.toHaveBeenCalled();
+  });
+
+  it("still sends anonymous visitors of /admin to /login and back", async () => {
+    configure();
+    anonymous();
+    const res = await updateSession(new NextRequest("http://localhost/admin"));
+    const loc = new URL(res.headers.get("location")!);
+    expect(loc.pathname).toBe("/login");
+    expect(loc.searchParams.get("next")).toBe("/admin");
+  });
+
+  it("does not treat look-alike paths as /admin", async () => {
+    configure();
+    signedIn("u1");
+    members.mockResolvedValue({ data: [] });
+    const res = await updateSession(new NextRequest("http://localhost/administrar"));
+    expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
+  });
+
   it("sends users with a family away from /onboarding", async () => {
     configure();
     signedIn("u1");
