@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import type { PublicEnv } from "@/lib/env";
+import { DB_SCHEMA } from "@/lib/supabase/schema";
 
 /**
  * Vercel Cron sends `Authorization: Bearer <CRON_SECRET>` when the CRON_SECRET env var is set.
@@ -32,6 +33,9 @@ export async function pingSupabase(
         apikey: env.supabaseAnonKey,
         Authorization: `Bearer ${env.supabaseAnonKey}`,
         "Content-Type": "application/json",
+        // PostgREST defaults to `public`; the RPC lives in the app schema.
+        "Content-Profile": DB_SCHEMA,
+        "Accept-Profile": DB_SCHEMA,
       },
       body: "{}",
       cache: "no-store",

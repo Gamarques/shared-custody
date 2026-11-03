@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import { DB_SCHEMA } from "@/lib/supabase/schema";
 import { isAuthorizedCron, pingSupabase } from "./keepalive";
 
 const env = { supabaseUrl: "https://abcd1234.supabase.co", supabaseAnonKey: "anon" };
@@ -29,6 +30,14 @@ describe("pingSupabase", () => {
     expect(url).toBe("https://abcd1234.supabase.co/rest/v1/rpc/keepalive_ping");
     expect(init.method).toBe("POST");
     expect(init.headers).toMatchObject({ apikey: "anon", Authorization: "Bearer anon" });
+  });
+
+  it("targets the app schema via PostgREST profile headers (TODO-013)", async () => {
+    const fetchImpl = vi.fn(async () => new Response('"2026-10-15T06:00:00.123+00:00"', { status: 200 }));
+    await pingSupabase(env, fetchImpl as unknown as typeof fetch);
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(DB_SCHEMA).toBe("shared_custody");
+    expect(init.headers).toMatchObject({ "Content-Profile": DB_SCHEMA, "Accept-Profile": DB_SCHEMA });
   });
 
   it("reports HTTP errors with the status and body", async () => {
