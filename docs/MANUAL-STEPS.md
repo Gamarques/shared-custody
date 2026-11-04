@@ -699,3 +699,48 @@ Notes:
 - An admin does not need a family: the proxy lets `/admin` through without one. Every other page
   still sends a user without a family to `/onboarding`.
 - In demo mode (`npm run demo`) Ana is the admin, so `/admin` works with the seed data.
+
+## Security review (2026-11-04)
+
+Status: **code fixes done in the repository; the steps below need the dashboards.** Full results in
+[`docs/security-review.md`](security-review.md); findings TODO-017 to TODO-024 in `docs/TODO-BUGS.md`.
+No migration has to be applied for these fixes.
+
+1. **Redeploy** so the new headers, proxy matcher and redirect checks reach production. Then check:
+
+   ```bash
+   curl -sI https://shared-custody.vercel.app/login | grep -iE 'content-security|strict-transport|x-frame|nosniff|referrer|permissions|x-powered'
+   ```
+
+   Expected: the six security headers and no `X-Powered-By`. Open the app, sign in, add an expense
+   with a receipt photo, open the receipt and sign out with DevTools open: the Console must show no
+   "Content Security Policy" error. If the Supabase URL ever changes, redeploy (the CSP takes it from
+   `NEXT_PUBLIC_SUPABASE_URL` at build time).
+2. **Vercel environment variables** (Settings > Environment Variables):
+   - `DEMO_MODE` and `NEXT_PUBLIC_DEMO_MODE` must not exist for Production. A production build with
+     either one now fails on purpose.
+   - `CRON_SECRET` set for Production only, random (`openssl rand -hex 32`), marked Sensitive.
+   - No variable holds a service role / `sb_secret_` key: the app does not need one.
+   - Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` carry the `NEXT_PUBLIC_` prefix.
+3. **Supabase > Authentication** (not visible from the repository; check, do not assume):
+   - Sign In / Providers > Email: is **Allow new users to sign up** on? With it on, anyone can create an
+     account by magic link (they can only create their own family; RLS isolates it). If only invited
+     guardians should get in, turn it off and create users from the dashboard, or keep it on and accept
+     open sign-up. Keep **Confirm email** on.
+   - Disable providers that are not used (phone, anonymous sign-ins, OAuth).
+   - Rate Limits: e-mails sent per hour, sign-ins/sign-ups and token verifications per IP are at the
+     defaults or lower; with a custom SMTP provider, set the e-mail limit explicitly.
+   - Password settings (used by the admin's password sign-in): minimum length 12 or more and, if the
+     plan allows, leaked password protection.
+   - Attack Protection: enable CAPTCHA (Turnstile or hCaptcha) if sign-up stays open. The login form
+     would then need the CAPTCHA token; that is a code change, ask for it first.
+   - URL Configuration: Site URL = `https://shared-custody.vercel.app`; the redirect allow list holds
+     only that origin's `/auth/callback` (or `/**`), the preview pattern you use and
+     `http://localhost:3000/**`. No wildcard for other domains.
+   - Sessions: optionally set an inactivity timeout or time-box (paid plans).
+   - Multi-factor: consider TOTP for the admin account.
+4. **Supabase > Advisors**: run the Security Advisor; it must list nothing for `shared_custody`.
+   **Storage > receipts** must still show the bucket as private.
+5. **Supabase > Project Settings > API keys**: if the legacy `service_role` JWT secret or an
+   `sb_secret_` key was ever pasted outside the dashboard (chat, e-mail, another repository), rotate it.
+   None was found in this repository or its git history.

@@ -50,13 +50,33 @@ describe("GET /api/cron/keepalive (RNF-06)", () => {
     ping.mockResolvedValue({ ok: false, status: 503, error: "paused", ms: 10 });
     const res = await get("Bearer s3cret-value");
     expect(res.status).toBe(502);
+    // The upstream status and body stay in the logs; the caller only learns that it failed.
+    expect(await res.json()).toEqual({ ok: false });
     expect(JSON.parse(err.mock.calls[0][0] as string)).toMatchObject({ event: "supabase_keepalive", ok: false, status: 503 });
     expect(log).not.toHaveBeenCalled();
   });
 
   it("fails with 500 when the Supabase env vars are missing", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
-    expect((await get("Bearer s3cret-value")).status).toBe(500);
+    const res = await get("Bearer s3cret-value");
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ ok: false });
+    expect(ping).not.toHaveBeenCalled();
+  });
+
+  it("answers 401 with no detail for a wrong, longer, shorter or lower-case secret", async () => {
+    for (const auth of ["Bearer s3cret-valu", "Bearer s3cret-valuex", "bearer s3cret-value", "s3cret-value", "Bearer  s3cret-value", "Basic s3cret-value"]) {
+      const res = await get(auth);
+      expect(res.status).toBe(401);
+      expect(await res.json()).toEqual({ ok: false, error: "unauthorized" });
+    }
+    expect(ping).not.toHaveBeenCalled();
+  });
+
+  it("is not opened by demo mode: the secret is still required", async () => {
+    vi.stubEnv("DEMO_MODE", "1");
+    expect((await get()).status).toBe(401);
+    expect((await get("Bearer s3cret-value")).status).toBe(200);
     expect(ping).not.toHaveBeenCalled();
   });
 });

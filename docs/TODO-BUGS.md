@@ -135,3 +135,67 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: `git status` limpo depois de `npm run qa:visual`; `npm run typecheck` e `npm run build` passam
 - Severity: low
 - Status: open
+
+### TODO-017: Open redirect no `next` do login com caracteres de controlo (`/%09/evil.com`)
+- Found: 2026-11-04 na revisão de segurança (`docs/security-review.md`, item 3)
+- Evidence: `safeNextPath` (`src/lib/auth/paths.ts`) só recusava `//` e `\`. `searchParams.get("next")` devolve `/\t/evil.com` para `/%09/evil.com`; o parser de URL apaga tab/CR/LF, então `new URL("/\t/evil.com", origin)` = `https://evil.com/`. Afeta `/auth/callback` (depois do magic link), o login por palavra-passe (`window.location.assign`) e o `emailRedirectTo`. Com o código antigo, 3 casos do novo teste falham (`%09`, `%0a`, `%0d%0a`)
+- Expected: só caminhos relativos da mesma origem; nunca redirecionar para outro site
+- Acceptance: testes de `paths.test.ts` e `auth-routes.test.ts` com variantes absolutas, `//`, `/\`, codificadas e com caracteres de controlo; `npm test` passa
+- Severity: medium
+- Status: done (2026-11-04) - `safeNextPath` recusa caracteres de controlo/espaço, `\`, `//`, mais de 2048 chars e confere que o destino resolve para a mesma origem; 11 casos novos no callback e 21 em `safeNextPath`
+
+### TODO-018: Matcher do proxy saltava páginas cujo caminho termina em `.png`/`.svg`/... (ex.: `/convite/x.png`)
+- Found: 2026-11-04 na revisão de segurança (item 4)
+- Evidence: o matcher excluía `.*\.(svg|png|jpg|jpeg|gif|webp|ico)$` e prefixos sem âncora (`sw.js` também excluía `/sw.jsx`). `unstable_doesMiddlewareMatch` deu `false` para `/convite/abc.png` e `/despesas/x.png`. A página do convite verifica o utilizador sozinha (sem fuga de dados), mas o proxy deixava de proteger/renovar a sessão nesses caminhos
+- Expected: o proxy corre em todas as rotas de página; só ficam de fora `_next/static/`, `_next/image`, `public/icons/` e os ficheiros exatos `favicon.ico`, `manifest.webmanifest`, `sw.js`, `offline.html`
+- Acceptance: `src/test/security-config.test.ts` (matcher real do Next) cobre os dois lados; `npm run qa:visual` sem falhas
+- Severity: low
+- Status: done (2026-11-04) - matcher em `src/proxy.ts` com exclusões exatas
+
+### TODO-019: Sem cabeçalhos de segurança (CSP, HSTS, nosniff, frame-ancestors...) e com `X-Powered-By`
+- Found: 2026-11-04 na revisão de segurança (item 5)
+- Evidence: `next.config.ts` não definia `headers()`; respostas sem CSP/X-Frame-Options (clickjacking possível) e com `X-Powered-By: Next.js`
+- Expected: CSP mínima (self + projeto Supabase https/wss, imagens data:/blob:), HSTS, nosniff, Referrer-Policy, X-Frame-Options DENY + `frame-ancestors 'none'`, Permissions-Policy sem câmara (o upload não usa `capture`), sem `X-Powered-By`, sem source maps no browser
+- Acceptance: testes em `src/test/security-config.test.ts`; `npm run build`; `npm run qa:visual` 0 falhas; nenhuma violação de CSP no Chrome em 14 ecrãs (build de produção com dados demo)
+- Severity: medium
+- Status: done (2026-11-04) - `headers()`, `poweredByHeader: false`, `productionBrowserSourceMaps: false` em `next.config.ts`
+
+### TODO-020: Modo demo sem trava para produção
+- Found: 2026-11-04 na revisão de segurança (item 3)
+- Evidence: só `DEMO_MODE`/`NEXT_PUBLIC_DEMO_MODE` decidiam. Se alguém os definisse na Vercel (Production), toda a app passava a usar o cliente falso, sempre autenticado como "Ana", admin, e `/api/demo` aceitava leituras/escritas de qualquer pessoa
+- Expected: o modo demo nunca corre no deploy de produção
+- Acceptance: build de produção com `DEMO_MODE=1` falha; em runtime as fábricas Supabase lançam erro e `/api/demo` e `/api/demo/receipt` devolvem 404 quando `VERCEL_ENV=production`; testes em `src/lib/supabase/demo-guard.test.ts` e `src/app/api/demo/route.test.ts`
+- Severity: medium
+- Status: done (2026-11-04) - `src/lib/supabase/demo-guard.ts`; `next.config.ts` lança erro no build com `VERCEL_ENV=production`; verificado com `VERCEL_ENV=production DEMO_MODE=1 next build` (sai com erro)
+
+### TODO-021: Cron keepalive devolvia ao chamador o corpo de erro do Supabase
+- Found: 2026-11-04 na revisão de segurança (item 3)
+- Evidence: com o segredo certo, uma falha devolvia `{ ok:false, status, error: <até 500 chars do corpo PostgREST> }` e "supabase not configured"
+- Expected: o chamador recebe só `{ ok:false }`; o detalhe fica nos logs da Vercel
+- Acceptance: `src/app/api/cron/keepalive/route.test.ts` (502/500 com corpo `{ ok:false }`, 401 sem detalhe para variações do segredo, modo demo não abre a rota)
+- Severity: low
+- Status: done (2026-11-04)
+
+### TODO-022: CSP com `'unsafe-inline'` em `script-src` (sem nonce)
+- Found: 2026-11-04 na revisão de segurança (item 5)
+- Evidence: o Next.js injeta scripts inline de hidratação; sem nonce, `script-src` precisa de `'unsafe-inline'`. A CSP atual já bloqueia scripts de outros domínios, `fetch` para fora do Supabase, frames, `<object>`, `<base>` e `form-action` externo, mas um XSS com script inline não seria bloqueado
+- Expected: CSP com nonce gerado no `src/proxy.ts` (todas as páginas já são dinâmicas) e `'strict-dynamic'`, mantendo as páginas guardadas offline pelo service worker a funcionar
+- Acceptance: nenhum `'unsafe-inline'` em `script-src` em produção; zero violações de CSP nos 14 ecrãs; teste offline do T-12 continua a passar
+- Severity: low (o React escapa tudo e não há `dangerouslySetInnerHTML` no código)
+- Status: open
+
+### TODO-023: Páginas autenticadas dependem só do proxy para mandar anónimos para /login
+- Found: 2026-11-04 na revisão de segurança (item 4)
+- Evidence: `/calendario`, `/guarda`, `/excecoes`, `/despesas`, `/despesas/nova`, `/despesas/[id]/*`, `/saldo`, `/convidar` fazem `getUser()` e usam `""` como id quando não há sessão; não redirecionam. Não há fuga: o RLS devolve zero linhas para `anon` e a página mostra o estado vazio. `/`, `/admin`, `/convite/[token]` e `/despesas/exportar` já verificam
+- Expected: defesa em profundidade: `if (!user) redirect("/login?next=...")` em cada página autenticada (ficheiros fora do âmbito desta revisão)
+- Acceptance: teste por página com cliente sem sessão espera redirect para `/login`
+- Severity: low
+- Status: open
+
+### TODO-024: Membros podem reescrever `created_at`/`updated_at` por UPDATE direto
+- Found: 2026-11-04 na revisão de segurança (item 6)
+- Evidence: as políticas de UPDATE em `expenses`, `families`, `members` e `children` não fixam os timestamps. Em `expenses`, `updated_at` mudado sozinho não gera linha de auditoria (o trigger ignora `updated_at`). Só afeta a própria família
+- Expected: nova migration com trigger BEFORE UPDATE que mantém `created_at` (e define `updated_at` pelo relógio do servidor), mais teste PGlite
+- Acceptance: teste PGlite mostra que `update ... set created_at = '2000-01-01'` não muda o valor; migration aplicada no projeto pelo dono
+- Severity: low
+- Status: open
