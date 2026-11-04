@@ -1,9 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isPublicPath } from "@/lib/auth/paths";
-import { isDemoMode } from "@/lib/demo/mode";
 import { createDemoServerClient } from "@/lib/demo/server";
 import { getPublicEnv, isSupabaseConfigured } from "@/lib/env";
+import { shouldUseDemoClient } from "./demo-guard";
 import { DB_SCHEMA } from "./schema";
 import { getSessionUser } from "./session-user";
 
@@ -15,8 +15,8 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   let response = NextResponse.next({ request });
   if (!isSupabaseConfigured()) return response;
 
-  const supabase = isDemoMode()
-    ? // Demo mode: no session cookie; the fake client is always signed in as Ana.
+  const supabase = shouldUseDemoClient()
+    ? // Demo mode: no session cookie; the fake client is always signed in as Ana (throws in production).
       (createDemoServerClient() as unknown as ReturnType<typeof createServerClient>)
     : createServerClient(getPublicEnv().supabaseUrl, getPublicEnv().supabaseAnonKey, {
         db: { schema: DB_SCHEMA },

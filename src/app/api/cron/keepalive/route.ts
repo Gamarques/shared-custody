@@ -19,14 +19,15 @@ export async function GET(request: Request) {
   }
   if (!isSupabaseConfigured()) {
     console.error(JSON.stringify({ event: "supabase_keepalive", ok: false, error: "supabase env not configured" }));
-    return Response.json({ ok: false, error: "supabase not configured" }, { status: 500 });
+    return Response.json({ ok: false }, { status: 500 });
   }
 
   const result = await pingSupabase(getPublicEnv());
   const line = JSON.stringify({ event: "supabase_keepalive", at: new Date().toISOString(), ...result });
   if (!result.ok) {
+    // The details (upstream status and body) go to the function logs only, never to the caller.
     console.error(line);
-    return Response.json(result, { status: 502 });
+    return Response.json({ ok: false }, { status: 502 });
   }
   console.log(line);
   return Response.json(result);

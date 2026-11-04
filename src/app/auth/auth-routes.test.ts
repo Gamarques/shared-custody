@@ -32,6 +32,24 @@ describe("GET /auth/callback", () => {
     expect(loc.pathname).toBe("/");
   });
 
+  it.each([
+    "https://evil.com",
+    "https:evil.com",
+    "//evil.com",
+    "/\\evil.com",
+    "/%5Cevil.com",
+    "%2F%2Fevil.com",
+    "/%09/evil.com",
+    "/%0a/evil.com",
+    "/%0d%0a/evil.com",
+    "/%00/evil.com",
+    "javascript:alert(1)",
+  ])("never redirects off-site after login (next=%s)", async (next) => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    const res = await GET(new NextRequest(`http://localhost/auth/callback?code=abc&next=${next}`));
+    expect(new URL(res.headers.get("location")!).origin).toBe("http://localhost");
+  });
+
   it("sends invalid/expired links back to /login?error=1", async () => {
     exchangeCodeForSession.mockResolvedValue({ error: new Error("expired") });
     const res = await GET(new NextRequest("http://localhost/auth/callback?code=bad"));

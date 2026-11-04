@@ -41,3 +41,24 @@ describe("/api/demo", () => {
     expect(GET(new NextRequest("http://localhost/api/demo/receipt?path=nope")).status).toBe(404);
   });
 });
+
+describe("/api/demo on the production deployment", () => {
+  it("answers 404 even with DEMO_MODE and NEXT_PUBLIC_DEMO_MODE set", async () => {
+    vi.stubEnv("DEMO_MODE", "1");
+    vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    const store = resetDemoStore();
+    const familyId = store.tables.families[0].id;
+    const res = await post({ kind: "table", table: "families", action: "select", columns: "name", filters: [{ column: "id", op: "eq", value: familyId }], order: [] });
+    expect(res.status).toBe(404);
+    expect(await res.text()).toBe("Not found");
+    expect(GET(new NextRequest(`http://localhost/api/demo/receipt?path=${familyId}/r.jpg`)).status).toBe(404);
+  });
+
+  it("still works on preview deployments and locally", async () => {
+    vi.stubEnv("DEMO_MODE", "1");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    resetDemoStore();
+    expect((await post({ kind: "rpc", fn: "keepalive_ping", args: {} })).status).toBe(200);
+  });
+});
