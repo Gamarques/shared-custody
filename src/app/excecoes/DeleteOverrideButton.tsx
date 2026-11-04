@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { overrideSaveErrorMessage } from "@/lib/custody/override-form";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../_components/feedback-store";
 
 /** Removes an override after confirmation; the rule applies again for its period. */
 export function DeleteOverrideButton({ id, reason }: { id: string; reason: string }) {
@@ -21,6 +22,7 @@ export function DeleteOverrideButton({ id, reason }: { id: string; reason: strin
       setError(overrideSaveErrorMessage(failed.code, "remover"));
       return;
     }
+    showFeedback("excecao-removida");
     router.refresh();
   }
 

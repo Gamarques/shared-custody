@@ -12,7 +12,9 @@ import {
   type RuleFormErrors,
   type RuleFormInput,
 } from "@/lib/custody/rule-form";
+import { ruleFormReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../_components/feedback-store";
 import styles from "./RuleForm.module.css";
 
 export type MemberOption = { id: string; name: string };
@@ -68,6 +70,7 @@ export function RuleForm({ familyId, members, initial, today }: Props) {
       setSubmitError(ruleSaveErrorMessage(error.code));
       return;
     }
+    showFeedback("regra-guardada");
     router.refresh();
   }
 
@@ -133,7 +136,7 @@ export function RuleForm({ familyId, members, initial, today }: Props) {
 
       {submitError && <p role="alert">{submitError}</p>}
       <div className={styles.actions}>
-        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy || !ruleFormReady(form)}>
           {busy ? "A guardar…" : isChange ? "Guardar nova versão" : "Guardar regra"}
         </button>
       </div>

@@ -40,7 +40,9 @@ const WIDTHS = opt("widths", "390,768,1280")
   .map(Number);
 const APP_PORT = 3190;
 const CDP_PORT = 9340;
-const BASE = EXTERNAL_URL || `http://127.0.0.1:${APP_PORT}`;
+// "localhost", not 127.0.0.1: `next dev` blocks its client chunks for other origins, so nothing would
+// hydrate and the screenshots would only show the server HTML (same as tools/qa-states.mjs).
+const BASE = EXTERNAL_URL || `http://localhost:${APP_PORT}`;
 const OUT = ".next-perf/visual-qa";
 const HEIGHTS = { 390: 844, 768: 1024, 1280: 800 };
 
@@ -58,6 +60,10 @@ const ROUTES = [
   "/convite/abcdefghijklmnopqrstuvwxyz123456",
   "/admin",
   "/admin?vista=utilizadores",
+  // Success toast after a write that navigates (code in ?ok=, removed from the URL once shown):
+  // inside the shell (above the tab bar on phones) and on the centered auth layout.
+  "/despesas?ok=despesa-atualizada",
+  "/login?ok=sessao-terminada",
 ];
 
 

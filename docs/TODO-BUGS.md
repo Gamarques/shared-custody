@@ -135,3 +135,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: `git status` limpo depois de `npm run qa:visual`; `npm run typecheck` e `npm run build` passam
 - Severity: low
 - Status: open
+
+### TODO-017: QA visual nunca hidrata as páginas (capturas só com o HTML do servidor)
+- Found: 2026-11-04 ao conferir o aviso de sucesso (toast) nas capturas de `/despesas?ok=despesa-atualizada`
+- Evidence: `tools/visual-qa.mjs` abria `http://127.0.0.1:3190`; o `next dev` registra "Blocked cross-origin request to Next.js dev resource /_next/hmr from \"127.0.0.1\"" e nenhum elemento ganha as chaves `__react*` (sem hidratação, nenhum efeito de Client Component corre). Pelo mesmo endereço com `localhost` a página hidrata e o toast aparece. `tools/qa-states.mjs` já usava `localhost` por esse motivo
+- Expected: a QA visual carrega as páginas por `localhost`, para as capturas e o check `console` refletirem a app hidratada
+- Acceptance: `npm run qa:visual` passa; a captura `despesas-ok-despesa-atualizada-390.png` mostra o toast "Despesa atualizada."
+- Severity: medium (capturas e checks da QA visual não cobriam nada que dependa de JavaScript no cliente)
+- Status: fixed in working tree (2026-11-04, feature de confirmação visual) - `BASE` passou a `http://localhost:<porta>`; aguarda avaliação

@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { inviteErrorMessage } from "@/lib/invites/invites";
 import { MEMBER_COLORS, validateMemberProfile, type OnboardingErrors } from "@/lib/onboarding/validate";
+import { memberProfileReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { withFeedback } from "../../_components/feedback-store";
 import { ColorPicker } from "../../_auth/ColorPicker";
 import styles from "../../_auth/auth.module.css";
 
@@ -35,7 +37,7 @@ export function AcceptInviteForm({ token, takenColors }: { token: string; takenC
       setSubmitError(inviteErrorMessage(error.code));
       return;
     }
-    router.replace("/");
+    router.replace(withFeedback("/", "convite-aceite"));
     router.refresh();
   }
 
@@ -52,7 +54,11 @@ export function AcceptInviteForm({ token, takenColors }: { token: string; takenC
         {errors.color && <p role="alert">{errors.color}</p>}
       </div>
 
-      <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
+      <button
+        type="submit"
+        className="btn btn-primary btn-lg btn-block"
+        disabled={busy || !memberProfileReady({ displayName, color })}
+      >
         {busy ? "A entrar…" : "Entrar na família"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}

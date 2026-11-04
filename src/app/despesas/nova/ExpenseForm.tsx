@@ -16,9 +16,11 @@ import {
   type SplitMember,
 } from "@/lib/expenses/expense-form";
 import { formatBps } from "@/lib/expenses/money";
+import { expenseFormReady } from "@/lib/forms/ready";
 import { checkReceiptFile, compressReceiptPhoto, receiptErrorMessage } from "@/lib/receipts/compress";
 import { RECEIPT_BUCKET, receiptPath } from "@/lib/receipts/receipts";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback, withFeedback } from "../../_components/feedback-store";
 import { RowIcon } from "../RowIcons";
 import styles from "../despesas.module.css";
 
@@ -82,7 +84,8 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
         setSubmitError(expenseSaveErrorMessage(updateError.code));
         return;
       }
-      router.push("/despesas");
+      // The list shows "Despesa atualizada." (the code travels in ?ok=).
+      router.push(withFeedback("/despesas", "despesa-atualizada"));
       router.refresh();
       return;
     }
@@ -123,6 +126,7 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
       setSubmitError(expenseSaveErrorMessage(error.code));
       return;
     }
+    showFeedback("despesa-enviada");
     setSaved(`Despesa registada: ${describeSavedExpense(row, currency)}. Aguarda a confirmação do outro responsável.`);
     setForm({ ...initial, spentOn: form.spentOn, paidBy: form.paidBy, payerPercent: defaultPercent });
     setPercentEdited(false);
@@ -266,13 +270,19 @@ export function ExpenseForm({ familyId, currency, today, members, defaultShareBp
       {(submitError || saved) && (
         <div className={styles.footerNotes}>
           {submitError && <p role="alert">{submitError}</p>}
-          {saved && <p role="status">{saved}</p>}
+          {saved && (
+            // Details of the saved expense; the toast (role="status") already announces it.
+            <p data-testid="saved" className={styles.split}>
+              <RowIcon name="check" size={16} />
+              <span>{saved}</span>
+            </p>
+          )}
         </div>
       )}
 
       <div className={styles.footerBar}>
         {cancel}
-        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy || !expenseFormReady(form)}>
           {busy ? "A guardar…" : expenseId ? "Guardar alterações" : "Registar despesa"}
         </button>
       </div>

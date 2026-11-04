@@ -11,7 +11,9 @@ import {
   type OverrideFormErrors,
   type OverrideFormInput,
 } from "@/lib/custody/override-form";
+import { overrideFormReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../_components/feedback-store";
 import styles from "./OverrideForm.module.css";
 
 export type MemberOption = { id: string; name: string };
@@ -52,6 +54,7 @@ export function OverrideForm({ familyId, timezone, members, initial }: Props) {
       return;
     }
     setForm(initial);
+    showFeedback("excecao-guardada");
     router.refresh();
   }
 
@@ -121,7 +124,7 @@ export function OverrideForm({ familyId, timezone, members, initial }: Props) {
 
       {submitError && <p role="alert">{submitError}</p>}
       <div className={styles.actions}>
-        <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+        <button type="submit" className="btn btn-primary btn-lg" disabled={busy || !overrideFormReady(form)}>
           {busy ? "A guardar…" : "Adicionar exceção"}
         </button>
       </div>

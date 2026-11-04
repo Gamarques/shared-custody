@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { confirmsFamilyName } from "@/lib/admin/admin";
+import { showFeedback } from "../_components/feedback-store";
 import { deleteFamilyAction, removeMemberAction } from "./actions";
 import styles from "./admin.module.css";
 
@@ -64,8 +65,12 @@ export function RemoveMemberButton({
     setError("");
     startTransition(async () => {
       const result = await removeMemberAction(familyId, userId);
-      if (result.ok) setOpen(false);
-      else setError(result.error);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setOpen(false);
+      showFeedback("membro-removido");
     });
   }
 
@@ -118,6 +123,7 @@ export function DeleteFamilyButton({ familyId, familyName }: { familyId: string;
         return;
       }
       close();
+      showFeedback("familia-eliminada");
     });
   }
 

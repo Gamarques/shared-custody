@@ -8,7 +8,9 @@ import {
   type SettlementFormErrors,
   type SettlementFormInput,
 } from "@/lib/balance/settlement-form";
+import { settlementFormReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../_components/feedback-store";
 import styles from "./saldo.module.css";
 
 type Member = { id: string; display_name: string };
@@ -47,6 +49,7 @@ export function SettlementForm({
       return;
     }
     setForm({ ...form, amount: "", note: "" });
+    showFeedback("acerto-registado");
     router.refresh();
   }
 
@@ -78,8 +81,8 @@ export function SettlementForm({
         <input value={form.note} maxLength={200} onChange={(e) => set({ note: e.target.value })} />
       </label>
       {errors.note && <p role="alert" className={styles.error}>{errors.note}</p>}
-      <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
-        Registar acerto
+      <button type="submit" className="btn btn-primary btn-block" disabled={busy || !settlementFormReady(form)}>
+        {busy ? "A registar…" : "Registar acerto"}
       </button>
       {failed && <p role="alert" className={styles.error}>Não foi possível registar o acerto.</p>}
     </form>

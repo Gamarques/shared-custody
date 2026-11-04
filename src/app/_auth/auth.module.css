@@ -84,7 +84,10 @@
   align-items: flex-start;
   gap: var(--space-3);
   margin: 0 !important;
-  border-color: #bfe3cf !important;
+  /* Not a live region any more (the toast announces it), so it draws its own box. */
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid #bfe3cf !important;
+  border-radius: var(--radius-md);
   background: var(--success-soft) !important;
   color: var(--success);
   font-size: var(--text-sm);

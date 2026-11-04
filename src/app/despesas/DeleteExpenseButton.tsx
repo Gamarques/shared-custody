@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { expenseSaveErrorMessage } from "@/lib/expenses/expense-form";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../_components/feedback-store";
 import { RowIcon } from "./RowIcons";
 import styles from "./despesas.module.css";
 
@@ -36,6 +37,8 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
       setError(expenseSaveErrorMessage(failed.code));
       return;
     }
+    setConfirming(false);
+    showFeedback("despesa-eliminada");
     router.refresh();
   }
 
@@ -72,7 +75,7 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
               Cancelar
             </button>
             <button type="button" className="btn btn-danger" disabled={busy} onClick={remove}>
-              Confirmar eliminação
+              {busy ? "A eliminar…" : "Confirmar eliminação"}
             </button>
           </div>
         </dialog>

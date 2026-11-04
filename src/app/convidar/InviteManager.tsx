@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { isValidEmail } from "@/lib/auth/paths";
 import { inviteErrorMessage, inviteMailto, inviteUrl } from "@/lib/invites/invites";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback, showFeedbackError } from "../_components/feedback-store";
 import { Card } from "../_components/ui";
 import { Icon } from "../_components/Icon";
 import styles from "../_auth/auth.module.css";
@@ -25,7 +26,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"create" | "revoke" | null>(null);
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
@@ -34,11 +35,11 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
       setError("Indica um e-mail válido ou deixa em branco.");
       return;
     }
-    setBusy(true);
+    setBusy("create");
     const { data, error: rpcError } = await createClient().rpc("create_invite", {
       invite_email: email.trim() || null,
     });
-    setBusy(false);
+    setBusy(null);
     const row = (data as { token: string; expires_at: string }[] | null)?.[0];
     if (rpcError || !row) {
       setError(inviteErrorMessage(rpcError?.code));
@@ -50,18 +51,34 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
       email: email.trim().toLowerCase() || null,
       expiresAt: row.expires_at,
     });
+    showFeedback("convite-criado");
   }
 
   async function onRevoke() {
     if (!pending) return;
-    setBusy(true);
+    setBusy("revoke");
+    setError("");
     const { error: delError } = await createClient().from("invites").delete().eq("token", pending.token);
-    setBusy(false);
+    setBusy(null);
     if (delError) {
       setError(inviteErrorMessage(delError.code));
       return;
     }
     setPending(null);
+    showFeedback("convite-cancelado");
+  }
+
+  async function onCopy(url: string) {
+    try {
+      // Missing outside secure contexts (plain http on a LAN address): the catch covers it.
+      await navigator.clipboard.writeText(url);
+    } catch {
+      setCopied(false);
+      showFeedbackError("Não foi possível copiar. Seleciona a ligação e copia-a à mão.");
+      return;
+    }
+    setCopied(true);
+    showFeedback("ligacao-copiada");
   }
 
   if (pending) {
@@ -80,10 +97,7 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={async () => {
-              await navigator.clipboard.writeText(url);
-              setCopied(true);
-            }}
+            onClick={() => onCopy(url)}
           >
             <Icon name={copied ? "check" : "copy"} size={16} />
             {copied ? "Copiado" : "Copiar ligação"}
@@ -95,8 +109,8 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
               Enviar por e-mail
             </a>
           )}
-          <button type="button" className="btn btn-secondary" onClick={onRevoke} disabled={busy}>
-            Cancelar convite
+          <button type="button" className="btn btn-secondary" onClick={onRevoke} disabled={busy !== null}>
+            {busy === "revoke" ? "A cancelar…" : "Cancelar convite"}
           </button>
         </div>
         {error && <p role="alert">{error}</p>}
@@ -114,9 +128,9 @@ export function InviteManager({ origin, familyName, initialPending }: Props) {
         </div>
         {error && <p role="alert">{error}</p>}
         <div>
-          <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+          <button type="submit" className="btn btn-primary btn-lg" disabled={busy !== null}>
             <Icon name="invite" size={18} />
-            {busy ? "A criar…" : "Criar ligação de convite"}
+            {busy === "create" ? "A criar…" : "Criar ligação de convite"}
           </button>
         </div>
       </form>

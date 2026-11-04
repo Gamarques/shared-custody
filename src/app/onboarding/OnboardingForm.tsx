@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { MEMBER_COLORS, validateOnboarding, type OnboardingErrors } from "@/lib/onboarding/validate";
+import { onboardingReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { withFeedback } from "../_components/feedback-store";
 import { ColorPicker } from "../_auth/ColorPicker";
 import styles from "../_auth/auth.module.css";
 
@@ -33,7 +35,7 @@ export function OnboardingForm() {
       setSubmitError("Não foi possível criar a família. Tenta novamente.");
       return;
     }
-    router.replace("/");
+    router.replace(withFeedback("/", "familia-criada"));
     router.refresh();
   }
 
@@ -56,7 +58,11 @@ export function OnboardingForm() {
         {errors.color && <p role="alert">{errors.color}</p>}
       </div>
 
-      <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={busy}>
+      <button
+        type="submit"
+        className="btn btn-primary btn-lg btn-block"
+        disabled={busy || !onboardingReady({ familyName, displayName, color })}
+      >
         {busy ? "A criar…" : "Criar família"}
       </button>
       {submitError && <p role="alert">{submitError}</p>}

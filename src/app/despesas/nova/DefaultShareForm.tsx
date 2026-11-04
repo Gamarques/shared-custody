@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { defaultShareSaveErrorMessage, validateDefaultShare } from "@/lib/expenses/expense-form";
 import { formatBps, parsePercentToBps } from "@/lib/expenses/money";
+import { defaultShareReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback } from "../../_components/feedback-store";
 import styles from "../despesas.module.css";
 
 type Props = { familyId: string; defaultShareBps: number };
@@ -37,6 +39,7 @@ export function DefaultShareForm({ familyId, defaultShareBps }: Props) {
       setError(defaultShareSaveErrorMessage(saveError?.code ?? "42501"));
       return;
     }
+    showFeedback("predefinicao-guardada");
     router.refresh();
   }
 
@@ -59,7 +62,7 @@ export function DefaultShareForm({ familyId, defaultShareBps }: Props) {
             </span>
           </div>
         </div>
-        <button type="submit" className="btn btn-secondary" disabled={busy || parsePercentToBps(percent) === defaultShareBps}>
+        <button type="submit" className="btn btn-secondary" disabled={busy || !defaultShareReady(percent, defaultShareBps)}>
           {busy ? "A guardar…" : "Guardar predefinição"}
         </button>
       </div>

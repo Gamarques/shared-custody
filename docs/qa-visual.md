@@ -25,7 +25,8 @@ WebSocket do Node (`tools/visual-qa.mjs`). Código de saída 1 se algum check fa
 
 Rotas: `/`, `/calendario`, `/guarda`, `/excecoes`, `/despesas`, `/despesas/nova`, `/saldo`,
 `/convidar`, `/login`, `/convite/<token>`, `/admin` (famílias e `?vista=utilizadores`; no demo a Ana é admin) e, descobertas na lista, `/despesas/<id>/editar` e
-`/historico`. **Rota nova = acrescentar em `ROUTES` no script.** `/login`, `/convite` e `/onboarding`
+`/historico`. `/despesas?ok=despesa-atualizada` e `/login?ok=sessao-terminada` capturam o aviso de sucesso
+(toast) dentro e fora do shell. **Rota nova = acrescentar em `ROUTES` no script.** `/login`, `/convite` e `/onboarding`
 não têm shell, e o script já espera isso.
 
 Capturas em `.next-perf/visual-qa/<rota>-<largura>.png` (ignorado pelo git). O script só pega o

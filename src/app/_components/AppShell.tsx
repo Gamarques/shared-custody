@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { FeedbackRegion } from "./Feedback";
 import { BrandMark, Icon } from "./Icon";
 import { breadcrumbFor, isActive, isAuthPath, NAV_ITEMS, PRIMARY_HREFS } from "./nav";
 
@@ -24,6 +25,7 @@ const SECONDARY = NAV_ITEMS.filter((item) => !(PRIMARY_HREFS as readonly string[
 /**
  * App chrome: sidebar on desktop (≥1024px), sticky header everywhere, bottom tab bar with a
  * "Mais" sheet on phones. Login, onboarding and invite pages get a centered layout instead.
+ * Both layouts mount the feedback toast (confirmation of writes, see feedback-store.ts).
  */
 export function AppShell({ signedIn, banner, account, holder, children }: Props) {
   const pathname = usePathname() ?? "/";
@@ -37,6 +39,7 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
           <span>Guarda Partilhada</span>
         </div>
         <div className="auth-card">{children}</div>
+        <FeedbackRegion shell="auth" />
       </div>
     );
   }
@@ -95,6 +98,7 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
       </div>
 
       <TabBar pathname={pathname} />
+      <FeedbackRegion shell="app" />
     </div>
   );
 }

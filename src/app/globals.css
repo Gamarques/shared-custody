@@ -96,6 +96,8 @@
   --z-overlay: 40;
   --z-sheet: 50;
   --z-menu: 60;
+  /* Feedback toast: above the tab bar, below the "Mais" sheet and its backdrop. */
+  --z-toast: 35;
 
   font-family: var(--font-sans);
   color: var(--fg);
@@ -276,7 +278,8 @@ input[type="checkbox"] {
   accent-color: var(--accent);
 }
 
-[role="alert"] {
+/* :where() keeps the specificity of these defaults unchanged; the toast regions style themselves. */
+[role="alert"]:not(:where(.toast-live)) {
   margin: var(--space-3) 0 0;
   padding: var(--space-2) var(--space-3);
   border: 1px solid #f6cfca;
@@ -286,7 +289,7 @@ input[type="checkbox"] {
   font-size: var(--text-sm);
 }
 
-[role="status"]:not(.demo-banner) {
+[role="status"]:not(.demo-banner):not(:where(.toast-live)) {
   margin: var(--space-4) 0;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--accent-line);
@@ -1139,6 +1142,9 @@ button[type="submit"]:not(:only-child) {
    Table        .table-wrap > table.table (th, td, .num for right-aligned numbers)
    EmptyState   .empty-state > .empty-state-icon + .empty-state-title + .empty-state-text
                 + .empty-state-action; .empty-state-inline lays it out in a row
+   Feedback     .toast-region[data-shell=app|auth] > .toast-live[role=status|alert]
+                > .toast[data-tone=success|error] > .toast-icon + .toast-text + .toast-close
+                (rendered by FeedbackRegion in the shell; forms call showFeedback(code))
    Utilities    .eyebrow, .stack, .cluster, .visually-hidden
    ------------------------------------------------------------------------- */
 
@@ -1716,6 +1722,144 @@ a.list-row:hover,
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
+}
+
+/* Feedback toast: confirmation after a write (src/app/_components/Feedback.tsx).
+   Phones/tablets: full width just above the bottom tab bar, never on top of it.
+   Desktop (>= 1024px, no tab bar): bottom-right corner. */
+
+.toast-region {
+  position: fixed;
+  right: max(var(--gutter), env(safe-area-inset-right));
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--space-3));
+  left: max(var(--gutter), env(safe-area-inset-left));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.toast-region[data-shell="auth"] {
+  bottom: calc(env(safe-area-inset-bottom) + var(--space-4));
+}
+
+@media (min-width: 1024px) {
+  .toast-region,
+  .toast-region[data-shell="auth"] {
+    right: var(--space-6);
+    bottom: var(--space-6);
+    left: auto;
+    width: 24rem;
+    align-items: stretch;
+  }
+}
+
+.toast-live {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: toast-in 220ms var(--ease);
+}
+
+.toast[data-tone="success"] {
+  border-color: #b7dcc6;
+  background: var(--success-soft);
+}
+
+.toast[data-tone="error"] {
+  border-color: #f6cfca;
+  background: var(--danger-soft);
+}
+
+.toast-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-pill);
+  color: #fff;
+}
+
+.toast[data-tone="success"] .toast-icon {
+  background: var(--success);
+}
+
+.toast[data-tone="error"] .toast-icon {
+  background: var(--danger);
+}
+
+.toast-icon .icon {
+  stroke-width: 2.5;
+}
+
+.toast-text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.toast[data-tone="success"] .toast-text {
+  color: var(--success);
+}
+
+.toast[data-tone="error"] .toast-text {
+  color: var(--danger);
+}
+
+.toast-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.toast-close:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.toast-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
 }
 
 /* 5. Home dashboard -------------------------------------------------------- */

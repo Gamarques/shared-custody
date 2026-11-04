@@ -32,6 +32,13 @@ describe("login form modes", () => {
     expect(html).not.toMatch(/criar conta|registar|new-password/i);
   });
 
+  it("the submit button starts disabled in both modes (nothing typed yet)", () => {
+    for (const mode of ["link", "password"] as const) {
+      const html = renderToStaticMarkup(<LoginForm next="/" initialMode={mode} />);
+      expect(html.match(/<button type="submit"[^>]*>/)?.[0]).toContain('disabled=""');
+    }
+  });
+
   it("/login?modo=palavra-passe opens the password mode directly", async () => {
     const html = renderToStaticMarkup(await LoginPage({ searchParams: Promise.resolve({ next: "/admin", modo: "palavra-passe" }) }));
     expect(html).toMatch(/autocomplete="current-password"/i);

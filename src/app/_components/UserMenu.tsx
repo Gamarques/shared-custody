@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { textColorOn } from "@/lib/custody/today";
+import { stashFeedback } from "./feedback-store";
 import { Icon } from "./Icon";
 
 type Props = {
@@ -22,6 +23,7 @@ export function initialsOf(text: string): string {
 /** Avatar button in the header; opens a small menu with who is signed in and "Sair". */
 export function UserMenu({ name, email, color, extra }: Props) {
   const [open, setOpen] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const label = name ?? email ?? "Conta";
   const avatarStyle = color ? { background: color, color: textColorOn(color) } : undefined;
@@ -69,10 +71,20 @@ export function UserMenu({ name, email, color, extra }: Props) {
           </span>
         </div>
         {extra}
-        <form action="/auth/signout" method="post" className="session-bar" data-testid="session-bar">
-          <button type="submit" className="user-menu-item">
+        <form
+          action="/auth/signout"
+          method="post"
+          className="session-bar"
+          data-testid="session-bar"
+          // Native post (works before hydration too); /login shows "Sessão terminada." from the stash.
+          onSubmit={() => {
+            stashFeedback("sessao-terminada");
+            setLeaving(true);
+          }}
+        >
+          <button type="submit" className="user-menu-item" disabled={leaving}>
             <Icon name="logout" size={18} />
-            Sair
+            {leaving ? "A sair…" : "Sair"}
           </button>
         </form>
       </div>

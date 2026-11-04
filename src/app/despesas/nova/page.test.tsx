@@ -79,6 +79,9 @@ describe("new expense page (RF-08, RF-09)", () => {
     expect(html).not.toMatch(/id="payerPercent"[^>]*(readOnly|disabled)/);
     expect(html).not.toContain("Usar a predefinição da família");
     expect(html).toContain("Registar despesa");
+    // Nothing typed yet: the submit button is disabled; the default share is already saved, so is its button.
+    expect(html).toMatch(/<button type="submit" class="btn btn-primary btn-lg" disabled="">Registar despesa<\/button>/);
+    expect(html).toMatch(/<button type="submit" class="btn btn-secondary" disabled="">Guardar predefinição<\/button>/);
 
     // Only the caller's family members are listed (RLS does the rest).
     const memberCalls = calls.filter((c) => c.table === "members");

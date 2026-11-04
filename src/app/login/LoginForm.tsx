@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { isValidEmail, safeNextPath } from "@/lib/auth/paths";
+import { loginReady } from "@/lib/forms/ready";
 import { createClient } from "@/lib/supabase/client";
+import { showFeedback, withFeedback } from "../_components/feedback-store";
 import { Icon } from "../_components/Icon";
 import styles from "../_auth/auth.module.css";
 
@@ -67,6 +69,7 @@ export function LoginForm({ next, initialMode = "link" }: { next: string; initia
       setMessage("Não foi possível enviar a ligação. Tenta novamente.");
     } else {
       setState("sent");
+      showFeedback("ligacao-enviada");
     }
   }
 
@@ -79,13 +82,15 @@ export function LoginForm({ next, initialMode = "link" }: { next: string; initia
       setMessage(result.error);
       return;
     }
-    // Full navigation, so the server renders the next page with the new session cookie.
-    window.location.assign(result.redirectTo);
+    // Full navigation, so the server renders the next page with the new session cookie; that page
+    // shows "Sessão iniciada." (the code travels in ?ok=).
+    window.location.assign(withFeedback(result.redirectTo, "sessao-iniciada"));
   }
 
   if (state === "sent") {
     return (
-      <p role="status" className={styles.sent}>
+      // Details of where the link went; the toast (role="status") announces the success.
+      <p className={styles.sent} data-testid="link-sent">
         <span className={styles.sentIcon}>
           <Icon name="check" size={16} />
         </span>
@@ -93,6 +98,8 @@ export function LoginForm({ next, initialMode = "link" }: { next: string; initia
       </p>
     );
   }
+
+  const ready = loginReady(mode, email, password);
 
   const emailField = (
     <div className="field">
@@ -127,7 +134,7 @@ export function LoginForm({ next, initialMode = "link" }: { next: string; initia
             />
           </div>
           {state === "error" && <p role="alert">{message}</p>}
-          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending"}>
+          <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending" || !ready}>
             {state === "sending" ? "A entrar…" : "Entrar"}
           </button>
         </form>
@@ -143,7 +150,7 @@ export function LoginForm({ next, initialMode = "link" }: { next: string; initia
       <form className={styles.form} onSubmit={onSubmitLink} data-testid="link-login">
         {emailField}
         {state === "error" && <p role="alert">{message}</p>}
-        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending"}>
+        <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={state === "sending" || !ready}>
           {state === "sending" ? "A enviar…" : "Enviar ligação de acesso"}
         </button>
       </form>
