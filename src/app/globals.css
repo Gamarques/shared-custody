@@ -2465,3 +2465,7 @@ a.list-row:hover,
   box-shadow: inset 0 -4px 0 rgba(31, 35, 40, 0.55);
 }
 
+/* Onboarding and invite pages inside the app chrome: same card as the login, centered. */
+.app-card-page {
+  margin: var(--space-5) auto var(--space-7);
+}

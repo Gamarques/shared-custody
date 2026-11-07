@@ -14,6 +14,12 @@ passos acima, onde se lê `public`/tabelas, leia `shared_custody`.
   TODO-014); aplicado com `alter role authenticator set pgrst.db_schemas = 'public, graphql_public,
   shared_custody'; notify pgrst, 'reload config';`. Se alguém gravar Settings > API > Exposed schemas
   no dashboard sem `shared_custody`, a app volta a falhar: confirmar com o cron (`ok:true`).
+- 2026-11-07: voltou a falhar (PGRST106; "Não foi possível carregar a família" e criar família
+  falhava). O `pgrst.db_schemas` do role tinha desaparecido: a fonte de verdade é a configuração
+  Data API do projeto, que sobrepõe o role. Corrigido de forma duradoura nessa configuração
+  (Management API `PATCH /v1/projects/<ref>/postgrest` com
+  `db_schema = "public,graphql_public,shared_custody"`, o mesmo que Settings > API > Exposed schemas).
+  Ao gravar Settings > API no dashboard, confirma que `shared_custody` continua na lista.
 - Chamadas REST diretas precisam de `Accept-Profile`/`Content-Profile: shared_custody`.
 - `supabase link` / `db push` rodam a partir da raiz do repositório (não de dentro de `supabase/`).
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FeedbackRegion } from "./Feedback";
 import { BrandMark, Icon } from "./Icon";
-import { breadcrumbFor, isActive, isAuthPath, NAV_ITEMS, PRIMARY_HREFS } from "./nav";
+import { breadcrumbFor, isActive, isAuthPath, isCardPath, NAV_ITEMS, PRIMARY_HREFS } from "./nav";
 
 type Props = {
   /** Without a session the shell falls back to the centered auth layout. */
@@ -24,7 +24,8 @@ const SECONDARY = NAV_ITEMS.filter((item) => !(PRIMARY_HREFS as readonly string[
 
 /**
  * App chrome: sidebar on desktop (≥1024px), sticky header everywhere, bottom tab bar with a
- * "Mais" sheet on phones. Login, onboarding and invite pages get a centered layout instead.
+ * "Mais" sheet on phones. The login gets a centered layout instead; onboarding and invite pages
+ * keep the chrome and show their form as a centered card.
  * Both layouts mount the feedback toast (confirmation of writes, see feedback-store.ts).
  */
 export function AppShell({ signedIn, banner, account, holder, children }: Props) {
@@ -93,7 +94,7 @@ export function AppShell({ signedIn, banner, account, holder, children }: Props)
           <div className="topbar-actions">{account}</div>
         </header>
         <div className="app-content" id="conteudo">
-          {children}
+          {isCardPath(pathname) ? <div className="auth-card app-card-page">{children}</div> : children}
         </div>
       </div>
 

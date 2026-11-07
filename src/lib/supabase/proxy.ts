@@ -58,10 +58,17 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     pathname !== "/admin" &&
     !pathname.startsWith("/admin/")
   ) {
-    const { data: membership } = await supabase.from("members").select("id").eq("user_id", user.id).limit(1);
+    const { data: membership, error: membershipError } = await supabase
+      .from("members")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1);
     const hasFamily = (membership?.length ?? 0) > 0;
     let target: string | null = null;
-    if (!hasFamily && pathname !== "/onboarding") target = "/onboarding";
+    // A failed query (e.g. the schema not exposed, PGRST106) is not "no family": let the page show
+    // its error instead of sending a member to onboarding, where creating a family would fail too.
+    if (membershipError) target = null;
+    else if (!hasFamily && pathname !== "/onboarding") target = "/onboarding";
     else if (hasFamily && pathname === "/onboarding") target = "/";
     if (target) {
       const url = request.nextUrl.clone();

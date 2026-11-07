@@ -35,7 +35,8 @@ export function OnboardingForm() {
       setSubmitError("Não foi possível criar a família. Tenta novamente.");
       return;
     }
-    router.replace(withFeedback("/", "familia-criada"));
+    // Next step for a new family: invite the other guardian.
+    router.replace(withFeedback("/convidar", "familia-criada"));
     router.refresh();
   }
 

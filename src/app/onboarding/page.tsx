@@ -7,7 +7,7 @@ export default function OnboardingPage() {
   return (
     <main>
       <AuthHeader icon="home" title="Bem-vindo">
-        <p>Cria a família, escolhe como apareces e a tua cor no calendário. O outro responsável é convidado depois.</p>
+        <p>Cria a família, escolhe como apareces e a tua cor no calendário. A seguir convidas o outro responsável.</p>
       </AuthHeader>
       {isSupabaseConfigured() ? (
         <OnboardingForm />

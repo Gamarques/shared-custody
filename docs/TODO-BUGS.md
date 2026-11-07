@@ -207,3 +207,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: teste PGlite mostra que `update ... set created_at = '2000-01-01'` não muda o valor; migration aplicada no projeto pelo dono
 - Severity: low
 - Status: open
+
+### TODO-026: Schema `shared_custody` deixou de estar exposto de novo (regressão da TODO-014)
+- Found: 2026-11-07, relatado pelo dono: "Não foi possível carregar a família" e criar família também falhava
+- Evidence: REST com `Content-Profile: shared_custody` devolvia `PGRST106` "Only the following schemas are exposed: public, graphql_public"; `pg_roles.rolconfig` do `authenticator` já não tinha `pgrst.db_schemas`; Management API `GET /postgrest` mostrava `db_schema: public,graphql_public`. O SQL de criar família funcionava (testado como `authenticated` em transação com rollback). O proxy tratava a falha como "sem família" e mandava para /onboarding
+- Expected: schema exposto de forma duradoura; uma falha da consulta de membro não manda membros para o onboarding
+- Acceptance: `GET /postgrest` com `shared_custody`; REST `rpc/keepalive_ping` devolve a hora da BD; teste do proxy para erro na consulta; `npm test` passa
+- Severity: high (app inutilizável em produção)
+- Status: done (2026-11-07) - `db_schema` definido na configuração Data API via Management API (keepalive_ping voltou a responder); proxy não redireciona quando a consulta falha (teste novo); MANUAL-STEPS atualizado

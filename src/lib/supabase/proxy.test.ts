@@ -132,6 +132,14 @@ describe("updateSession", () => {
     expect(new URL(res.headers.get("location")!).pathname).toBe("/onboarding");
   });
 
+  it("does not send a member to /onboarding when the membership query fails (e.g. PGRST106)", async () => {
+    configure();
+    signedIn("u1");
+    members.mockResolvedValue({ data: null, error: { code: "PGRST106", message: "Invalid schema: shared_custody" } });
+    const res = await updateSession(new NextRequest("http://localhost/despesas"));
+    expect(res.headers.get("location")).toBeNull();
+  });
+
   it("sends users with a family away from /onboarding", async () => {
     configure();
     signedIn("u1");

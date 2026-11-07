@@ -16,9 +16,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
 /** The bottom tab bar on phones shows these; the rest go under "Mais". */
 export const PRIMARY_HREFS = ["/", "/calendario", "/despesas", "/saldo"] as const;
 
-/** Pages that render without the app chrome (centered auth layout). */
+/** Pages that render without the app chrome (centered auth layout): only the login. */
 export function isAuthPath(pathname: string): boolean {
-  return pathname === "/login" || pathname === "/onboarding" || pathname.startsWith("/convite/");
+  return pathname === "/login";
+}
+
+/** Signed-in pages shown as a centered card inside the app chrome (navigation stays visible). */
+export function isCardPath(pathname: string): boolean {
+  return pathname === "/onboarding" || pathname.startsWith("/convite/");
 }
 
 export function isActive(href: string, pathname: string): boolean {
@@ -30,6 +35,8 @@ export type Crumb = { label: string; href?: string };
 /** Header trail for a path: the section, then the sub-page when there is one. */
 export function breadcrumbFor(pathname: string): Crumb[] {
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return [{ label: "Administração" }];
+  if (pathname === "/onboarding") return [{ label: "Criar família" }];
+  if (pathname.startsWith("/convite/")) return [{ label: "Convite" }];
   const section = NAV_ITEMS.find((item) => item.href !== "/" && isActive(item.href, pathname));
   if (!section) return [{ label: "Início" }];
   if (pathname === section.href) return [{ label: section.label }];
