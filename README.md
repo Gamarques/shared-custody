@@ -66,3 +66,5 @@ or Supabase project is needed (the Supabase variables are ignored if present). S
 - `supabase/migrations` — SQL migrations, including RLS policies
 
 Conventions: money is always stored and computed as integer cents; every table has RLS enabled.
+
+Sign-up is invite-only: the magic link creates an account only from an invite link (`claim_invite` + the Auth "Before User Created" hook, see "Registo só por convite" in `docs/MANUAL-STEPS.md`).

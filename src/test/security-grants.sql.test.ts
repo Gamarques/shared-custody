@@ -28,7 +28,9 @@ describe("anon (no session)", () => {
     ).toEqual([]);
   });
 
-  it("can execute no security definer function except is_family_member (false without a session)", async () => {
+  it("can execute no security definer function except claim_invite (keyed by the secret token) and is_family_member (false without a session)", async () => {
+    // claim_invite (invite-only sign-up, 2026-11-07) is called by /login before the invitee has a
+    // session: it only writes the claimed e-mail on the pending invite whose token is given.
     expect(
       await names(`
         select p.proname as name
@@ -36,7 +38,7 @@ describe("anon (no session)", () => {
         where n.nspname = 'shared_custody' and p.prosecdef and p.prorettype <> 'trigger'::regtype
           and has_function_privilege('anon', p.oid, 'execute')
         order by 1`),
-    ).toEqual(["is_family_member"]);
+    ).toEqual(["claim_invite", "is_family_member"]);
     const { rows } = await t.as(null, () => t.db.query<{ v: boolean }>("select shared_custody.is_family_member(id) as v from (select gen_random_uuid() as id) x"));
     expect(rows[0].v).toBe(false);
   });
@@ -58,6 +60,8 @@ describe("security definer functions", () => {
       "admin_list_families",
       "admin_list_users",
       "admin_remove_member",
+      // Added on purpose by 20261107000100_invite_only_signup.sql (invite-only sign-up).
+      "claim_invite",
       "confirm_expense",
       "create_family",
       "create_invite",
@@ -65,9 +69,25 @@ describe("security definer functions", () => {
       "dispute_expense",
       "expenses_audit",
       "get_invite",
+      // Added on purpose by the same migration: the Supabase Auth "Before User Created" hook,
+      // executable only by supabase_auth_admin (checked below and in invite-signup.sql.test.ts).
+      "hook_before_user_created",
       "is_app_admin",
       "is_family_member",
     ]);
+  });
+
+  it("the auth hook is executable only by supabase_auth_admin", async () => {
+    expect(
+      await names(`
+        select r as name from unnest(array['public', 'anon', 'authenticated', 'supabase_auth_admin']) r
+        where case when r = 'public'
+                   then exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+                                where p.oid = 'shared_custody.hook_before_user_created(jsonb)'::regprocedure
+                                  and a.grantee = 0 and a.privilege_type = 'EXECUTE')
+                   else has_function_privilege(r, 'shared_custody.hook_before_user_created(jsonb)', 'execute') end
+        order by 1`),
+    ).toEqual(["supabase_auth_admin"]);
   });
 
   it("each callable one checks the caller (auth.uid, is_app_admin or is_family_member)", async () => {
@@ -77,10 +97,11 @@ describe("security definer functions", () => {
       where n.nspname = 'shared_custody' and p.prosecdef and p.prorettype <> 'trigger'::regtype
         and has_function_privilege('authenticated', p.oid, 'execute')`);
     const unchecked = rows.filter((r) => !/auth\.uid\(\)|is_app_admin\(\)|is_family_member\(|decide_expense\(/.test(r.src));
-    // get_invite is keyed by the secret invite token (~244 random bits) instead: the invitee is
-    // not a member yet. It returns only what the invite page shows.
-    expect(unchecked.map((r) => r.name)).toEqual(["get_invite"]);
-    expect(unchecked[0].src).toMatch(/where i\.token = invite_token/);
+    // claim_invite and get_invite are keyed by the secret invite token (~244 random bits)
+    // instead: the invitee is not a member yet (and, for claim_invite, has no session yet).
+    // get_invite returns only what the invite page shows; claim_invite only records an e-mail.
+    expect(unchecked.map((r) => r.name).sort()).toEqual(["claim_invite", "get_invite"]);
+    for (const r of unchecked) expect(r.src, r.name).toMatch(/where i\.token = invite_token/);
     // decide_expense itself is internal: only its two wrappers are callable.
     expect(rows.map((r) => r.name)).not.toContain("decide_expense");
   });

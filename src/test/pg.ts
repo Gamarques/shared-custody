@@ -7,13 +7,15 @@ const MIGRATIONS_DIR = "supabase/migrations";
 
 /**
  * Minimal stand-in for what Supabase provides before our migrations run:
- * the anon/authenticated roles, auth.users, auth.uid() and the default grants
+ * the anon/authenticated/supabase_auth_admin roles, auth.users, auth.uid() and the default grants
  * that make RLS (not table privileges) the real access gate.
  */
 const SUPABASE_STUB = `
 create role anon nologin;
 create role authenticated nologin;
 create role service_role nologin;
+-- The role Supabase Auth runs as; it calls the Postgres auth hooks.
+create role supabase_auth_admin nologin;
 create schema auth;
 create table auth.users (
   id uuid primary key, email text, created_at timestamptz default now(), last_sign_in_at timestamptz

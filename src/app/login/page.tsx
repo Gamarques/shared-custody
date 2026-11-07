@@ -23,7 +23,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       )}
       {error && <p role="alert">A ligação é inválida ou expirou. Pede uma nova.</p>}
       {isSupabaseConfigured() ? (
-        <LoginForm next={safeNextPath(next)} initialMode={modo === "palavra-passe" ? "password" : "link"} />
+        // The password form is only for accounts created in the dashboard (the admin): it is reached
+        // by typing /login?modo=palavra-passe and is not linked from anywhere in the app.
+        <LoginForm next={safeNextPath(next)} mode={modo === "palavra-passe" ? "password" : "link"} />
       ) : (
         <p className={styles.note}>Supabase ainda não configurado (ver .env.example).</p>
       )}

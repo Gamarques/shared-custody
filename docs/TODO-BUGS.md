@@ -215,3 +215,11 @@ pelo Jev contra os critérios de aceitação (nota >= 3.0 de 0..4).
 - Acceptance: `GET /postgrest` com `shared_custody`; REST `rpc/keepalive_ping` devolve a hora da BD; teste do proxy para erro na consulta; `npm test` passa
 - Severity: high (app inutilizável em produção)
 - Status: done (2026-11-07) - `db_schema` definido na configuração Data API via Management API (keepalive_ping voltou a responder); proxy não redireciona quando a consulta falha (teste novo); MANUAL-STEPS atualizado
+
+### TODO-027: Com o registo só por convite, não há forma de criar a conta do primeiro responsável de uma família nova sem desligar o hook
+- Found: 2026-11-07 ao implementar o registo só por convite (`20261107000100_invite_only_signup.sql`)
+- Evidence: o hook `hook_before_user_created` só deixa criar contas com e-mail reclamado ou bloqueado num convite pendente, e um convite pertence sempre a uma família existente (`invites.family_id not null`, `create_invite` exige que quem convida seja membro). Quem quer criar uma família nova (ou um admin sem família) não tem convite. Hoje o dono tem de desligar o hook, criar o utilizador no dashboard e voltar a ligar (MANUAL-STEPS, "Users created by the owner"); durante esse intervalo o registo fica aberto a qualquer pessoa. Também não está confirmado se o "Add user" do dashboard passa pelo hook
+- Expected: uma forma de o admin autorizar um e-mail sem desligar o hook, por exemplo uma tabela `signup_allowlist` (só escrita por uma função `admin_*` que verifica `is_app_admin()`) consultada pelo hook, com validade curta, e um formulário em `/admin`
+- Acceptance: teste PGlite em que o hook aceita um e-mail autorizado pelo admin dentro do prazo e recusa depois; um não-admin não consegue autorizar (42501); MANUAL-STEPS deixa de mandar desligar o hook
+- Severity: medium (operacional; não abre dados, mas obriga a abrir o registo por uns minutos)
+- Status: open

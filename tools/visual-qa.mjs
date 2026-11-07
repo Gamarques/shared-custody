@@ -57,6 +57,8 @@ const ROUTES = [
   "/saldo",
   "/convidar",
   "/login",
+  // Login from an invite link: shows "Estás a entrar a partir de um convite." above the form.
+  `/login?next=${encodeURIComponent(`/convite/${"0123456789abcdef".repeat(4)}`)}`,
   "/convite/abcdefghijklmnopqrstuvwxyz123456",
   "/admin",
   "/admin?vista=utilizadores",

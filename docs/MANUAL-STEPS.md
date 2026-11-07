@@ -665,7 +665,8 @@ migration and the app uses no service role key.
 
 1. **Apply the migration** (`supabase db push`, or paste the file in the SQL editor). Check the
    Security/Performance Advisor afterwards: it must stay clean for `shared_custody`.
-2. **Create the admin user** (there is no password sign-up in the app): Supabase dashboard >
+2. **Create the admin user** (there is no password sign-up in the app; once the invite-only hook
+   is on, see "Users created by the owner" in "Registo só por convite"): Supabase dashboard >
    Authentication > Users > **Add user** > **Create new user**. Enter the owner's e-mail and a
    strong password and switch **Auto Confirm User** on. (If the owner already signed in with the
    magic link, the user exists: use the user's "..." menu > **Send password recovery**, or set a
@@ -681,8 +682,8 @@ migration and the app uses no service role key.
 4. **Verify**:
    - `select u.email from shared_custody.app_admins a join auth.users u on u.id = a.user_id;`
      returns exactly the owner's e-mail.
-   - Open `/login?next=/admin`, tap **Entrar com palavra-passe** (or open
-     `/login?modo=palavra-passe&next=/admin`), sign in with the e-mail and password: `/admin`
+   - Open `/login?modo=palavra-passe&next=/admin` (the password form is not linked from the app
+     since the invite-only sign-up change), sign in with the e-mail and password: `/admin`
      opens with the tabs **Famílias** and **Utilizadores** listing every family and user. The
      avatar menu shows an **Admin** entry.
    - A wrong password shows "E-mail ou palavra-passe incorretos.".
@@ -705,6 +706,129 @@ Notes:
 - An admin does not need a family: the proxy lets `/admin` through without one. Every other page
   still sends a user without a family to `/onboarding`.
 - In demo mode (`npm run demo`) Ana is the admin, so `/admin` works with the seed data.
+
+## Registo só por convite (invite-only sign-up, 2026-11-07)
+
+Status: **code, migration and PGlite tests done; nothing applied to the live project, hook not
+enabled.** Owner decision: the e-mail magic link stays the only normal way to sign in, and only
+someone with a valid invite link can get a new account.
+
+How it works:
+
+- `/login` (normal login) asks for the magic link with `shouldCreateUser: false`. An e-mail with no
+  account gets "Não encontrámos nenhuma conta com este e-mail. Para entrar pela primeira vez, abre a
+  ligação de convite que recebeste." The password form is no longer linked anywhere; the admin
+  opens `/login?modo=palavra-passe` directly.
+- `/login?next=/convite/<token>` (where the proxy sends an anonymous visitor of an invite link) shows
+  "Estás a entrar a partir de um convite.", first calls `shared_custody.claim_invite(token, e-mail)`
+  (anon may call it; it records `claimed_email`/`claimed_at` on the pending invite, at most 5 claims
+  per invite in 10 minutes), and only then asks for a magic link with `shouldCreateUser: true`.
+- The real gate is the Supabase Auth **Before User Created** hook
+  `shared_custody.hook_before_user_created`: a new user is created only if their e-mail was claimed
+  on a pending, unexpired invite in the last hour, or is the e-mail lock of a pending, unexpired
+  invite. Otherwise Auth answers HTTP 403 `signup_requires_invite`. `shouldCreateUser: false` is only
+  UX: without the hook, anyone can still call the Auth API directly with `create_user: true`.
+- Existing users are not affected (the hook only runs when a user is about to be created).
+- Keep **Authentication > Sign In / Providers > Email > Allow new users to sign up** **on**. With it
+  off, Auth refuses every sign-up (`signup_disabled`) before the hook runs, so invitees could not get
+  an account either.
+
+### Steps (in this order)
+
+1. **Apply the migration** `supabase/migrations/20261107000100_invite_only_signup.sql`
+   (`npx supabase db push` from the repository root, or the Management API / SQL editor). Check:
+
+   ```sql
+   select proname, prosecdef, proconfig from pg_proc
+   where pronamespace = 'shared_custody'::regnamespace
+     and proname in ('claim_invite', 'hook_before_user_created');
+   -- 2 rows, prosecdef = true, proconfig = {search_path=shared_custody}
+   select has_function_privilege('supabase_auth_admin', 'shared_custody.hook_before_user_created(jsonb)', 'execute'),  -- true
+          has_function_privilege('anon', 'shared_custody.hook_before_user_created(jsonb)', 'execute'),                 -- false
+          has_function_privilege('authenticated', 'shared_custody.hook_before_user_created(jsonb)', 'execute'),        -- false
+          has_function_privilege('anon', 'shared_custody.claim_invite(text, text)', 'execute');                         -- true
+   select shared_custody.hook_before_user_created('{"user": {"email": "nobody@example.com"}}');
+   -- {"error": {"message": "signup_requires_invite", "http_code": 403}}
+   ```
+
+   Then run the Security Advisor: it must list nothing new for `shared_custody`.
+2. **Deploy the app** (Vercel) so `/login` calls `claim_invite` on invite links. Before this step an
+   invite login would still work only while the hook is off; after the hook is on, the old app could
+   create accounts only for e-mail-locked invites.
+3. **Enable the hook** through the Management API with a personal access token of the owner's
+   account (never a `service_role` key):
+
+   ```bash
+   curl -X PATCH "https://api.supabase.com/v1/projects/<ref>/config/auth" \
+     -H "Authorization: Bearer <personal access token>" -H "Content-Type: application/json" \
+     -d '{"hook_before_user_created_enabled": true,
+          "hook_before_user_created_uri": "pg-functions://postgres/shared_custody/hook_before_user_created"}'
+   curl -s "https://api.supabase.com/v1/projects/<ref>/config/auth" \
+     -H "Authorization: Bearer <personal access token>" | grep -o '"hook_before_user_created_[a-z]*":[^,]*'
+   ```
+
+   Same thing in the dashboard: Authentication > Hooks > Before User Created > Postgres function
+   `shared_custody.hook_before_user_created`. If the dashboard offers to apply grants, they are
+   already in the migration.
+
+### Verify
+
+1. **Unknown e-mail, normal login:** in a private window open `/login`, enter an e-mail that has no
+   account: the page shows the "Não encontrámos nenhuma conta..." message; no e-mail is sent; no new
+   row in Authentication > Users.
+2. **Direct API bypass is refused:** with only the anon key,
+
+   ```bash
+   curl -s -X POST "$NEXT_PUBLIC_SUPABASE_URL/auth/v1/otp" -H "apikey: $ANON" \
+     -H "Content-Type: application/json" -d '{"email": "nobody@example.com", "create_user": true}'
+   ```
+
+   must fail (expected HTTP 403 with `signup_requires_invite`; write down the exact status and
+   `error_code` Auth returns, the login page maps 403 and that message to its pt-PT text) and create
+   no user.
+3. **Invite flow:** member A creates an invite on `/convidar` (once without e-mail, once with B's
+   e-mail). B opens the link in another browser, lands on `/login` with "Estás a entrar a partir de
+   um convite.", enters the e-mail, receives the link, opens it in the same browser, comes back to
+   `/convite/<token>`, accepts and lands on `/`. In the SQL editor the invite has `claimed_email` = B's
+   e-mail and `accepted_at` set.
+4. **Wrong e-mail on a locked invite:** with an invite locked to B's e-mail, entering C's e-mail on
+   that login page shows "Este convite foi enviado para outro e-mail..." and sends nothing.
+5. **Existing users:** A signs out and signs in again with the magic link: works as before. The
+   admin signs in at `/login?modo=palavra-passe`: works as before.
+6. **Logs:** Authentication > Logs show the hook calls; a refused one has status 403.
+
+### Users created by the owner (dashboard "Add user", "Invite user", Admin API)
+
+Supabase Auth may run the hook for users created from the dashboard too (not confirmed: the
+documentation only says the hook runs "before a new user is created"). Safer default, in order:
+
+1. **A guardian who joins an existing family:** do not create the user at all. A member of that
+   family creates an invite with that e-mail on `/convidar` (the e-mail lock lets the hook through
+   for 7 days, no claim needed) and sends the link.
+2. **Anyone else** (the first guardian of a new family, or an admin without a family): first try
+   **Add user** with the hook on. If it fails with `signup_requires_invite`, turn the hook off
+   (Authentication > Hooks, or the PATCH above with `"hook_before_user_created_enabled": false`),
+   create the user, and turn the hook back on **immediately**; then check with the GET above that it
+   is enabled. While it is off, sign-up is open to anyone. See TODO-027.
+
+### Roll back
+
+1. **Turn the hook off** (fast, no deploy): PATCH with `"hook_before_user_created_enabled": false`,
+   or switch it off in Authentication > Hooks. Sign-up is open again through the Auth API; the app's
+   normal login still asks with `shouldCreateUser: false` and invite logins still work.
+2. To also undo the code, revert the commit and redeploy. The migration may stay (unused columns and
+   functions). To remove it, only after the old app is deployed (the new one calls `claim_invite`), run
+   a new migration with:
+
+   ```sql
+   drop function if exists shared_custody.hook_before_user_created(jsonb);
+   drop function if exists shared_custody.claim_invite(text, text);
+   alter table shared_custody.invites
+     drop column if exists claimed_email, drop column if exists claimed_at,
+     drop column if exists claim_count, drop column if exists claim_window_start;
+   ```
+
+   Turn the hook off before dropping its function, or every sign-up fails.
 
 ## Security review (2026-11-04)
 
@@ -732,7 +856,8 @@ No migration has to be applied for these fixes.
    - Sign In / Providers > Email: is **Allow new users to sign up** on? With it on, anyone can create an
      account by magic link (they can only create their own family; RLS isolates it). If only invited
      guardians should get in, turn it off and create users from the dashboard, or keep it on and accept
-     open sign-up. Keep **Confirm email** on.
+     open sign-up. Keep **Confirm email** on. *Superseded 2026-11-07:* the owner chose invite-only
+     sign-up; keep it **on** and enable the hook, see "Registo só por convite".
    - Disable providers that are not used (phone, anonymous sign-ins, OAuth).
    - Rate Limits: e-mails sent per hour, sign-ins/sign-ups and token verifications per IP are at the
      defaults or lower; with a custom SMTP provider, set the e-mail limit explicitly.

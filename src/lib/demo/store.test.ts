@@ -291,6 +291,13 @@ describe("fake client: writes", () => {
     expect((await client.rpc("create_family", { family_name: "X", member_display_name: "Ana", member_color: "#2f6f5e" })).error?.code).toBe("23505");
   });
 
+  it("claim_invite is a no-op success (the demo has no login and no Auth hook)", async () => {
+    const { client, store } = setup();
+    const before = structuredClone(store.tables.invites);
+    expect(await client.rpc("claim_invite", { invite_token: "f".repeat(64), invite_email: "x@example.com" })).toMatchObject({ data: null, error: null });
+    expect(store.tables.invites).toEqual(before);
+  });
+
   it("runs the invite flow for a new family", async () => {
     const store = new DemoStore({ now: () => NOW });
     store.users.push({ ...DEMO_ANA }, { ...DEMO_BRUNO });

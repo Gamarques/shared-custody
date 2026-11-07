@@ -27,7 +27,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!user) {
     return (
       <InviteShell>
-        <Link href={`/login?next=${encodeURIComponent(`/convite/${token}`)}`}>Entra para aceitar o convite</Link>
+        <Link href={`/login?next=${encodeURIComponent(`/convite/${token}`)}`}>Entra com o teu e-mail para aceitar o convite</Link>
       </InviteShell>
     );
   }

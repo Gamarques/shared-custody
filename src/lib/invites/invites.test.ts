@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inviteErrorMessage, inviteMailto, inviteUrl, isValidInviteToken } from "./invites";
+import { inviteErrorMessage, inviteMailto, inviteTokenFromPath, inviteUrl, isValidInviteToken } from "./invites";
 
 const token = "a".repeat(64);
 
@@ -9,6 +9,18 @@ describe("invite helpers", () => {
     expect(isValidInviteToken("A".repeat(64))).toBe(false);
     expect(isValidInviteToken("a".repeat(63))).toBe(false);
     expect(isValidInviteToken("../login")).toBe(false);
+  });
+
+  it("finds the token only in an exact invite page path", () => {
+    expect(inviteTokenFromPath(`/convite/${token}`)).toBe(token);
+    for (const path of ["/", "/convite", `/convite/${token}/x`, `/convite/${token}?a=1`, `/x/convite/${token}`, "/convite/not-a-token", `/convite/${"A".repeat(64)}`]) {
+      expect(inviteTokenFromPath(path), path).toBeNull();
+    }
+  });
+
+  it("maps the claim_invite codes", () => {
+    expect(inviteErrorMessage("IV009")).toBe("Indica um e-mail válido.");
+    expect(inviteErrorMessage("IV010")).toMatch(/Demasiadas tentativas/);
   });
 
   it("builds the invite URL without double slashes", () => {

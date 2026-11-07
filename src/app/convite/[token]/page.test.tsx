@@ -51,6 +51,14 @@ describe("/convite/[token]", () => {
     expect(html).toContain('value="#c2410c"');
   });
 
+  it("sends anonymous visitors to /login with the invite as next", async () => {
+    getUser.mockResolvedValue({ data: { user: null } });
+    const html = await render();
+    expect(html).toContain(`href="/login?next=%2Fconvite%2F${token}"`);
+    expect(html).toContain("Entra com o teu e-mail para aceitar o convite");
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed tokens without querying", async () => {
     const html = await render("not-a-token");
     expect(html).toContain("Convite não encontrado");

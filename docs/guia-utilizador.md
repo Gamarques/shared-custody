@@ -18,17 +18,26 @@ A app abre como uma aplicação normal, com ícone no ecrã principal.
 
 ## 2. Entrar
 
+### A primeira vez: sempre pela ligação de convite
+
+Só quem foi convidado pode criar conta. Na primeira vez, **abre a ligação de convite** que recebeste (por WhatsApp, SMS ou e-mail). A página de entrada diz **"Estás a entrar a partir de um convite."**:
+
+1. Escreve o teu e-mail e toca em **Enviar ligação de acesso**. Se o convite foi feito para um e-mail, usa esse.
+2. Abre o e-mail que recebeste e toca em **Entrar**. Voltas ao convite para escolher o teu nome e a tua cor.
+
+Se abrires a app sem a ligação de convite e ainda não tiveres conta, aparece **"Não encontrámos nenhuma conta com este e-mail."**: volta à mensagem do convite e abre a ligação a partir daí.
+
+### Nas vezes seguintes
+
 1. Escreve o teu e-mail e toca em **Enviar ligação de acesso**.
 2. Abre o e-mail **"A tua ligação para entrar na Guarda Partilhada"** e toca em **Entrar**. Se não o vires, procura no spam.
 3. Pronto, a sessão fica guardada. Não precisas de palavra-passe.
-
-> Se tiveres uma palavra-passe, podes tocar em **Entrar com palavra-passe**.
 
 ---
 
 ## 3. Primeira vez: criar a família
 
-Quem entra primeiro cria a família:
+Quem entra primeiro cria a família. Como só se cria conta por convite, a conta do primeiro responsável de uma família nova é criada pelo administrador da app: pede-lha. Depois:
 
 1. Dá um **nome à família** (ex.: "Família Silva").
 2. Escreve o **teu nome**, tal como o outro responsável o vai ver.
@@ -39,7 +48,7 @@ Quem entra primeiro cria a família:
 1. Vai a **Convidar** (no telemóvel está em **Mais**).
 2. Se quiseres, escreve o e-mail dele. Assim só essa pessoa pode aceitar o convite.
 3. Toca em **Criar convite** e depois em **Copiar ligação**.
-4. Envia a ligação por WhatsApp, SMS ou e-mail. Quem a receber entra, escolhe o nome e a cor e fica na família.
+4. Envia a ligação por WhatsApp, SMS ou e-mail. Quem a receber entra **por essa ligação** (é a única forma de criar conta), escolhe o nome e a cor e fica na família.
 
 A família tem no máximo **dois responsáveis**. Cada convite só pode ser usado uma vez e é válido durante **7 dias**.
 

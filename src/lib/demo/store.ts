@@ -505,6 +505,8 @@ export class DemoStore {
 
   private rpc(fn: string, args: Row, userId: string | null): unknown {
     if (fn === "keepalive_ping") return this.now().toISOString();
+    // Invite-only sign-up: the demo has no login and no Auth hook, so claiming is a no-op success.
+    if (fn === "claim_invite") return null;
     if (!userId) fail("28000", "not authenticated", 401);
     switch (fn) {
       case "create_family":

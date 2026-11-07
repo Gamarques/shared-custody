@@ -5,6 +5,12 @@ export function isValidInviteToken(token: string): boolean {
   return TOKEN.test(token);
 }
 
+/** The token when `path` is exactly an invite page (`/convite/<token>`), else null. */
+export function inviteTokenFromPath(path: string): string | null {
+  const match = /^\/convite\/([^/?#]+)$/.exec(path);
+  return match && isValidInviteToken(match[1]) ? match[1] : null;
+}
+
 export function inviteUrl(origin: string, token: string): string {
   return `${origin.replace(/\/+$/, "")}/convite/${token}`;
 }
@@ -24,7 +30,7 @@ export const INVITE_STATUS_MESSAGES: Record<Exclude<InviteStatus, "valid">, stri
   full: "Esta família já tem os dois responsáveis.",
 };
 
-/** SQLSTATE codes raised by create_invite / accept_invite. */
+/** SQLSTATE codes raised by create_invite / accept_invite / claim_invite. */
 const ERROR_MESSAGES: Record<string, string> = {
   IV001: "Convite não encontrado. Pode ter sido substituído por uma ligação mais recente.",
   IV002: INVITE_STATUS_MESSAGES.accepted,
@@ -35,6 +41,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   IV006: "Essa cor já é do outro responsável. Escolhe outra.",
   IV007: "Já fazes parte de uma família.",
   IV008: "Cria a tua família antes de convidar alguém.",
+  // claim_invite (login from an invite link, migration 20261107000100_invite_only_signup.sql)
+  IV009: "Indica um e-mail válido.",
+  IV010: "Demasiadas tentativas com este convite. Espera 10 minutos e tenta novamente.",
 };
 
 export function inviteErrorMessage(code: string | undefined): string {
